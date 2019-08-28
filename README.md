@@ -16,6 +16,9 @@ A simple bar/restaurant manager app
 9. point browser to http://localhost:8080
 10. PROFIT!
 
+An initial user will be created for you, tacocat, with password TacOcaT2019.
+I suggest you change that on your first login.
+
 ## License
 
 Copyright © 2019 FIXME
