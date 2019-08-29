@@ -312,6 +312,7 @@
                           , menu_group
                      from   item
                      where  menu_group = ?
+                       and  in_stock
                      order
                        by   menu_group desc
                           , name"
