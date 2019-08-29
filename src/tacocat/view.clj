@@ -313,7 +313,9 @@
            [(fn [r _] (map (fn [r] (make-link (str "/view-role/" (:id r)) (:name r))) r))
             (fn [p _] (map (fn [p] [:h6 p]) (sort p)))
             (fn [m _] (map (fn [m] [:h5 m]) (sort m)))]
-           [{:roles user-roles :machines machines :permissions permissions}])))))
+           [{:roles       user-roles
+             :machines    machines
+             :permissions permissions}])))))
   ([user]
    (render-user-info user (:id user))))
 
@@ -356,7 +358,7 @@
                      (form/hidden-field {:value i} "change-permission")
                      (form/check-box i (contains? role-perms (:name r)))
                      (form/submit-button "Cambiar")))]
-        all-perms))))
+        (sort all-perms)))))
 
 (defn render-add-new-role
   "Add role page"
@@ -847,7 +849,8 @@
          item    :item
          options :options
          id-bill :id_bill
-         item-id :id_item}     (sql/retrieve-bill-item id)]
+         item-id :id_item}     (sql/retrieve-bill-item id)
+        item-group             (:menu_group (sql/retrieve-item-by-id item-id))]
     (println "Item:" item "id:" item-id)
     (with-page (str "Cambiar " item
                     (if (nil? options)
@@ -859,9 +862,8 @@
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
          (form/drop-down "set-item"
-                         (map (fn [{id :id
-                                    nm :name}] [nm id])
-                              (sql/retrieve-items))
+                         (map (fn [{id :id nm :name}] [nm id])
+                              (sql/retrieve-items-in-group item-group))
                          item-id)
          [:br]
          (form/submit-button "Cambiar")]))))
@@ -1071,8 +1073,10 @@
        [:br]
        (form/label {:for "option-group"} "option-group" "Grupo: ")
        (form/drop-down {:id "option-group"} "option-group"
-                       (map (fn [{g :name}] [g g])
-                            (sql/retrieve-option-groups)))
+                       (map (fn [g] [g g])
+                            (sort
+                              (map :name 
+                                   (sql/retrieve-option-groups)))))
        [:br]
        (form/submit-button "Crear"))]))
 
@@ -1097,7 +1101,11 @@
        (with-form post-page
          (form/hidden-field {:value true} "set-option-group")
          (form/label {:for "option-group"} "option-group" "Grupo: ")
-         (form/drop-down {:id "option-group"} "option-group" (map :name all-option-groups) option-group)
+         (form/drop-down {:id "option-group"} "option-group"
+                         (sort
+                           (map :name
+                                all-option-groups))
+                         option-group)
          (form/submit-button "Cambiar"))
        (with-form post-page
          (form/hidden-field {:value true} "set-option-charge")

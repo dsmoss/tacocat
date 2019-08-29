@@ -285,7 +285,23 @@
                           , menu_group
                      from   item
                      order
-                       by   menu_group desc"]))
+                       by   menu_group desc
+                          , name"]))
+
+(defn retrieve-items-in-group
+  "Finds all items in a specific menu group"
+  [group]
+  (j/query db-spec ["select id
+                          , name
+                          , charge
+                          , in_stock
+                          , menu_group
+                     from   item
+                     where  menu_group = ?
+                     order
+                       by   menu_group desc
+                          , name"
+                    group]))
 
 (defn update-item-menu-group
   "Change an items menu_group"
