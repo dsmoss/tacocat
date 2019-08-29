@@ -411,8 +411,10 @@
        [:br]
        (form/label {:for "menu-group"} "menu-group" "Grupo: ")
        (form/drop-down {:id "menu-group"} "menu-group"
-                       (map (fn [{g :name}] [g g])
-                            (sql/retrieve-menu-groups)))
+                       (map (fn [g] [g g])
+                            (sort
+                              (map :name
+                                   (sql/retrieve-menu-groups)))))
        [:br]
        (form/label {:for "amount"} "amount" "Monto: ")
        (form/text-field {:id "amount" :type "number" :step "0.01"} "amount")
@@ -458,8 +460,8 @@
          (form/hidden-field {:value id} "set-item-menu-group")
          (form/label {:for "menu-group"} "menu-group" "Grupo: ")
          (form/drop-down {:id "menu-group"} "menu-group"
-                         (map (fn [{g :name}] [g g])
-                              menu-groups)
+                         (map (fn [g] [g g])
+                              (sort (map :name menu-groups)))
                          mgroup)
          (form/submit-button "Cambiar"))
        (with-form (str "/view-item/" id)
@@ -1123,7 +1125,7 @@
          (form/hidden-field {:value id} "set-item-menu-group")
          (form/label {:for "menu-group"} "menu-group" "Grupo: ")
          (form/drop-down {:id "menu-group"} "menu-group"
-                         (map (fn [g] [g g]) all-groups)
+                         (map (fn [g] [g g]) (sort all-groups))
                          group)
          [:br]
          (form/submit-button "Cambiar"))])))

@@ -301,7 +301,6 @@
   "Add an option"
   [user id o-name o-group]
   (println "Adding option" o-name "in" o-group)
-  (sql/insert-option user o-name o-group)
   (add-option-to-item
     user
     id
