@@ -863,7 +863,8 @@
         [:h5
          (form/drop-down "set-item"
                          (map (fn [{id :id nm :name}] [nm id])
-                              (sql/retrieve-items-in-group item-group))
+                              (sql/retrieve-items-in-stock-in-group
+                                item-group))
                          item-id)
          [:br]
          (form/submit-button "Cambiar")]))))

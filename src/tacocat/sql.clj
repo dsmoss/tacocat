@@ -302,7 +302,7 @@
                        by   menu_group desc
                           , name"]))
 
-(defn retrieve-items-in-group
+(defn retrieve-items-in-stock-in-group
   "Finds all items in a specific menu group"
   [group]
   (j/query db-spec ["select id
