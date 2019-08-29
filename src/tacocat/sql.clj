@@ -115,7 +115,24 @@
                           , option_name
                           , option_group
                      from   v_item_options
-                     where  id_item = ?"
+                     where  id_item = ?
+                     order
+                       by   option_group
+                          , option_name"
+                    id]))
+
+(defn retrieve-valid-options-in-stock
+  "Finds valid options in stock for an item"
+  [id]
+  (j/query db-spec ["select id_option
+                          , option_name
+                          , option_group
+                     from   v_item_options
+                     where  id_item = ?
+                       and  option_in_stock
+                     order
+                       by   option_group
+                         ,  option_name"
                     id]))
 
 (defn retrieve-current-options

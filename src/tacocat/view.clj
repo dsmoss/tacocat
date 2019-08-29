@@ -877,7 +877,7 @@
          options :options
          id-bill :id_bill
          item-id :id_item} (sql/retrieve-bill-item id)
-        valid-options      (sql/retrieve-valid-options item-id)
+        valid-options      (sql/retrieve-valid-options-in-stock item-id)
         current-options    (set (flatten (map vals (sql/retrieve-current-options id))))]
     (with-page (str "Opciones para " item
                     (if (nil? options)
@@ -894,8 +894,8 @@
                                                    (map (fn [{n :option_name
                                                               i :id_option}]
                                                           [:h5
-                                                           (form/check-box i (contains? current-options i))
-                                                           (form/label n (str " " n))])
+                                                           (form/label {:for i} n (str " " n))
+                                                           (form/check-box {:id i} i (contains? current-options i))])
                                                         (val i))})
                                           (group-by :option_group valid-options)))
                option-groups (keys ordered-options)]
