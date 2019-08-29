@@ -275,6 +275,20 @@
                        by   date desc"
                     id-close]))
 
+(defn retrieve-items-in-stock
+  "Gets a list of valid items in the menu"
+  []
+  (j/query db-spec ["select id
+                          , name
+                          , charge
+                          , in_stock
+                          , menu_group
+                     from   item
+                     where  in_stock
+                     order
+                       by   menu_group desc
+                          , name"]))
+
 (defn retrieve-items
   "Gets a list of items in the menu"
   []

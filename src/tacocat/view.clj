@@ -948,7 +948,7 @@
                                               nm :name}] [nm id])
                                         (val m))))
                  (form/submit-button "Añadir")])])
-           (group-by :menu_group (sql/retrieve-items))))))
+           (group-by :menu_group (sql/retrieve-items-in-stock))))))
 
 (defn render-new-bill
   "Shows a page where we can create a new bill"
