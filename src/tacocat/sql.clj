@@ -43,7 +43,8 @@
        ret#)))
 
 (defn insert-new-intake
-  "Inserts a bill into the intake table. This results in the bill being considered as closed"
+  "Inserts a bill into the intake table.
+   This results in the bill being considered as closed"
   [user id charge]
   (ins user db-spec :intakes {:id_bill id :amount charge}))
 

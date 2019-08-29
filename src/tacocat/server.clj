@@ -532,7 +532,7 @@
 (defn handle-view-item
   "Shows the item screen"
   [request]
-  (println request)
+  ;(println request)
   (let [params                                 (-> request :params)
         id                                     (-> params :id)
         {charge      "amount"
