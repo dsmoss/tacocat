@@ -4,7 +4,4 @@ sudo -u postgres psql < db-setup.sql
 
 psql "postgresql://tacocat:Tacocat2019@localhost:5432/tacocat" < "table-setup.sql"
 
-for i in $(ls upgrade-*.sql | sort) ; do
-	echo "Applying $i";
-       	psql "postgresql://tacocat:Tacocat2019@localhost:5432/tacocat" < "$i";
-done
+./upgrade
