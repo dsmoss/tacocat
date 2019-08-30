@@ -606,12 +606,18 @@
                           , user_name
                           , name
                           , salt
+                          , language
                      from   app_user
                      where  id = ?"
                     id]))
      [:permissions (retrieve-user-permissions id db)]))
   ([id]
    (retrieve-user-by-id id db-spec)))
+
+(defn update-user-language
+  "Update the language of a user"
+  [user id language]
+  (upd user db-spec :app_user {:language language} ["id = ?" id]))
 
 (defn set-password-for-user
   "Sets a users password"
@@ -674,6 +680,7 @@
   (j/query db-spec ["select id
                           , user_name
                           , name
+                          , language
                           , enabled
                      from   app_user
                      order
@@ -877,22 +884,33 @@
                        by   length(name)
                           , name"]))
 
+(defn insert-intl
+  "Inserts an internationalised string"
+  [user key-name lang value]
+  (j/with-db-transaction [t-con db-spec]
+    (del user t-con :intl ["key = ? and lang = ?" key-name lang])
+    (ins user t-con :intl {:key key-name :lang lang :val value})))
+
 (defn retrieve-internationalised-string
   "Find the value of an internationalised string"
   ([k lang default db]
+   ;(println "k" k "lang" lang "default" default)
    (if (nil? lang)
      default
      (let [{v :val
             f :fallback} (first
-                           (j/query db ["select i.val
-                                              , l.fallback
-                                         from   intl      as i
-                                         join   intl_lang as l
+                           (j/query db ["select l.fallback
+                                              , i.val
+                                         from   intl_lang as l
+                                         join   intl_key  as k
+                                           on   1 = 1
+                                         left   outer
+                                         join   intl      as i
                                            on   i.lang = l.name
-                                         where  i.key = ?
-                                         and    i.lang = ?"
-                                        k
-                                        lang]))]
+                                         where  l.name = ?
+                                           and  k.name = ?"
+                                        lang
+                                        k]))]
        (if (nil? v)
          (recur k f default db)
          v))))
@@ -905,25 +923,25 @@
   "Gets all internationalised strings"
   [src-lang dest-lang]
   ; Weird-ass select....
-  (j/query db-spec ["select k.name  as key
-                          , s.lang as src_lang
-                          , d.lang as dst_lang
-                          , s.val  as src_val
-                          , d.val  as dst_val
-                     from   intl_key as k
+  (j/query db-spec ["select k.name    as key
+                          , sl.name   as src_lang
+                          , dl.name   as dst_lang
+                          , s.val     as src_val
+                          , d.val     as dst_val
+                     from   intl_key  as k
+                     join   intl_lang as sl
+                       on   1 = 1
+                     join   intl_lang as dl
+                       on   1 = 1
                      left   outer
-                     join   intl as s
-                       on   k.name = s.key
+                     join   intl      as s
+                       on   sl.name = s.lang
                      left   outer
-                     join   intl as d
-                       on   k.name = d.key
-                     where  (s.lang = ?     and d.lang = ?)
-                       or   (s.lang is null and d.lang is null)
-                       or   (s.lang = ?     and d.lang is null)
-                       or   (s.lang is null and d.lang = ?)
-                      order
+                     join   intl      as d
+                       on   dl.name = d.lang
+                     where  sl.name = ?
+                       and  dl.name = ?                    
+                     order
                        by   key"
-                    src-lang
-                    dest-lang
                     src-lang
                     dest-lang]))

@@ -10,11 +10,14 @@ create table intl_lang
   , full_name varchar(128) not null
 );
 
+-- Fallback to english when no translations available.
+-- Be careful not to set a fallback for 'en' least you
+-- cause an endless loop
 insert into intl_lang (name   , fallback, full_name)
-               values ('es'   , null    , 'Español')
-	            , ('es_MX', 'es'    , 'Español de México')
+               values ('es'   , 'en'    , 'Español')
+	            , ('es-MX', 'es'    , 'Español de México')
 		    , ('en'   , null    , 'English')
-		    , ('en_GB', 'en'    , 'British English')
+		    , ('en-GB', 'en'    , 'British English')
 ;
 
 drop table if exists intl_key cascade;
@@ -30,7 +33,10 @@ create table intl
   , primary key (key, lang)
 );
 
-insert into permission (name) values ('can-translate');
+insert into permission (name)
+                values ('can-translate')
+		     , ('change-other-users-language')
+;
 
 insert into role_permission (id_role, id_permission)
 select r.id
@@ -41,6 +47,7 @@ join   permission as p
 where  r.name = 'Admin'
   and  p.name
   in ( 'can-translate'
+     , 'change-other-users-language'
 );
 
 alter table app_user
@@ -48,7 +55,11 @@ add   column language
 varchar(8)
 not null
 references intl_lang(name)
-default 'es_MX';
+default 'en';
 
 insert into app_data (key, val)
-values ('default-language', 'es-MX');
+values ('default-language', 'en');
+
+insert into intl_key (name)
+              values ('btn-view-translations')
+;

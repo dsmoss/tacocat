@@ -335,7 +335,8 @@
         {user-name "user-name"
          c-user    "change-user-name"
          uname     "name"
-         password  "password"} params]
+         password  "password"
+         language  "language"} params]
     ; First log in, so that info is accurate
     (if (contains? params "perform-login")
       (controller/perform-login
@@ -351,6 +352,9 @@
       (if (or (empty? id) (= (int-or-null id)
                              (:id logged-in-user)))
         (do
+          (if (contains? params "set-user-language")
+            (controller/change-user-language
+              (get-user request) (:id logged-in-user) language))
           (if (contains? params "change-user-password")
             (controller/change-user-password
               (get-user request) (:id logged-in-user) password))
@@ -366,6 +370,10 @@
                       (:id logged-in-user))))
         (with-check-permissions request "view-other-users"
           (view/render-user-info id)
+          {:trigger    "set-user-language"
+           :permission "change-other-users-language"
+           :action     (controller/change-user-language
+                         (get-user request) id language)}
           {:trigger    "change-user-name"
            :permission "change-other-users-name"
            :action     (controller/change-user-name 
@@ -463,16 +471,28 @@
   [request]
   ; If user id == id -> change login
   ; otherwise check permissions
-  (let [params                 (:params request)
-        {user-name "user-name"
-         password  "password"} params
-        id                     (:id params)]
+  (let [params (:params request)
+        id     (:id params)]
     ; User can change own password
     (if (= (int-or-null id)  ; Current user id == request id
-           (:id (controller/get-logged-in-user (:remote-addr request))))
+           (-> request :remote-addr controller/get-logged-in-user :id))
       (response request (view/render-change-user-password id))
       (with-check-permissions request "change-other-users-password"
         (view/render-change-user-password id)))))
+
+(defn handle-change-user-language
+  "Change the language of the user"
+  [request]
+  ; If user id == id -> change
+  ; otherwise check permissions
+  (let [params (:params request)
+        id     (:id params)]
+    ; User can change own lang
+    (if (= (int-or-null id)  ; Current user id == request id
+           (-> request :remote-addr controller/get-logged-in-user :id))
+      (response request (view/render-change-user-language id))
+      (with-check-permissions request "change-other-users-language"
+        (view/render-change-user-language id)))))
 
 (defn handle-change-user-name
   "Change full name of user"
@@ -662,70 +682,83 @@
 (defn handle-intl
   "Shows the internationalisation screen"
   [request]
-  (println request)
+  ;(println request)
+  ; {translate btn-view-translations,
+  ;  lang-from es,
+  ;  lang-to   en,
+  ;  value     some}
   (let [{lang-to   "lang-to"
-         lang-from "lang-from"} (-> request :params)]
+         lang-from "lang-from"
+         key-name  "translate"
+         value     "value"} (-> request :params)]
     (with-check-permissions request "can-translate"
-      (view/render-intl lang-from lang-to))))
+      (view/render-intl lang-from lang-to)
+      {:trigger    "translate"
+       :permission "can-translate"
+       :action     (controller/set-translation
+                     (get-user request) key-name lang-to value)})))
+
+(def id [#"\d+" :id])
 
 (def handler
   "Get the handler function for our routes."
   (make-handler
     ["/"
-     [[""                                        handle-icons]                 ; done
-      ["css"                                     handle-css]                   ; done
-      ["fonts"                                   handle-fonts]                 ; done
-      [""                                        handle-index]                 ; done
-      ["admin"                     {""           handle-admin}]                ; done
-      ["admin-options"             {""           handle-admin-options}]        ; done
-      ["list-users"                {""           handle-list-users}]           ; done
-      ["add-new-user"              {""           handle-add-new-user}]         ; done
-      ["list-roles"                {""           handle-list-roles}]           ; done
-      ["list-items"                {""           handle-list-items}]           ; done
-      ["add-new-item"              {""           handle-add-new-item}]         ; done
-      ["add-new-menu-group"        {""           handle-add-new-menu-group}]   ; done
-      [["view-item/"               [#"\d+" :id]] handle-view-item]             ; done
-      [["create-new-option-group/" [#"\d+" :id]] handle-new-option-group]      ; done
-      [["create-new-option/"       [#"\d+" :id]] handle-new-option]            ; done
-      [["view-option/"             [#"\d+" :id]] handle-view-option]           ; done
-      [["change-item-menu-group/"  [#"\d+" :id]] handle-change-item-menu-group]; done
-      [["change-item-charge/"      [#"\d+" :id]] handle-change-item-charge]    ; done
-      [["delete-item/"             [#"\d+" :id]] handle-delete-item]           ; done
-      ["login"                     {""           handle-login}]                ; done
-      ["user-info"                 {""           handle-user-info              ; done
-       ["/"                        [#"\d+" :id]] handle-user-info}]            ; done
-      [["change-user-name/"        [#"\d+" :id]] handle-change-user-name]      ; done
-      [["change-password/"         [#"\d+" :id]] handle-change-password]       ; done
-      [["change-user-roles/"       [#"\d+" :id]] handle-change-user-roles]     ; done
-      [["view-role/"               [#"\d+" :id]] handle-view-role]             ; done
-      ["add-new-role"              {""           handle-add-new-role}]         ; done
-      [["delete-role/"             [#"\d+" :id]] handle-delete-role]           ; done
-      [["delete-user/"             [#"\d+" :id]] handle-delete-user]           ; done
-      ["bills"                     {""           handle-bills}]                ; done
-      [["edit-location/"           [#"\d+" :id]] handle-edit-bill-location]    ; done
-      ["new-bill"                  {""           handle-new-bill}]             ; done
-      [["bill/"                    [#"\d+" :id]] handle-single-bill]           ; done
-      [["set-person/"              [#"\d+" :id]] handle-set-person]            ; done
-      [["set-bill-item/"           [#"\d+" :id]] handle-set-bill-item]         ; done
-      [["set-bill-item-options/"   [#"\d+" :id]] handle-set-bill-item-options] ; done
-      [["delete-bill-item/"        [#"\d+" :id]] handle-delete-bill-item]      ; done
-      [["set-charge-override/"     [#"\d+" :id]] handle-charge-override]       ; done
-      [["add-item/"                [#"\d+" :id]] handle-add-item]              ; done
-      [["charge-bill/"             [#"\d+" :id]] handle-charge-bill]           ; done
-      ["add-expense"               {""           handle-new-expense}]          ; done
-      ["old-bills"                 {""           handle-old-bills}]            ; done
-      [["closed-bill/"             [#"\d+" :id]] handle-closed-bill]           ; done
-      [["print-bill/"              [#"\d+" :id]] handle-print-bill]            ; done
-      [["close/"                   [#"\d+" :id]] handle-single-close]          ; done
-      ["close-acct"                {""           handle-close-acct}]           ; done
-      ["previous-closes"           {""           handle-previous-closes}]      ; done
-      ["closed-services"           {""           handle-closed-services}]      ; done
-      [["services-for-close/"      [#"\d+" :id]] handle-services-for-close]    ; done
-      ["add-services-expense"      {""           handle-add-services-expense}] ; done
-      ["services"                  {""           handle-services}]             ; done
-      ["accts"                     {""           handle-accts}]                ; done
-      ["log"                       {""           handle-log}]
-      ["intl"                      {""           handle-intl}]
+     [[""                              handle-icons]                 ; done
+      ["css"                           handle-css]                   ; done
+      ["fonts"                         handle-fonts]                 ; done
+      [""                              handle-index]                 ; done
+      ["admin"                     {"" handle-admin}]                ; done
+      ["admin-options"             {"" handle-admin-options}]        ; done
+      ["list-users"                {"" handle-list-users}]           ; done
+      ["add-new-user"              {"" handle-add-new-user}]         ; done
+      ["list-roles"                {"" handle-list-roles}]           ; done
+      ["list-items"                {"" handle-list-items}]           ; done
+      ["add-new-item"              {"" handle-add-new-item}]         ; done
+      ["add-new-menu-group"        {"" handle-add-new-menu-group}]   ; done
+      [["view-item/"               id] handle-view-item]             ; done
+      [["create-new-option-group/" id] handle-new-option-group]      ; done
+      [["create-new-option/"       id] handle-new-option]            ; done
+      [["view-option/"             id] handle-view-option]           ; done
+      [["change-item-menu-group/"  id] handle-change-item-menu-group]; done
+      [["change-item-charge/"      id] handle-change-item-charge]    ; done
+      [["delete-item/"             id] handle-delete-item]           ; done
+      ["login"                     {"" handle-login}]                ; done
+      ["user-info"                 {"" handle-user-info              ; done
+       ["/"                        id] handle-user-info}]            ; done
+      [["change-user-name/"        id] handle-change-user-name]      ; done
+      [["change-password/"         id] handle-change-password]       ; done
+      [["change-user-roles/"       id] handle-change-user-roles]     ; done
+      [["change-user-language/"    id] handle-change-user-language]
+      [["view-role/"               id] handle-view-role]             ; done
+      ["add-new-role"              {"" handle-add-new-role}]         ; done
+      [["delete-role/"             id] handle-delete-role]           ; done
+      [["delete-user/"             id] handle-delete-user]           ; done
+      ["bills"                     {"" handle-bills}]                ; done
+      [["edit-location/"           id] handle-edit-bill-location]    ; done
+      ["new-bill"                  {"" handle-new-bill}]             ; done
+      [["bill/"                    id] handle-single-bill]           ; done
+      [["set-person/"              id] handle-set-person]            ; done
+      [["set-bill-item/"           id] handle-set-bill-item]         ; done
+      [["set-bill-item-options/"   id] handle-set-bill-item-options] ; done
+      [["delete-bill-item/"        id] handle-delete-bill-item]      ; done
+      [["set-charge-override/"     id] handle-charge-override]       ; done
+      [["add-item/"                id] handle-add-item]              ; done
+      [["charge-bill/"             id] handle-charge-bill]           ; done
+      ["add-expense"               {"" handle-new-expense}]          ; done
+      ["old-bills"                 {"" handle-old-bills}]            ; done
+      [["closed-bill/"             id] handle-closed-bill]           ; done
+      [["print-bill/"              id] handle-print-bill]            ; done
+      [["close/"                   id] handle-single-close]          ; done
+      ["close-acct"                {"" handle-close-acct}]           ; done
+      ["previous-closes"           {"" handle-previous-closes}]      ; done
+      ["closed-services"           {"" handle-closed-services}]      ; done
+      [["services-for-close/"      id] handle-services-for-close]    ; done
+      ["add-services-expense"      {"" handle-add-services-expense}] ; done
+      ["services"                  {"" handle-services}]             ; done
+      ["accts"                     {"" handle-accts}]                ; done
+      ["log"                       {"" handle-log}]
+      ["intl"                      {"" handle-intl}]
       [true (fn [req] {:status 404 :body "404 not found"})]]]))
 
 (defn app

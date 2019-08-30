@@ -12,71 +12,103 @@
 
 (def links
   {:general [:tr
-             [:th {:width "20%"} (make-link "/"         "Inicio")]
-             [:th {:width "20%"} (make-link "/bills"    "Comandas")]
-             [:th {:width "20%"} (make-link "/accts"    "Cuentas")]
-             [:th {:width "20%"} (make-link "/services" "Servicios")]
-             [:th {:width "20%"} (make-link "/admin"    "Admin")]]
+             [:th {:width "20%"} (make-link
+                                   "/"         "Inicio")]
+             [:th {:width "20%"} (make-link
+                                   "/bills"    "Comandas")]
+             [:th {:width "20%"} (make-link
+                                   "/accts"    "Cuentas")]
+             [:th {:width "20%"} (make-link
+                                   "/services" "Servicios")]
+             [:th {:width "20%"} (make-link
+                                   "/admin"    "Admin")]]
    :main    [:tr
-             [:th {:width "33%"} (make-link "/old-bills"       "Entradas")]
-             [:th {:width "34%"} (make-link "/closed-services" "Servicios Pasados")]
-             [:th {:width "33%"} (make-link "/previous-closes" "Cierres")]]
+             [:th {:width "33%"} (make-link
+                                   "/old-bills"       "Entradas")]
+             [:th {:width "34%"} (make-link
+                                   "/closed-services" "Servicios Pasados")]
+             [:th {:width "33%"} (make-link
+                                   "/previous-closes" "Cierres")]]
    :admin   [:tr
-             [:th {:width "16%"} (make-link "/admin-options" "Opciones")]
-             [:th {:width "16%"} (make-link "/list-users"    "Usuarios")]
-             [:th {:width "16%"} (make-link "/list-roles"    "Roles")]
-             [:th {:width "16%"} (make-link "/list-items"    "Productos")]
-             [:th {:width "16%"} (make-link "/log"           "Registro")]
-             [:th {:width "16%"} (make-link "/intl"          "Traducir")]]
+             [:th {:width "16%"} (make-link
+                                   "/admin-options" "Opciones")]
+             [:th {:width "16%"} (make-link
+                                   "/list-users"    "Usuarios")]
+             [:th {:width "16%"} (make-link 
+                                   "/list-roles"    "Roles")]
+             [:th {:width "16%"} (make-link 
+                                   "/list-items"    "Productos")]
+             [:th {:width "16%"} (make-link 
+                                   "/log"           "Registro")]
+             [:th {:width "16%"} (make-link 
+                                   "/intl"          "Traducir")]]
    :error   [:tr
-             [:th {:width "100%"} (make-link "/user-info" "Información del Usuario")]]})
+             [:th {:width "100%"} (make-link 
+                                    "/user-info" "Información del Usuario")]]})
 
 (defn with-page
   "Adds content to a page"
   [header user section & content]
-  (page/html5
-    [:head
-     [:link {:rel  "apple-touch-icon"       :sizes "180x180" :href "/apple-touch-icon.png"}]
-     [:link {:rel  "icon" :type "image/png" :sizes "32x32"   :href "/favicon-32x32.png"}]
-     [:link {:rel  "icon" :type "image/png" :sizes "16x16"   :href "/favicon-16x16.png"}]
-     [:link {:rel  "manifest"                                :href "/site.webmanifest"}]
-     [:link {:rel  "mask-icon"                               :href "/safari-pinned-tab.svg" :color "#5bbad5"}]
-     [:meta {:name "msapplication-TileColor" :content "#da532c"}]
-     [:meta {:name "theme-color"             :content "#ffffff"}]
-     [:meta {:name "viewport"                :content "width=device-width, initial-scale=1.0"}]
-     [:meta {:charset "UTF-8"}]
-     (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
-                       "https://www.w3schools.com/lib/w3-theme-grey.css"
-                       "/css/style.css"
-                       "/fonts/style.css")
-     [:style (str "h1, h2, h3, h4, h5, h6, div, p, th, td, tr {font-family: "
-                  (let [font (sql/retrieve-app-data-val "default-font")]
-                    (if (or (nil? font) (empty? font))
-                      ""
-                      (str \" font "\", ")))
-                  "Verdana, sans-serif;}")]
-     [:title header]]
-    [:body
-     [:center
-      [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
-       (:general links)]
-      [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
-       (section  links)]]
-     [:header {:class "w3-container w3-card w3-theme-l4"} [:center [:h1 header]]]
-     [:center content]
-     [:center
-      [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
-       (section  links)]
-      [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
-       (:general links)]]
-     [:header {:class "w3-container w3-card w3-theme-l4"}
-      [:center
-       [:h5
-        (if (nil? user)
-          (make-link "/login" "Entrar")
-          [:span
-           (make-link "/user-info" user)
-           (make-link "/login" "Cambiar")])]]]]))
+  (let [lang (if (empty? user)
+               (sql/retrieve-app-data-val "default-language")
+               (:language user))]
+    (page/html5
+      [:head
+       [:link {:rel     "apple-touch-icon"
+               :sizes   "180x180"
+               :href    "/apple-touch-icon.png"}]
+       [:link {:rel     "icon"
+               :type    "image/png"
+               :sizes   "32x32"
+               :href    "/favicon-32x32.png"}]
+       [:link {:rel     "icon"
+               :type    "image/png"
+               :sizes   "16x16"
+               :href    "/favicon-16x16.png"}]
+       [:link {:rel     "manifest"
+               :href    "/site.webmanifest"}]
+       [:link {:rel     "mask-icon"
+               :href    "/safari-pinned-tab.svg"
+               :color   "#5bbad5"}]
+       [:meta {:name    "msapplication-TileColor"
+               :content "#da532c"}]
+       [:meta {:name    "theme-color"
+               :content "#ffffff"}]
+       [:meta {:name    "viewport"
+               :content "width=device-width, initial-scale=1.0"}]
+       [:meta {:charset "UTF-8"}]
+       (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
+                         "https://www.w3schools.com/lib/w3-theme-grey.css"
+                         "/css/style.css"
+                         "/fonts/style.css")
+       [:style (str "h1, h2, h3, h4, h5, h6, div, p, th, td, tr {font-family: "
+                    (let [font (sql/retrieve-app-data-val "default-font")]
+                      (if (or (nil? font) (empty? font))
+                        ""
+                        (str \" font "\", ")))
+                    "Verdana, sans-serif;}")]
+       [:title header]]
+      [:body
+       [:center
+        [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
+         (:general links)]
+        [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
+         (section  links)]]
+       [:header {:class "w3-container w3-card w3-theme-l4"} [:center [:h1 header]]]
+       [:center content]
+       [:center
+        [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
+         (section  links)]
+        [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
+         (:general links)]]
+       [:header {:class "w3-container w3-card w3-theme-l4"}
+        [:center
+         [:h5
+          (if (empty? user)
+            (make-link "/login" "Entrar")
+            [:span
+             (make-link "/user-info" (:name user))
+             (make-link "/login" "Cambiar")])]]]])))
 
 (defn with-printing-page
   "Makes a page suitable for printing"
@@ -150,7 +182,7 @@
   ;  ...
   ;(NOT-ALLOWED (:name user)))
   (with-page (sql/retrieve-app-data-val "business-name")
-    (:name user)
+    user
     :main
     (make-link "/bills"    "Comandas")
     (make-link "/accts"    "Cuentas" )
@@ -208,7 +240,7 @@
 (defn NOT-ALLOWED
   [user & permissions-required]
   (with-page "Acción Prohibida"
-    (:name user)
+    user
     :error
     [:h2 {:style "color: red;"} "Permisos Insuficientes"]
     (if (not (empty? permissions-required))
@@ -249,7 +281,7 @@
   "Show the login page"
   [user]
   (with-page "Registro de Usuario"
-    (:name user)
+    user
     :error
     [:h5
      (with-form "/user-info"
@@ -266,7 +298,7 @@
   "Delete user page"
   [user id]
   (with-page (str "Borrar Usuario " (-> id int-or-null sql/retrieve-user-by-id :name))
-    (:name user)
+    user
     :admin
     [:h5
      (with-form "/list-users"
@@ -278,13 +310,36 @@
   [user id]
   (let [uname (-> id int-or-null sql/retrieve-user-by-id :name)]
     (with-page (str "Cambiar Nombre de " uname)
-      (:name user)
+      user
       :admin
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "change-user-name")
          (form/label {:for id} "nombre" "Nombre Completo: ")
          (form/text-field {:id id} "name" uname)
+         [:br]
+         (form/submit-button "Cambiar"))])))
+
+(defn render-change-user-language
+  "Language selection screen"
+  [user id]
+  (let [language (-> id
+                     int-or-null
+                     sql/retrieve-user-by-id
+                     :language)
+        langs    (sql/retrieve-langs)]
+    (with-page "Lenguaje"
+      user
+      :admin
+      [:h5
+       (with-form (str "/user-info/" id)
+         (form/hidden-field {:value id} "set-user-language")
+         (form/label {:for "language"} "language" "Lenguaje: ")
+         (form/drop-down {:id "language"} "language"
+                         (map (fn [{n :name f :full_name}]
+                                [f n])
+                              langs)
+                         language)
          [:br]
          (form/submit-button "Cambiar"))])))
 
@@ -300,16 +355,18 @@
            id                         (if (nil? id) (:id user) id)
            {uname       :name
             user-name   :user_name
+            language    :language
             permissions :permissions} (sql/retrieve-user-by-id id) ;user
            user-roles                 (sql/retrieve-roles-for-user id)
            machines                   (sql/retrieve-logged-in-to id)]
        (with-page "Información de Ususario"
-         (:name user)
+         user
          :admin
          [:h5 "Nombre de Usuario: " user-name]
          (make-link (str "/change-user-name/"  id) (str "Nombre Completo: " uname))
          (make-link (str "/change-password/"   id) "Cambiar Contraseña")
          (make-link (str "/change-user-roles/" id) "Cambiar Roles")
+         (make-link (str "/change-user-language/" id) (str "Cambiar Lenguaje: " language))
          (with-table
            [:roles  :permissions :machines]
            ["Roles" "Permisos"   "Máquinas"]
@@ -330,7 +387,7 @@
         all-roles     (sql/retrieve-all-roles)
         edit-user     (sql/retrieve-user-by-id id)]
     (with-page (str "Roles para " (:name edit-user))
-      (:name user)
+      user
       :admin
       [:h5
        (with-form (str "/user-info/" id)
@@ -351,7 +408,7 @@
         all-perms     (sql/retrieve-all-permissions)
         role-perms    (sql/retrieve-permissions-for-role id)]
     (with-page rname
-      (:name user)
+      user
       :admin
       (with-table
         [:name     :id]
@@ -367,7 +424,7 @@
   "Add role page"
   [user]
   (with-page "Añadir Rol"
-    (:name user)
+    user
     :admin
     [:h5
      (with-form "/list-roles"
@@ -381,7 +438,7 @@
   "Delete role page"
   [user id]
   (with-page (str "Borrar Rol: " (-> id int-or-null sql/retrieve-role-by-id :name))
-    (:name user)
+    user
     :admin
     [:h5
      (with-form "/list-roles"
@@ -392,7 +449,7 @@
   "New Menu Group page"
   [user]
   (with-page "Añadir Grupo de Menú"
-    (:name user)
+    user
     :admin
     [:h5
      (with-form"/list-items"
@@ -406,7 +463,7 @@
   "New item page"
   [user]
   (with-page "Añadir Producto"
-    (:name user)
+    user
     :admin
     [:h5
      (with-form "/list-items"
@@ -453,7 +510,7 @@
         item-options          (into #{} (map :id_option (sql/retrieve-valid-options id)))
         all-options           (sql/retrieve-all-options)]
     (with-page iname
-      (:name user)
+      user
       :admin
       [:h5
        (with-form (str "/view-item/" id)
@@ -500,7 +557,7 @@
   [user id]
   (let [u (sql/retrieve-user-by-id (int-or-null id))]
     (with-page (str "Change Password for " (:name u))
-      (:name user)
+      user
       :admin
       [:h5
        (with-form (str "/user-info/" id)
@@ -514,7 +571,7 @@
   "Gets the admin page"
   [user]
   (with-page "Admin"
-    (:name user)
+    user
     :admin
     (make-link "/admin-options" "Opciones de la Aplicación")
     (make-link "/list-users"    "Usuarios")
@@ -528,7 +585,7 @@
   [user lang-from lang-to]
   (let [langs (sql/retrieve-langs)]
     (with-page "Internacionalización"
-      (:name user)
+      user
       :admin
       (with-form "/intl"
         (form/label {:for "lang-from"} "lang-from" "De: ")
@@ -545,7 +602,7 @@
                              langs)
                         lang-to)
         [:br]
-        (form/submit-button "Ver Traducciones"))
+        (form/submit-button (get-string "btn-view-translations")))
       (if (and (not (nil? lang-from))
                (not (nil? lang-to))
                (not (= lang-from lang-to)))
@@ -563,11 +620,11 @@
                         k lang-to)])
            (fn [v i] 
              (with-form "/intl"
-               (form/hidden-field {:value lang-to}   "do-translation")
+               (form/hidden-field {:value (:key i)}  "translate")
                (form/hidden-field {:value lang-from} "lang-from")
                (form/hidden-field {:value lang-to}   "lang-to")
                [:h5
-                (form/text-field (:key i) v)
+                (form/text-field "value" v)
                 (form/submit-button "Cambiar")]))]
           (sql/retrieve-intl lang-from lang-to))))))
 
@@ -575,7 +632,7 @@
   "Gets the app options page"
   [user]
   (with-page "Opciones de la Aplicación"
-    (:name user)
+    user
     :admin
     [:h5
      (with-form "/admin-options"
@@ -592,7 +649,7 @@
   "Gets the product page"
   [user]
   (with-page "Productos"
-    (:name user)
+    user
     :admin
     (make-link "/add-new-item"       "Añadir Producto")
     (make-link "/add-new-menu-group" "Añadir Grupo de Menú")
@@ -615,7 +672,7 @@
   "Services screen"
   [user]
   (with-page "Servicios"
-    (:name user)
+    user
     :main
     (make-link "/add-services-expense" "Añadir Cargo de Servicios")
     (make-services-table (sql/retrieve-current-services))
@@ -625,7 +682,7 @@
   "Services for prior closes"
   [user]
   (with-page "Servicios de Cierres Anteriores"
-    (:name user)
+    user
     :main
     (with-table
       [:date   :id]
@@ -638,7 +695,7 @@
   "Services page for a specific close"
   [user id]
   (with-page (str "Servicios de Cierre " id)
-    (:name user)
+    user
     :main
     (make-services-table (sql/retrieve-services-for-close id))))
 
@@ -656,7 +713,7 @@
   "Shows the bills page"
   [user]
   (with-page "Comandas"
-    (:name user)
+    user
     :main
     (make-link "new-bill"  "Nueva Comanda")
     (get-existing-bills)
@@ -666,7 +723,7 @@
   "Shows the previous closes"
   [user]
   (with-page "Cierres"
-    (:name user)
+    user
     :main
     (with-table
       [:date   :expense_amount :intake_amount :earnings  :id]
@@ -682,7 +739,7 @@
   "Shows the close current accounting period page"
   [user]
   (with-page "Cierre de Cuentas"
-    (:name user)
+    user
     :main
     (with-form "/previous-closes"
       (form/hidden-field {:value true} "make-close")
@@ -692,7 +749,7 @@
   "Makes a form to add a service expense"
   [user]
   (with-page "Añadir Cargo de Servicios"
-    (:name user)
+    user
     :main
     (with-form "/services"
       (form/hidden-field {:value true} "add-service-charge")
@@ -709,7 +766,7 @@
   "Shows the closed bills page"
   [user]
   (with-page "Comandas Cerradas"
-    (:name user)
+    user
     :main
     (get-closed-bills)))
 
@@ -748,7 +805,7 @@
          options :options
          id-bill :id_bill} (sql/retrieve-bill-item id)]
     (with-page (str "Borrar " item)
-      (:name user)
+      user
       :main
       [:h5
        (with-form (str "/bill/" id-bill)
@@ -760,7 +817,7 @@
   [user id]
   (let [{location :location} (sql/retrieve-bill id)]
     (with-page "Cambiar Mesa"
-      (:name user)
+      user
       :main
       (with-form (str "/bill/" id)
         (form/hidden-field {:value id} "edit-bill-location")
@@ -793,7 +850,7 @@
   "Renders a new expense form"
   [user]
   (with-page "Añadir Gasto"
-    (:name user)
+    user
     :main
     (with-form "/accts"
       (form/hidden-field {:value true} "add-expense")
@@ -813,7 +870,7 @@
          location :location
          charge   :charge}  (sql/retrieve-bill id)]
     (with-page location
-      (:name user)
+      user
       :main
       (make-link (str "/print-bill/" id) "Imprimir")
       (get-old-bill-items id)
@@ -860,7 +917,7 @@
          charge   :charge}  (sql/retrieve-bill id)
         mult                (float-or-null (sql/retrieve-app-data-val "card-multiplicative"))]
     (with-page location
-      (:name user)
+      user
       :main
       (make-link (str "/add-item/" id) "Añadir a comanda")
       (make-link (str "/charge-bill/" id) "Cobrar")
@@ -882,7 +939,7 @@
                     (if (nil? options)
                       ""
                       (str " (" options ")")))
-      (:name user)
+      user
       :main
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
@@ -908,7 +965,7 @@
                     (if (nil? options)
                       ""
                       (str " (" options ")")))
-      (:name user)
+      user
       :main
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
@@ -935,7 +992,7 @@
                     (if (nil? options)
                       ""
                       (str " (" options ")")))
-      (:name user)
+      user
       :main
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
@@ -973,7 +1030,7 @@
                     (if (nil? options)
                       ""
                       (str " (" options ")")))
-      (:name user)
+      user
       :main
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
@@ -986,7 +1043,7 @@
   "Displays a page where we add an item to a bill"
   [user id]
   (with-page "Añadir a comanda"
-    (:name user)
+    user
     :main
     (doall
       (map (fn [m]
@@ -1007,7 +1064,7 @@
   "Shows a page where we can create a new bill"
   [user]
   (with-page "Nueva Comanda"
-    (:name user)
+    user
     :main
     (with-form "/bills"
       (form/hidden-field {:value true} "new-bill")
@@ -1024,7 +1081,7 @@
          location :location
          charge   :charge}  (sql/retrieve-bill id)]
     (with-page (str "Cobro para " location)
-      (:name user)
+      user
       :main
       [:p date]
       (with-form (str "/closed-bill/" id)
@@ -1037,7 +1094,7 @@
   "Displays the accounts page"
   [user]
   (with-page "Cuentas"
-    (:name user)
+    user
     :main
     (make-link "/add-expense"     "Añadir Gasto")
     (make-link "/close-acct"      "Hacer Cierre")
@@ -1062,7 +1119,7 @@
   "Page listing all registered users"
   [user]
   (with-page "Usuarios Registrados"
-    (:name user)
+    user
     :admin
     (make-link "/add-new-user" "Añadir Usuario")
     (let
@@ -1093,7 +1150,7 @@
   "Gets the list roles page"
   [user]
   (with-page "Roles Registrados"
-    (:name user)
+    user
     :admin
     (make-link "/add-new-role" "Añadir Nuevo Rol")
     (with-table
@@ -1110,7 +1167,7 @@
   "Page to add an option group"
   [user id]
   (with-page "Nuevo Grupo de Opciones"
-    (:name user)
+    user
     :admin
     [:h5
      (with-form (str "/view-item/" id)
@@ -1123,7 +1180,7 @@
   "Page to add an option"
   [user id]
   (with-page "Nueva Opción"
-    (:name user)
+    user
     :admin
     [:h5
      (with-form (str "/view-item/" id)
@@ -1150,7 +1207,7 @@
         all-option-groups        (sql/retrieve-all-option-groups)
         post-page                (str "/view-option/" id)]
     (with-page (str option-group "/" oname)
-      (:name user)
+      user
       :admin
       [:h5
        (with-form post-page
@@ -1186,7 +1243,7 @@
          group :menu_group} (sql/retrieve-item-by-id id)
         all-groups          (map :name (sql/retrieve-menu-groups))]
     (with-page iname
-      (:name user)
+      user
       :admin
       [:h5
        (with-form (str "/view-item/" id)
@@ -1205,7 +1262,7 @@
         {iname :name
          charge :charge} (sql/retrieve-item-by-id id)]
     (with-page iname
-      (:name user)
+      user
       :admin
       [:h5
        (with-form (str "/view-item/" id)
@@ -1221,7 +1278,7 @@
   (let [id            (int-or-null id)
         {iname :name} (sql/retrieve-item-by-id id)]
     (with-page (str "Borrar " iname)
-      (:name user)
+      user
       :admin
       [:h5 "En la mayor parte de los casos cambiar la existencia
             va a tener el efecto deseado. Esta acción fallará si
@@ -1235,7 +1292,7 @@
   "User registration page"
   [user]
   (with-page "Registro de Usuario"
-    (:name user)
+    user
     :admin
     [:h5
      (with-form "/list-users"
@@ -1255,7 +1312,7 @@
   "Displays a close"
   [user id]
   (with-page (str "Cierre " id)
-    (:name user)
+    user
     :main
     (let [{date         :date
            expenses     :expense_amount
@@ -1286,7 +1343,7 @@
   "Log page"
   [user]
   (with-page "Registro"
-    (:name user)
+    user
     :admin
     [:p "Últimas 1000 entradas"]
     (with-table 

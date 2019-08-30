@@ -304,6 +304,18 @@
   (sql/update-user-enabled
     user (int-or-null id) (bool-or-null enabled)))
 
+(defn change-user-language
+  "Sets the language of a user"
+  [user id language]
+  (println "Setting language of" id "to" language)
+  (sql/update-user-language user (int-or-null id) language))
+
+(defn set-translation
+  "Sets internationalisation for a key"
+  [user key-name lang value]
+  (println "Setting" key-name "(" lang ") to" value)
+  (sql/insert-intl user key-name lang value))
+
 (defn add-option
   "Add an option"
   [user id o-name o-group]
