@@ -358,7 +358,7 @@
                      (form/hidden-field {:value i} "change-permission")
                      (form/check-box i (contains? role-perms (:name r)))
                      (form/submit-button "Cambiar")))]
-        (sort all-perms)))))
+        all-perms))))
 
 (defn render-add-new-role
   "Add role page"
@@ -1013,21 +1013,28 @@
     (:name user)
     :admin
     (make-link "/add-new-user" "Añadir Usuario")
-    (with-table
-      [:user_name :name             :id          :id      :id]
-      ["Usuario"  "Nombre Completo" "Contraseña" "Roles"  ""]
-      [(fn [u _] [:h5 u])
-       (fn [n u] (make-link (str "/user-info/" (:id u)) n))
-       (fn [i _] (make-link (str "/change-password/"   i) "Cambiar Contraseña"))
-       (fn [i _]
-         (make-link (str "/change-user-roles/" i)
-                    (apply str
-                           (interpose ", "
-                                      (sort
-                                        (map :name
-                                             (sql/retrieve-roles-for-user i)))))))
-       (fn [i _] (make-link (str "/delete-user/"       i) "Borrar"))]
-      (sql/retrieve-registered-users))
+    (let
+      [make-role-string (fn [roles]
+                          (apply str
+                            (interpose ", "
+                              (sort
+                                (map :name roles)))))]
+      (with-table
+        [:user_name :name             :id          :id     :enabled :id]
+        ["Usuario"  "Nombre Completo" "Contraseña" "Roles" "Activo" ""]
+        [(fn [u _] [:h5 u])
+         (fn [n u] (make-link (str "/user-info/" (:id u)) n))
+         (fn [i _] (make-link (str "/change-password/"   i)
+                              "Cambiar Contraseña"))
+         (fn [i _]
+           (make-link (str "/change-user-roles/" i)
+                      (make-role-string (sql/retrieve-roles-for-user i))))
+         (fn [b u] (with-form "/list-users"
+                     (form/hidden-field {:value (:id u)} "change-user-enabled")
+                     (form/check-box {:id "enabled"} "enabled" b)
+                     (form/submit-button "Cambiar")))
+         (fn [i _] (make-link (str "/delete-user/"       i) "Borrar"))]
+        (sql/retrieve-registered-users)))
     (make-link "/add-new-user" "Añadir Usuario")))
 
 (defn render-list-roles

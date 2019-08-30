@@ -554,21 +554,27 @@
   [user-name password ip-addr]
   (j/with-db-transaction [t-con db-spec]
     (let [{correct-pw :correct_password
+           enabled    :enabled
            user-id    :id} (first
-                             (j/query t-con ["select id
-                                                   , produce_password_hash
-                                                       ( ?
-                                                       , salt)
-                                                   = password_hash as correct_password
-                                              from   app_user
-                                              where  user_name = ?"
-                                             password
-                                             user-name]))]
-      ; Log out existing users if any
-      (del {:id user-id} t-con :app_user_ip_addr ["ip_addr = ?" ip-addr])
-      (if correct-pw
-        ; Log in current user
-        (ins {:id user-id} t-con :app_user_ip_addr {:ip_addr ip-addr :id_app_user user-id})))))
+                             (j/query t-con
+                               ["select id
+                                      , enabled
+                                      , produce_password_hash( ? , salt) =
+                                        password_hash as correct_password
+                                 from   app_user
+                                 where  user_name = ?"
+                                password
+                                user-name]))]
+      (if enabled
+        (do
+          ; Log out existing users if any
+          (del {:id user-id} t-con :app_user_ip_addr
+               ["ip_addr = ?" ip-addr])
+          (if correct-pw
+            ; Log in new user
+            (ins {:id user-id} t-con :app_user_ip_addr
+                 {:ip_addr ip-addr :id_app_user user-id})))
+        (println "User" user-id "tred to log in, but is not enabled")))))
 
 (defn retrieve-user-permissions
   "Finds permissions allocated to user"
@@ -619,6 +625,14 @@
                                     salt]))]
       (upd user t-con :app_user {:password_hash phash} ["id = ?" id]))))
 
+(defn update-user-enabled
+  "update enabled flag"
+  [user id enabled]
+  (j/with-db-transaction [t-con db-spec]
+    (upd user t-con :app_user {:enabled enabled} ["id = ?" id])
+    (if (not enabled) ; log user out of everythin if disabled
+      (del user t-con :app_user_ip_addr ["id_app_user = ?" id]))))
+
 (defn insert-new-user
   "Add a user" 
   [user username uname password]
@@ -655,7 +669,13 @@
 (defn retrieve-registered-users
   "Finds all registered users"
   []
-  (j/query db-spec ["select id, user_name, name from app_user"]))
+  (j/query db-spec ["select id
+                          , user_name
+                          , name
+                          , enabled
+                     from   app_user
+                     order
+                       by   name"]))
 
 (defn retrieve-role-by-id
   "Finds a specific role"

@@ -383,12 +383,18 @@
   "Shows a page with all the registered users and related actions"
   [request]
   ;(println request)
-  (let [{username "username"
-         uname    "name"
-         password "password"
-         delete   "delete-user"} (:params request)]
+  (let [{username   "username"
+         uname      "name"
+         password   "password"
+         delete     "delete-user"
+         id-user-ch "change-user-enabled"
+         enabled    "enabled"}            (:params request)]
     (with-check-permissions
       request "list-users" view/render-list-users
+      {:trigger    "change-user-enabled"
+       :permission "change-user-enabled"
+       :action     (controller/change-user-enabled
+                     (get-user request) id-user-ch enabled)}
       {:trigger    "delete-user"
        :permission "delete-user"
        :action     (controller/delete-user 

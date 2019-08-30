@@ -297,6 +297,13 @@
   (println "Adding option group" og-name)
   (sql/insert-option-group user og-name))
 
+(defn change-user-enabled
+  "Sets the enabled flag on a user"
+  [user id enabled]
+  (println "Setting enabled to" enabled "for user" id)
+  (sql/update-user-enabled
+    user (int-or-null id) (bool-or-null enabled)))
+
 (defn add-option
   "Add an option"
   [user id o-name o-group]
