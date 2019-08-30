@@ -252,11 +252,11 @@
     [:h5
      (with-form "/user-info"
        (form/hidden-field {:value true} "perform-login")
-       (form/label "usuario" "Usuario: ")
-       (form/text-field "user-name" (:user_name user))
+       (form/label {:for "user-name"} "usuario" "Usuario: ")
+       (form/text-field {:id "user-name"} "user-name" (:user_name user))
        [:br]
-       (form/label "contraseña" "Contraseña: ")
-       (form/password-field "password")
+       (form/label {:for "password"} "password" "Contraseña: ")
+       (form/password-field {:id "password"} "password")
        [:br]
        (form/submit-button "Entrar"))]))
 
@@ -502,8 +502,8 @@
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value true} "change-user-password")
-         (form/label "password" "Nueva Contraseña: ")
-         (form/password-field "password")
+         (form/label {:for "password"} "password" "Nueva Contraseña: ")
+         (form/password-field {:id "password"} "password")
          [:br]
          (form/submit-button "Cambiar"))])))
 
@@ -645,11 +645,11 @@
     (with-form "/services"
       (form/hidden-field {:value true} "add-service-charge")
       [:h5
-       (form/label "Concepto: " "Concepto: ")
-       (form/text-field "concept")
+       (form/label {:for "concept"} "concept" "Concepto: ")
+       (form/text-field {:id "concept"} "concept")
        [:br]
-       (form/label "Monto: " "Monto: ")
-       (form/text-field {:type "number" :step "0.01"} "amount")
+       (form/label {:for "amount"} "amount" "Monto: ")
+       (form/text-field {:id "amount" :type "number" :step "0.01"} "amount")
        [:br]
        (form/submit-button "Añadir")])))
 
@@ -746,11 +746,11 @@
     (with-form "/accts"
       (form/hidden-field {:value true} "add-expense")
       [:h5
-       (form/label "" "Concepto: ")
-       (form/text-field "concept")
+       (form/label {:for "concept"} "concept" "Concepto: ")
+       (form/text-field {:id "concept"} "concept")
        [:br]
-       (form/label "" "Monto: ")
-       (form/text-field {:type "number" :step "0.01"} "amount")
+       (form/label {:for "amount"} "amount" "Monto: ")
+       (form/text-field {:id "amount" :type "number" :step "0.01"} "amount")
        [:br]
        (form/submit-button "Añadir")])))
 
@@ -960,8 +960,8 @@
     (with-form "/bills"
       (form/hidden-field {:value true} "new-bill")
       [:h5
-       (form/label :mesa "Mesa: ")
-       (form/text-field {:type "text"} "bill-location")
+       (form/label {:for "bill-location"} "bill-location" "Mesa: ")
+       (form/text-field {:id "bill-location" :type "text"} "bill-location")
        [:br]
        (form/submit-button "Crear")])))
 
@@ -1116,7 +1116,7 @@
        (with-form post-page
          (form/hidden-field {:value true} "set-option-in-stock")
          (form/label {:for "option-in-stock"} "option-in-stock" "En Inventario: ")
-         (form/check-box "option-in-stock" in-stock?)
+         (form/check-box {:id "option-in-stock"} "option-in-stock" in-stock?)
          (form/submit-button "Cambiar"))])))
 
 (defn render-change-item-menu-group
@@ -1181,14 +1181,14 @@
     [:h5
      (with-form "/list-users"
        (form/hidden-field {:value true} "add-user")
-       (form/label "username" "Nombre de Usuario: ")
-       (form/text-field "username")
+       (form/label {:for "username"} "username" "Nombre de Usuario: ")
+       (form/text-field {:id "username"} "username")
        [:br]
-       (form/label "name" "Nombre Completo: ")
-       (form/text-field "name")
+       (form/label {:for "name"} "name" "Nombre Completo: ")
+       (form/text-field {:id "name"} "name")
        [:br]
-       (form/label "password" "Contraseña: ")
-       (form/password-field "password")
+       (form/label {:for "password"} "password" "Contraseña: ")
+       (form/password-field {:id "password"} "password")
        [:br]
        (form/submit-button "Crear"))]))
 
