@@ -659,6 +659,15 @@
   [request]
   (with-check-permissions request "view-log" view/render-log))
 
+(defn handle-intl
+  "Shows the internationalisation screen"
+  [request]
+  (println request)
+  (let [{lang-to   "lang-to"
+         lang-from "lang-from"} (-> request :params)]
+    (with-check-permissions request "can-translate"
+      (view/render-intl lang-from lang-to))))
+
 (def handler
   "Get the handler function for our routes."
   (make-handler
@@ -716,6 +725,7 @@
       ["services"                  {""           handle-services}]             ; done
       ["accts"                     {""           handle-accts}]                ; done
       ["log"                       {""           handle-log}]
+      ["intl"                      {""           handle-intl}]
       [true (fn [req] {:status 404 :body "404 not found"})]]]))
 
 (defn app

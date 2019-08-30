@@ -1,8 +1,9 @@
 (ns tacocat.view
-  (:require [hiccup.page  :as page]
-            [hiccup.form  :as form]
+  (:require [hiccup.page  :as    page]
+            [hiccup.form  :as    form]
             [tacocat.util :refer :all]
-            [tacocat.sql  :as sql]))
+            [tacocat.sql  :as    sql]
+            [tacocat.intl :refer [get-string]]))
 
 (defn make-link
   "Makes the link form"
@@ -21,11 +22,12 @@
              [:th {:width "34%"} (make-link "/closed-services" "Servicios Pasados")]
              [:th {:width "33%"} (make-link "/previous-closes" "Cierres")]]
    :admin   [:tr
-             [:th {:width "20%"} (make-link "/admin-options" "Opciones")]
-             [:th {:width "20%"} (make-link "/list-users"    "Usuarios")]
-             [:th {:width "20%"} (make-link "/list-roles"    "Roles")]
-             [:th {:width "20%"} (make-link "/list-items"    "Productos")]
-             [:th {:width "20%"} (make-link "/log"           "Registro")]]
+             [:th {:width "16%"} (make-link "/admin-options" "Opciones")]
+             [:th {:width "16%"} (make-link "/list-users"    "Usuarios")]
+             [:th {:width "16%"} (make-link "/list-roles"    "Roles")]
+             [:th {:width "16%"} (make-link "/list-items"    "Productos")]
+             [:th {:width "16%"} (make-link "/log"           "Registro")]
+             [:th {:width "16%"} (make-link "/intl"          "Traducir")]]
    :error   [:tr
              [:th {:width "100%"} (make-link "/user-info" "Información del Usuario")]]})
 
@@ -518,7 +520,56 @@
     (make-link "/list-users"    "Usuarios")
     (make-link "/list-roles"    "Roles")
     (make-link "/list-items"    "Productos")
-    (make-link "/log"           "Registro")))
+    (make-link "/log"           "Registro")
+    (make-link "/intl"          "Traducir")))
+
+(defn render-intl
+  "Renders the internationalisation page"
+  [user lang-from lang-to]
+  (let [langs (sql/retrieve-langs)]
+    (with-page "Internacionalización"
+      (:name user)
+      :admin
+      (with-form "/intl"
+        (form/label {:for "lang-from"} "lang-from" "De: ")
+        (form/drop-down {:id "lang-from"} "lang-from"
+                        (map (fn [{l :full_name n :name}]
+                               [l n])
+                             langs)
+                        lang-from)
+        [:br]
+        (form/label {:for "lang-to"} "lang-to" "A: ")
+        (form/drop-down {:id "lang-to"} "lang-to"
+                        (map (fn [{l :full_name n :name}]
+                               [l n])
+                             langs)
+                        lang-to)
+        [:br]
+        (form/submit-button "Ver Traducciones"))
+      (if (and (not (nil? lang-from))
+               (not (nil? lang-to))
+               (not (= lang-from lang-to)))
+        (with-table
+          [:key       :src_val  :key      :dst_val]
+          ["Etiqueta" lang-from "Default" lang-to]
+          [(fn [k _] [:h5 k])
+           (fn [v i] [:h5
+                      (if (nil? v)
+                        (sql/retrieve-internationalised-string
+                          (:key i) lang-from)
+                        v)])
+           (fn [k _] [:h5
+                      (sql/retrieve-internationalised-string
+                        k lang-to)])
+           (fn [v i] 
+             (with-form "/intl"
+               (form/hidden-field {:value lang-to}   "do-translation")
+               (form/hidden-field {:value lang-from} "lang-from")
+               (form/hidden-field {:value lang-to}   "lang-to")
+               [:h5
+                (form/text-field (:key i) v)
+                (form/submit-button "Cambiar")]))]
+          (sql/retrieve-intl lang-from lang-to))))))
 
 (defn render-app-options
   "Gets the app options page"

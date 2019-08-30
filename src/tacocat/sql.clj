@@ -865,3 +865,65 @@
                      order
                        by   date desc
                      limit  1000"]))
+
+(defn retrieve-langs
+  "gets all the languages registered for internationalisation"
+  []
+  (j/query db-spec ["select name
+                          , fallback
+                          , full_name
+                     from   intl_lang
+                     order
+                       by   length(name)
+                          , name"]))
+
+(defn retrieve-internationalised-string
+  "Find the value of an internationalised string"
+  ([k lang default db]
+   (if (nil? lang)
+     default
+     (let [{v :val
+            f :fallback} (first
+                           (j/query db ["select i.val
+                                              , l.fallback
+                                         from   intl      as i
+                                         join   intl_lang as l
+                                           on   i.lang = l.name
+                                         where  i.key = ?
+                                         and    i.lang = ?"
+                                        k
+                                        lang]))]
+       (if (nil? v)
+         (recur k f default db)
+         v))))
+  ([k lang default]
+   (retrieve-internationalised-string k lang default db-spec))
+  ([k lang]
+   (retrieve-internationalised-string k lang k)))
+
+(defn retrieve-intl
+  "Gets all internationalised strings"
+  [src-lang dest-lang]
+  ; Weird-ass select....
+  (j/query db-spec ["select k.name  as key
+                          , s.lang as src_lang
+                          , d.lang as dst_lang
+                          , s.val  as src_val
+                          , d.val  as dst_val
+                     from   intl_key as k
+                     left   outer
+                     join   intl as s
+                       on   k.name = s.key
+                     left   outer
+                     join   intl as d
+                       on   k.name = d.key
+                     where  (s.lang = ?     and d.lang = ?)
+                       or   (s.lang is null and d.lang is null)
+                       or   (s.lang = ?     and d.lang is null)
+                       or   (s.lang is null and d.lang = ?)
+                      order
+                       by   key"
+                    src-lang
+                    dest-lang
+                    src-lang
+                    dest-lang]))
