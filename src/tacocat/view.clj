@@ -274,16 +274,17 @@
 (defn render-change-user-name
   "Screen to change users full name"
   [user id]
-  (with-page (str "Cambiar Nombre de" (-> id int-or-null sql/retrieve-user-by-id :name))
-    (:name user)
-    :admin
-    [:h5
-     (with-form (str "/user-info/" id)
-       (form/hidden-field {:value id} "change-user-name")
-       (form/label {:for id} "nombre" "Nombre Completo: ")
-       (form/text-field {:id id} "name")
-       [:br]
-       (form/submit-button "Cambiar"))]))
+  (let [uname (-> id int-or-null sql/retrieve-user-by-id :name)]
+    (with-page (str "Cambiar Nombre de " uname)
+      (:name user)
+      :admin
+      [:h5
+       (with-form (str "/user-info/" id)
+         (form/hidden-field {:value id} "change-user-name")
+         (form/label {:for id} "nombre" "Nombre Completo: ")
+         (form/text-field {:id id} "name" uname)
+         [:br]
+         (form/submit-button "Cambiar"))])))
 
 (defn render-user-info
   "Shows user info page or login error"

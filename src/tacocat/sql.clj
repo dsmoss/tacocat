@@ -620,10 +620,12 @@
     (let [{salt  :salt} (retrieve-user-by-id id t-con)
           {phash :hash} (first
                           (j/query t-con
-                                   ["select produce_password_hash(?, ?) as hash"
+                            ["select produce_password_hash(?, ?)
+                                     as hash"
                                     password
                                     salt]))]
-      (upd user t-con :app_user {:password_hash phash} ["id = ?" id]))))
+      (upd user t-con :app_user
+           {:password_hash phash} ["id = ?" id]))))
 
 (defn update-user-enabled
   "update enabled flag"
