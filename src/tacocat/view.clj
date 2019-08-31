@@ -46,9 +46,57 @@
              [:th {:width "100%"} (make-link 
                                     "/user-info" "Información del Usuario")]]})
 
+(def link-data
+  {:general [{:destination "/"
+              :string      "ln-home"}
+             {:destination "/bills"
+              :string      "ln-bills"}
+             {:destination "/accts"
+              :string      "ln-accts"}
+             {:destination "/services"
+              :string      "ln-services"}
+             {:destination "/admin"
+              :string      "ln-admin"}]
+   :admin    [{:destination "/admin-options"
+              :string      "ln-admin-options"}
+             {:destination "/list-users"
+              :string      "ln-list-users"}
+             {:destination "/list-roles"
+              :string      "ln-list-roles"}
+             {:destination "/list-items"
+              :string      "ln-list-items"}
+             {:destination "/log"
+              :string      "ln-log"}
+             {:destination "/intl"
+              :string      "ln-intl"}]
+   :main    [{:destination "/old-bills"
+              :string      "ln-old-bills"}
+             {:destination "/closed-services"
+              :string      "ln-closed-services"}
+             {:destination "/previous-closes"
+              :string      "ln-previous-closes"}]
+   :error   [{:destination "/user-info"
+              :string      "ln-user-info"}]})
+
+(defn get-links
+  "Gets the links for a section"
+  [lang sections]
+  [:center
+   (for [s    sections
+         :let [data    (s link-data)
+               percent (float (/ 100 (count data)))]]
+     [:table {:width "100%"
+              :style "w3-cell w3-container"
+              :cellpadding 10}
+      [:tr
+       (map (fn [{d :destination s :string}]
+              [:th {:width (str percent "%")}
+               (make-link d (get-string s {} lang))])
+            data)]])])
+
 (defn with-page
   "Adds content to a page"
-  [header user section & content]
+  [header user sections & content]
   (let [lang (if (empty? user)
                (sql/retrieve-app-data-val "default-language")
                (:language user))]
@@ -81,7 +129,9 @@
                          "https://www.w3schools.com/lib/w3-theme-grey.css"
                          "/css/style.css"
                          "/fonts/style.css")
-       [:style (str "h1, h2, h3, h4, h5, h6, div, p, th, td, tr {font-family: "
+       [:style (str "h1, h2, h3, h4,
+                     h5, h6, div, p,
+                     th, td, tr {font-family: "
                     (let [font (sql/retrieve-app-data-val "default-font")]
                       (if (or (nil? font) (empty? font))
                         ""
@@ -89,18 +139,12 @@
                     "Verdana, sans-serif;}")]
        [:title header]]
       [:body
-       [:center
-        [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
-         (:general links)]
-        [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
-         (section  links)]]
-       [:header {:class "w3-container w3-card w3-theme-l4"} [:center [:h1 header]]]
+       (get-links lang [:general])
+       (get-links lang sections)
+       [:header {:class "w3-container w3-card w3-theme-l4"}
+        [:center [:h1 header]]]
        [:center content]
-       [:center
-        [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
-         (section  links)]
-        [:table {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
-         (:general links)]]
+       (get-links lang sections)
        [:header {:class "w3-container w3-card w3-theme-l4"}
         [:center
          [:h5
@@ -183,7 +227,7 @@
   ;(NOT-ALLOWED (:name user)))
   (with-page (sql/retrieve-app-data-val "business-name")
     user
-    :main
+    [:main]
     (make-link "/bills"    "Comandas")
     (make-link "/accts"    "Cuentas" )
     (make-link "/services" "Servicios")
@@ -241,7 +285,7 @@
   [user & permissions-required]
   (with-page "Acción Prohibida"
     user
-    :error
+    [:error]
     [:h2 {:style "color: red;"} "Permisos Insuficientes"]
     (if (not (empty? permissions-required))
       (with-table
@@ -282,7 +326,7 @@
   [user]
   (with-page "Registro de Usuario"
     user
-    :error
+    [:error]
     [:h5
      (with-form "/user-info"
        (form/hidden-field {:value true} "perform-login")
@@ -299,7 +343,7 @@
   [user id]
   (with-page (str "Borrar Usuario " (-> id int-or-null sql/retrieve-user-by-id :name))
     user
-    :admin
+    [:admin]
     [:h5
      (with-form "/list-users"
        (form/hidden-field {:value id} "delete-user")
@@ -311,7 +355,7 @@
   (let [uname (-> id int-or-null sql/retrieve-user-by-id :name)]
     (with-page (str "Cambiar Nombre de " uname)
       user
-      :admin
+      [:admin]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "change-user-name")
@@ -330,7 +374,7 @@
         langs    (sql/retrieve-langs)]
     (with-page "Lenguaje"
       user
-      :admin
+      [:admin]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "set-user-language")
@@ -349,7 +393,7 @@
    (if (empty? user)
      (with-page "Error"
        nil
-       :error
+       [:error]
        [:h2 {:style "color: red;"} "Usuario o Contraseña incorrecta"])
      (let [id                         (int-or-null id)
            id                         (if (nil? id) (:id user) id)
@@ -361,7 +405,7 @@
            machines                   (sql/retrieve-logged-in-to id)]
        (with-page "Información de Ususario"
          user
-         :admin
+         [:admin]
          [:h5 "Nombre de Usuario: " user-name]
          (make-link (str "/change-user-name/"  id) (str "Nombre Completo: " uname))
          (make-link (str "/change-password/"   id) "Cambiar Contraseña")
@@ -388,7 +432,7 @@
         edit-user     (sql/retrieve-user-by-id id)]
     (with-page (str "Roles para " (:name edit-user))
       user
-      :admin
+      [:admin]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value true} "set-user-roles")
@@ -409,7 +453,7 @@
         role-perms    (sql/retrieve-permissions-for-role id)]
     (with-page rname
       user
-      :admin
+      [:admin]
       (with-table
         [:name     :id]
         ["Permiso" ""]
@@ -425,7 +469,7 @@
   [user]
   (with-page "Añadir Rol"
     user
-    :admin
+    [:admin]
     [:h5
      (with-form "/list-roles"
        (form/hidden-field {:value true} "add-role")
@@ -439,7 +483,7 @@
   [user id]
   (with-page (str "Borrar Rol: " (-> id int-or-null sql/retrieve-role-by-id :name))
     user
-    :admin
+    [:admin]
     [:h5
      (with-form "/list-roles"
        (form/hidden-field {:value id} "delete-role")
@@ -450,7 +494,7 @@
   [user]
   (with-page "Añadir Grupo de Menú"
     user
-    :admin
+    [:admin]
     [:h5
      (with-form"/list-items"
        (form/hidden-field {:value true} "add-new-menu-group")
@@ -464,7 +508,7 @@
   [user]
   (with-page "Añadir Producto"
     user
-    :admin
+    [:admin]
     [:h5
      (with-form "/list-items"
        (form/hidden-field {:value true} "add-new-item")
@@ -511,7 +555,7 @@
         all-options           (sql/retrieve-all-options)]
     (with-page iname
       user
-      :admin
+      [:admin]
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-name")
@@ -558,7 +602,7 @@
   (let [u (sql/retrieve-user-by-id (int-or-null id))]
     (with-page (str "Change Password for " (:name u))
       user
-      :admin
+      [:admin]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value true} "change-user-password")
@@ -572,7 +616,7 @@
   [user]
   (with-page "Admin"
     user
-    :admin
+    [:admin]
     (make-link "/admin-options" "Opciones de la Aplicación")
     (make-link "/list-users"    "Usuarios")
     (make-link "/list-roles"    "Roles")
@@ -586,7 +630,7 @@
   (let [langs (sql/retrieve-langs)]
     (with-page "Internacionalización"
       user
-      :admin
+      [:admin]
       (with-form "/intl"
         (form/label {:for "lang-from"} "lang-from" "De: ")
         (form/drop-down {:id "lang-from"} "lang-from"
@@ -633,7 +677,7 @@
   [user]
   (with-page "Opciones de la Aplicación"
     user
-    :admin
+    [:admin]
     [:h5
      (with-form "/admin-options"
        (form/hidden-field {:value true} "make-admin-changes")
@@ -650,7 +694,7 @@
   [user]
   (with-page "Productos"
     user
-    :admin
+    [:admin]
     (make-link "/add-new-item"       "Añadir Producto")
     (make-link "/add-new-menu-group" "Añadir Grupo de Menú")
     (with-table
@@ -673,7 +717,7 @@
   [user]
   (with-page "Servicios"
     user
-    :main
+    [:main]
     (make-link "/add-services-expense" "Añadir Cargo de Servicios")
     (make-services-table (sql/retrieve-current-services))
     (make-link "/add-services-expense" "Añadir Cargo de Servicios")))
@@ -683,7 +727,7 @@
   [user]
   (with-page "Servicios de Cierres Anteriores"
     user
-    :main
+    [:main]
     (with-table
       [:date   :id]
       ["Fecha" "Cierre"]
@@ -696,7 +740,7 @@
   [user id]
   (with-page (str "Servicios de Cierre " id)
     user
-    :main
+    [:main]
     (make-services-table (sql/retrieve-services-for-close id))))
 
 (defn get-existing-bills
@@ -714,7 +758,7 @@
   [user]
   (with-page "Comandas"
     user
-    :main
+    [:main]
     (make-link "new-bill"  "Nueva Comanda")
     (get-existing-bills)
     (make-link "new-bill"  "Nueva Comanda")))
@@ -724,7 +768,7 @@
   [user]
   (with-page "Cierres"
     user
-    :main
+    [:main]
     (with-table
       [:date   :expense_amount :intake_amount :earnings  :id]
       ["Fecha" "Gastos"        "Entradas"     "Ganancia" ""]
@@ -740,7 +784,7 @@
   [user]
   (with-page "Cierre de Cuentas"
     user
-    :main
+    [:main]
     (with-form "/previous-closes"
       (form/hidden-field {:value true} "make-close")
       [:h5 (form/submit-button "Cerrar")])))
@@ -750,7 +794,7 @@
   [user]
   (with-page "Añadir Cargo de Servicios"
     user
-    :main
+    [:main]
     (with-form "/services"
       (form/hidden-field {:value true} "add-service-charge")
       [:h5
@@ -767,7 +811,7 @@
   [user]
   (with-page "Comandas Cerradas"
     user
-    :main
+    [:main]
     (get-closed-bills)))
 
 (defn get-bill-items
@@ -806,7 +850,7 @@
          id-bill :id_bill} (sql/retrieve-bill-item id)]
     (with-page (str "Borrar " item)
       user
-      :main
+      [:main]
       [:h5
        (with-form (str "/bill/" id-bill)
          (form/hidden-field {:value id} "delete-bill-item")
@@ -818,7 +862,7 @@
   (let [{location :location} (sql/retrieve-bill id)]
     (with-page "Cambiar Mesa"
       user
-      :main
+      [:main]
       (with-form (str "/bill/" id)
         (form/hidden-field {:value id} "edit-bill-location")
         [:h5
@@ -851,7 +895,7 @@
   [user]
   (with-page "Añadir Gasto"
     user
-    :main
+    [:main]
     (with-form "/accts"
       (form/hidden-field {:value true} "add-expense")
       [:h5
@@ -871,7 +915,7 @@
          charge   :charge}  (sql/retrieve-bill id)]
     (with-page location
       user
-      :main
+      [:main]
       (make-link (str "/print-bill/" id) "Imprimir")
       (get-old-bill-items id)
       (format-money charge "Total:" :h2)
@@ -918,7 +962,7 @@
         mult                (float-or-null (sql/retrieve-app-data-val "card-multiplicative"))]
     (with-page location
       user
-      :main
+      [:main]
       (make-link (str "/add-item/" id) "Añadir a comanda")
       (make-link (str "/charge-bill/" id) "Cobrar")
       (get-bill-items id)
@@ -940,7 +984,7 @@
                       ""
                       (str " (" options ")")))
       user
-      :main
+      [:main]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
@@ -966,7 +1010,7 @@
                       ""
                       (str " (" options ")")))
       user
-      :main
+      [:main]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
@@ -993,7 +1037,7 @@
                       ""
                       (str " (" options ")")))
       user
-      :main
+      [:main]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         (form/hidden-field {:value true} "set-options")
@@ -1031,7 +1075,7 @@
                       ""
                       (str " (" options ")")))
       user
-      :main
+      [:main]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
@@ -1044,7 +1088,7 @@
   [user id]
   (with-page "Añadir a comanda"
     user
-    :main
+    [:main]
     (doall
       (map (fn [m]
              [:div
@@ -1065,7 +1109,7 @@
   [user]
   (with-page "Nueva Comanda"
     user
-    :main
+    [:main]
     (with-form "/bills"
       (form/hidden-field {:value true} "new-bill")
       [:h5
@@ -1082,7 +1126,7 @@
          charge   :charge}  (sql/retrieve-bill id)]
     (with-page (str "Cobro para " location)
       user
-      :main
+      [:main]
       [:p date]
       (with-form (str "/closed-bill/" id)
         (form/hidden-field {:value charge} "bill-charge")
@@ -1095,7 +1139,7 @@
   [user]
   (with-page "Cuentas"
     user
-    :main
+    [:main]
     (make-link "/add-expense"     "Añadir Gasto")
     (make-link "/close-acct"      "Hacer Cierre")
     (with-table
@@ -1120,7 +1164,7 @@
   [user]
   (with-page "Usuarios Registrados"
     user
-    :admin
+    [:admin]
     (make-link "/add-new-user" "Añadir Usuario")
     (let
       [make-role-string (fn [roles]
@@ -1151,7 +1195,7 @@
   [user]
   (with-page "Roles Registrados"
     user
-    :admin
+    [:admin]
     (make-link "/add-new-role" "Añadir Nuevo Rol")
     (with-table
       [:name :id        :id]
@@ -1168,7 +1212,7 @@
   [user id]
   (with-page "Nuevo Grupo de Opciones"
     user
-    :admin
+    [:admin]
     [:h5
      (with-form (str "/view-item/" id)
        (form/hidden-field {:value true} "add-new-option-group")
@@ -1181,7 +1225,7 @@
   [user id]
   (with-page "Nueva Opción"
     user
-    :admin
+    [:admin]
     [:h5
      (with-form (str "/view-item/" id)
        (form/hidden-field {:value true} "add-new-option")
@@ -1208,7 +1252,7 @@
         post-page                (str "/view-option/" id)]
     (with-page (str option-group "/" oname)
       user
-      :admin
+      [:admin]
       [:h5
        (with-form post-page
          (form/hidden-field {:value true} "set-option-name")
@@ -1244,7 +1288,7 @@
         all-groups          (map :name (sql/retrieve-menu-groups))]
     (with-page iname
       user
-      :admin
+      [:admin]
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-menu-group")
@@ -1263,7 +1307,7 @@
          charge :charge} (sql/retrieve-item-by-id id)]
     (with-page iname
       user
-      :admin
+      [:admin]
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-charge")
@@ -1279,7 +1323,7 @@
         {iname :name} (sql/retrieve-item-by-id id)]
     (with-page (str "Borrar " iname)
       user
-      :admin
+      [:admin]
       [:h5 "En la mayor parte de los casos cambiar la existencia
             va a tener el efecto deseado. Esta acción fallará si
             el producto ha sido anteriormente añadido a una
@@ -1293,7 +1337,7 @@
   [user]
   (with-page "Registro de Usuario"
     user
-    :admin
+    [:admin]
     [:h5
      (with-form "/list-users"
        (form/hidden-field {:value true} "add-user")
@@ -1313,7 +1357,7 @@
   [user id]
   (with-page (str "Cierre " id)
     user
-    :main
+    [:main]
     (let [{date         :date
            expenses     :expense_amount
            intakes      :intake_amount
@@ -1344,7 +1388,7 @@
   [user]
   (with-page "Registro"
     user
-    :admin
+    [:admin]
     [:p "Últimas 1000 entradas"]
     (with-table 
       [:date   :id_app_user :action  :details]

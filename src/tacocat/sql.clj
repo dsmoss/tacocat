@@ -907,6 +907,7 @@
                                          left   outer
                                          join   intl      as i
                                            on   i.lang = l.name
+                                           and  i.key  = k.name
                                          where  l.name = ?
                                            and  k.name = ?"
                                         lang
@@ -936,9 +937,11 @@
                      left   outer
                      join   intl      as s
                        on   sl.name = s.lang
+                       and  k.name  = s.key
                      left   outer
                      join   intl      as d
                        on   dl.name = d.lang
+                       and  k.name = d.key
                      where  sl.name = ?
                        and  dl.name = ?                    
                      order
