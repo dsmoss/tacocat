@@ -119,11 +119,12 @@
         [:center
          [:h5
           (if (empty? user)
-            (make-link "/login" (get-string "ln-login" {}))
+            (make-link "/login" (get-string "ln-login" {} lang))
             [:span
              (make-link "/user-info" (:name user))
              (make-link "/login"
-                        (get-string "ln-change-user" {}))])]]]])))
+                        (get-string
+                          "ln-change-user" {} lang))])]]]])))
 
 (defn print-head
   "Head tag for printing"
