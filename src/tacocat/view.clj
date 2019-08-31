@@ -458,22 +458,27 @@
   "Role selection and assignment page for a user"
   [user id]
   (let [id            (int-or-null id)
-        id-user-roles (into #{} (map :id (sql/retrieve-roles-for-user id)))
+        id-user-roles (into #{}
+                            (map :id
+                                 (sql/retrieve-roles-for-user id)))
         all-roles     (sql/retrieve-all-roles)
-        edit-user     (sql/retrieve-user-by-id id)]
-    (with-page (str "Roles para " (:name edit-user))
+        edit-user     (sql/retrieve-user-by-id id)
+        lang          (:language user)]
+    (with-page (get-string "str-roles-for/name" edit-user lang)
       user
       [:admin]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value true} "set-user-roles")
-         (with-table
-           [:name :id]
-           ["Rol" ""]
-           [(fn [n r] (form/label {:for (:id r)} (:name r) (:name r)))
-            (fn [i _] (form/check-box {:id i} i (contains? id-user-roles i)))]
+         (with-table lang
+           [:name      :id]
+           ["str-role" ""]
+           [(fn [n r] (form/label {:for (:id r)}
+                                  (:name r) (:name r)))
+            (fn [i _] (form/check-box {:id i} i
+                                      (contains? id-user-roles i)))]
            all-roles)
-         (form/submit-button "Cambiar"))])))
+         (form/submit-button (get-string "btn-change" {} lang)))])))
 
 (defn render-view-role
   "Role page"
@@ -481,82 +486,98 @@
   (let [id            (int-or-null id)
         {rname :name} (sql/retrieve-role-by-id id)
         all-perms     (sql/retrieve-all-permissions)
-        role-perms    (sql/retrieve-permissions-for-role id)]
+        role-perms    (sql/retrieve-permissions-for-role id)
+        lang          (:language user)]
     (with-page rname
       user
       [:admin]
-      (with-table
-        [:name     :id]
-        ["Permiso" ""]
+      (with-table lang
+        [:name            :id]
+        ["str-permission" ""]
         [(fn [n _] [:h5 n])
          (fn [i r] (with-form (str "/view-role/" id)
-                     (form/hidden-field {:value i} "change-permission")
-                     (form/check-box i (contains? role-perms (:name r)))
-                     (form/submit-button "Cambiar")))]
+                     (form/hidden-field
+                       {:value i} "change-permission")
+                     (form/check-box
+                       i (contains? role-perms (:name r)))
+                     (form/submit-button
+                       (get-string "btn-change" {} lang))))]
         all-perms))))
 
 (defn render-add-new-role
   "Add role page"
   [user]
-  (with-page "Añadir Rol"
-    user
-    [:admin]
-    [:h5
-     (with-form "/list-roles"
-       (form/hidden-field {:value true} "add-role")
-       (form/label {:for "role"} "role" "Rol: ")
-       (form/text-field {:id "role"} "role")
-       [:br]
-       (form/submit-button "Añadir"))]))
+  (let [lang (:language user)]
+    (with-page (get-string "str-add-role" {} lang)
+      user
+      [:admin]
+      [:h5
+       (with-form "/list-roles"
+         (form/hidden-field {:value true} "add-role")
+         (form/label {:for "role"} "role"
+                     (get-string "lbl-role" {} lang))
+         (form/text-field {:id "role"} "role")
+         [:br]
+         (form/submit-button (get-string "btn-add" {} lang)))])))
 
 (defn render-delete-role
   "Delete role page"
   [user id]
-  (with-page (str "Borrar Rol: " (-> id int-or-null sql/retrieve-role-by-id :name))
+  (with-page (get-string "str-delete-role/name"
+                         (-> id int-or-null sql/retrieve-role-by-id)
+                         (:language user))
     user
     [:admin]
     [:h5
      (with-form "/list-roles"
        (form/hidden-field {:value id} "delete-role")
-       (form/submit-button "Borrar"))]))
+       (form/submit-button
+         (get-string "btn-delete" {} (:language user))))]))
 
 (defn render-add-new-menu-group
   "New Menu Group page"
   [user]
-  (with-page "Añadir Grupo de Menú"
-    user
-    [:admin]
-    [:h5
-     (with-form"/list-items"
-       (form/hidden-field {:value true} "add-new-menu-group")
-       (form/label {:for "menu-group-name"} "menu-group-name" "Nombre: ")
-       (form/text-field {:id "menu-group-name"} "menu-group-name")
-       [:br]
-       (form/submit-button "Añadir"))]))
+  (let [lang (:language user)]
+    (with-page (get-string "str-add-new-menu-group" {} lang)
+      user
+      [:admin]
+      [:h5
+       (with-form "/list-items"
+         (form/hidden-field {:value true} "add-new-menu-group")
+         (form/label {:for "menu-group-name"} "menu-group-name"
+                     (get-string "lbl-name" lang))
+         (form/text-field {:id "menu-group-name"} "menu-group-name")
+         [:br]
+         (form/submit-button (get-string "btn-add" {} lang)))])))
 
 (defn render-add-new-item
   "New item page"
   [user]
-  (with-page "Añadir Producto"
-    user
-    [:admin]
-    [:h5
-     (with-form "/list-items"
-       (form/hidden-field {:value true} "add-new-item")
-       (form/label {:for "item-name"} "item-name" "Producto: ")
-       (form/text-field {:id "item-name"} "item-name")
-       [:br]
-       (form/label {:for "menu-group"} "menu-group" "Grupo: ")
-       (form/drop-down {:id "menu-group"} "menu-group"
-                       (map (fn [g] [g g])
-                            (sort
-                              (map :name
-                                   (sql/retrieve-menu-groups)))))
-       [:br]
-       (form/label {:for "amount"} "amount" "Monto: ")
-       (form/text-field {:id "amount" :type "number" :step "0.01"} "amount")
-       [:br]
-       (form/submit-button "Añadir"))]))
+  (let [lang (:language user)]
+    (with-page (get-string "str-add-item" {} lang)
+      user
+      [:admin]
+      [:h5
+       (with-form "/list-items"
+         (form/hidden-field {:value true} "add-new-item")
+         (form/label {:for "item-name"} "item-name"
+                     (get-string "lbl-item" {} lang))
+         (form/text-field {:id "item-name"} "item-name")
+         [:br]
+         (form/label {:for "menu-group"} "menu-group"
+                     (get-string "lbl-group" {} lang))
+         (form/drop-down {:id "menu-group"} "menu-group"
+                         (map (fn [g] [g g])
+                              (-> sql/retrieve-menu-groups
+                                  (map :name)
+                                  sort)))
+         [:br]
+         (form/label {:for "amount"} "amount"
+                     (get-string "lbl-charge" {} lang))
+         (form/text-field {:id "amount" :type "number" :step "0.01"}
+                          "amount")
+         [:br]
+         (form/submit-button (get-string "btn-add" {} lang)))])))
 
 (defn with-options-table
   "Make a table for showing item options"
