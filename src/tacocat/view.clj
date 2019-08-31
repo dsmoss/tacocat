@@ -222,13 +222,16 @@
   ;(if (contains? (:permissions user) "view-index")
   ;  ...
   ;(NOT-ALLOWED (:name user)))
-  (with-page (sql/retrieve-app-data-val "business-name")
-    user
-    [:main]
-    (make-link "/bills"    "Comandas")
-    (make-link "/accts"    "Cuentas" )
-    (make-link "/services" "Servicios")
-    (make-link "/admin"    "Admin")))
+  (let [lang (if (empty? user)
+               (sql/retrieve-app-data-val "default-language")
+               (:language user))]
+    (with-page (sql/retrieve-app-data-val "business-name")
+      user
+      [:main]
+      (make-link "/bills"    (get-string "ln-bills"    {} lang))
+      (make-link "/accts"    (get-string "ln-accts"    {} lang))
+      (make-link "/services" (get-string "ln-services" {} lang))
+      (make-link "/admin"    (get-string "ln-admin"    {} lang)))))
 
 (defn headers
   "Make the [:th ...] section of a table"
@@ -239,18 +242,19 @@
       vec))
 
 (defn with-table
-  "Makes a [:table [:tr [:td ... ]]] structure out of a list of maps
-  by applying the respective function to each.
+  "Makes a [:table [:tr [:td ... ]]] structure out of a list of
+  maps by applying the respective function to each.
  
-  Each function must be able to take two arguments: The column content and the context"
-  [columns column-display functions list-of-maps]
+  Each function must be able to take two arguments:
+  The column content and the context"
+  [lang columns column-display functions list-of-maps]
   (-> (fn [d]
         (-> (fn [c f] [:td {:valign "top"} (f (get d c) d)])
             (map columns functions)
             (conj :tr)
             vec))
       (map list-of-maps)
-      (conj (headers column-display)
+      (conj (headers (map #(get-string % {} lang) column-display))
             {:cellspacing 0 :cellpadding 1}
             :table)
       vec))
@@ -280,38 +284,44 @@
 
 (defn NOT-ALLOWED
   [user & permissions-required]
-  (with-page "Acción Prohibida"
-    user
-    [:error]
-    [:h2 {:style "color: red;"} "Permisos Insuficientes"]
-    (if (not (empty? permissions-required))
-      (with-table
-        [:permissions]
-        ["Permisos"]
-        [(fn [p _] (map (fn [p] [:h6 p]) (sort p)))]
-        [{:permissions permissions-required}]))
-    (make-link "/login" "Cambiar Usuario")))
+  (let [lang (if (empty? user)
+               (sql/retrieve-app-data-val "default-language")
+               (:language user))]
+    (with-page (get-string "str-forbidden-action" {} lang)
+      user
+      [:error]
+      [:h2 {:style "color: red;"}
+       (get-string "str-insufficient-permissions" {} lang)]
+      (if (not (empty? permissions-required))
+        (with-table lang
+          [:permissions]
+          [(get-string "str-permissions" {} lang)]
+          [(fn [p _] (map (fn [p] [:h6 p]) (sort p)))]
+          [{:permissions permissions-required}]))
+      (make-link "/login" (get-string "ln-change-user" {} lang)))))
 
 (defn format-bill-list
   "Formats a list of bills"
-  [bill-link-root bill-data editable?]
-  (with-table
-    [:date   :location :charge :id]
-    ["Fecha" "Mesa"    "Monto" ""]
+  [user bill-link-root bill-data editable?]
+  (with-table (:language user)
+    [:date      :location      :charge      :id]
+    ["str-date" "str-location" "str-charge" ""]
     [(fn [d _] (format-date d))
      (fn [l c] (if editable?
                  (make-link (str "/edit-location/" (:id c)) l)
                  [:h5 l]))
      (fn [c _] (format-money c))
-     (fn [i _] (make-link (str bill-link-root i) "Mostrar"))]
+     (fn [i _] (make-link
+                 (str bill-link-root i)
+                 (get-string "ln-view" {} (:language user))))]
     bill-data))
 
 (defn make-services-table
   "Makes a services table"
-  [services-resultset]
-  (with-table
-    [:date   :concept   :amount :running_total]
-    ["Fecha" "Concepto" "Monto" "Nuevo Balance"]
+  [user services-resultset]
+  (with-table (:language user)
+    [:date      :concept      :amount      :running_total]
+    ["str-date" "str-concept" "str-charge" "str-new-balance"]
     [(fn [d _] (format-date d))
      (fn [c _] [:h5 c])
      (fn [m _] (format-money m))
@@ -321,102 +331,126 @@
 (defn render-login
   "Show the login page"
   [user]
-  (with-page "Registro de Usuario"
-    user
-    [:error]
-    [:h5
-     (with-form "/user-info"
-       (form/hidden-field {:value true} "perform-login")
-       (form/label {:for "user-name"} "usuario" "Usuario: ")
-       (form/text-field {:id "user-name"} "user-name" (:user_name user))
-       [:br]
-       (form/label {:for "password"} "password" "Contraseña: ")
-       (form/password-field {:id "password"} "password")
-       [:br]
-       (form/submit-button "Entrar"))]))
+  (let [lang (if (empty? user)
+               (sql/retrieve-app-data-val "default-language")
+               (:language user))]
+    (with-page (get-string "str-user-login" {} lang)
+      user
+      [:error]
+      [:h5
+       (with-form "/user-info"
+         (form/hidden-field {:value true} "perform-login")
+         (form/label {:for "user-name"}
+                     "user-name"
+                     (get-string "lbl-user-name" {} lang))
+         (form/text-field {:id "user-name"}
+                          "user-name" (:user_name user))
+         [:br]
+         (form/label {:for "password"}
+                     "password" (get-string "lbl-password" {} lang))
+         (form/password-field {:id "password"} "password")
+         [:br]
+         (form/submit-button (get-string "btn-enter" {} lang)))])))
 
 (defn render-delete-user
   "Delete user page"
   [user id]
-  (with-page (str "Borrar Usuario " (-> id int-or-null sql/retrieve-user-by-id :name))
+  (with-page (get-string "str-delete-user/name"
+                         (-> id int-or-null sql/retrieve-user-by-id)
+                         (:language user))
     user
     [:admin]
     [:h5
      (with-form "/list-users"
        (form/hidden-field {:value id} "delete-user")
-       (form/submit-button "Borrar"))]))
+       (form/submit-button
+         (get-string "btn-delete" {} (:language user))))]))
 
 (defn render-change-user-name
   "Screen to change users full name"
   [user id]
-  (let [uname (-> id int-or-null sql/retrieve-user-by-id :name)]
-    (with-page (str "Cambiar Nombre de " uname)
+  (let [u    (-> id int-or-null sql/retrieve-user-by-id)
+        lang (:language user)]
+    (with-page (get-string "str-change-user-name/name" u lang)
       user
       [:admin]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "change-user-name")
-         (form/label {:for id} "nombre" "Nombre Completo: ")
-         (form/text-field {:id id} "name" uname)
+         (form/label {:for id} "nombre"
+                     (get-string "lbl-full-name" {} lang))
+         (form/text-field {:id id} "name" (:name u))
          [:br]
-         (form/submit-button "Cambiar"))])))
+         (form/submit-button (get-string "btn-change" {} lang)))])))
 
 (defn render-change-user-language
   "Language selection screen"
   [user id]
-  (let [language (-> id
-                     int-or-null
-                     sql/retrieve-user-by-id
-                     :language)
-        langs    (sql/retrieve-langs)]
-    (with-page "Lenguaje"
+  (let [lang  (-> id
+                  int-or-null
+                  sql/retrieve-user-by-id
+                  :language)
+        langs (sql/retrieve-langs)]
+    (with-page (get-string "str-lang" {} lang)
       user
       [:admin]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "set-user-language")
-         (form/label {:for "language"} "language" "Lenguaje: ")
+         (form/label {:for "language"} "language"
+                     (get-string "lbl-lang" {} lang))
          (form/drop-down {:id "language"} "language"
                          (map (fn [{n :name f :full_name}]
-                                [f n])
+                                [(get-string f {} lang) n])
                               langs)
-                         language)
+                         lang)
          [:br]
-         (form/submit-button "Cambiar"))])))
+         (form/submit-button (get-string "btn-change" {} lang)))])))
 
 (defn render-user-info
   "Shows user info page or login error"
   ([user id]
-   (if (empty? user)
-     (with-page "Error"
-       nil
-       [:error]
-       [:h2 {:style "color: red;"} "Usuario o Contraseña incorrecta"])
-     (let [id                         (int-or-null id)
-           id                         (if (nil? id) (:id user) id)
-           {uname       :name
-            user-name   :user_name
-            language    :language
-            permissions :permissions} (sql/retrieve-user-by-id id) ;user
-           user-roles                 (sql/retrieve-roles-for-user id)
-           machines                   (sql/retrieve-logged-in-to id)]
-       (with-page "Información de Ususario"
-         user
-         [:admin]
-         [:h5 "Nombre de Usuario: " user-name]
-         (make-link (str "/change-user-name/"  id) (str "Nombre Completo: " uname))
-         (make-link (str "/change-password/"   id) "Cambiar Contraseña")
-         (make-link (str "/change-user-roles/" id) "Cambiar Roles")
-         (make-link (str "/change-user-language/" id) (str "Cambiar Lenguaje: " language))
-         (with-table
-           [:roles  :permissions :machines]
-           ["Roles" "Permisos"   "Máquinas"]
-           [(fn [r _] (map (fn [r] (make-link (str "/view-role/" (:id r)) (:name r))) r))
-            (fn [p _] (map (fn [p] [:h6 p]) (sort p)))
-            (fn [m _] (map (fn [m] [:h5 m]) (sort m)))]
-           [{:roles       user-roles
-             :machines    machines
-             :permissions permissions}])))))
+   (let [lang (if (empty? user)
+                (sql/retrieve-app-data-val "default-language")
+                (:language user))]
+     (if (empty? user)
+       (with-page (get-string "str-error" {} lang)
+         nil
+         [:error]
+         [:h2 {:style "color: red;"}
+          (get-string "str-wrong-user-or-password" {} lang)])
+       (let [id              (int-or-null id)
+             id              (if (nil? id) (:id user) id)
+             {permissions :permissions
+              :as         u} (sql/retrieve-user-by-id id)
+             user-roles      (sql/retrieve-roles-for-user id)
+             machines        (sql/retrieve-logged-in-to id)]
+         (with-page (get-string "str-user-info/name" u lang)
+           user
+           [:admin]
+           [:h5 (get-string "str-username/user_name" u lang)]
+           (make-link (str "/change-user-name/"  id)
+                      (get-string "ln-full-name/name" u lang))
+           (make-link (str "/change-password/"   id)
+                      (get-string "ln-change-password" {} lang))
+           (make-link (str "/change-user-roles/" id)
+                      (get-string "ln-change-roles" {} lang))
+           (make-link (str "/change-user-language/" id)
+                      (get-string
+                        "ln-change-language/language" u lang))
+           (with-table lang
+             [:roles      :permissions      :machines]
+             ["str-roles" "str-permissions" "str-machines"]
+             [(fn [r _] (map (fn [r]
+                               (make-link
+                                 (str "/view-role/" (:id r))
+                                 (:name r)))
+                             r))
+              (fn [p _] (map (fn [p] [:h6 p]) (sort p)))
+              (fn [m _] (map (fn [m] [:h5 m]) (sort m)))]
+             [{:roles       user-roles
+               :machines    machines
+               :permissions permissions}]))))))
   ([user]
    (render-user-info user (:id user))))
 
@@ -647,7 +681,7 @@
       (if (and (not (nil? lang-from))
                (not (nil? lang-to))
                (not (= lang-from lang-to)))
-        (with-table
+        (with-table (:language user)
           [:key       :src_val  :key      :dst_val]
           ["Etiqueta" lang-from "Default" lang-to]
           [(fn [k _] [:small k])
@@ -716,7 +750,7 @@
     user
     [:main]
     (make-link "/add-services-expense" "Añadir Cargo de Servicios")
-    (make-services-table (sql/retrieve-current-services))
+    (make-services-table user (sql/retrieve-current-services))
     (make-link "/add-services-expense" "Añadir Cargo de Servicios")))
 
 (defn render-closed-services
@@ -738,17 +772,17 @@
   (with-page (str "Servicios de Cierre " id)
     user
     [:main]
-    (make-services-table (sql/retrieve-services-for-close id))))
+    (make-services-table user (sql/retrieve-services-for-close id))))
 
 (defn get-existing-bills
   "Returns a structure containing existing bills"
-  []
-  (format-bill-list "/bill/" (sql/retrieve-bills) true))
+  [user]
+  (format-bill-list user "/bill/" (sql/retrieve-bills) true))
 
 (defn get-closed-bills
   "Returns a structure containing existing bills"
-  []
-  (format-bill-list "/closed-bill/" (sql/retrieve-closed-bills) false))
+  [user]
+  (format-bill-list user "/closed-bill/" (sql/retrieve-closed-bills) false))
 
 (defn render-bills
   "Shows the bills page"
@@ -757,7 +791,7 @@
     user
     [:main]
     (make-link "new-bill"  "Nueva Comanda")
-    (get-existing-bills)
+    (get-existing-bills user)
     (make-link "new-bill"  "Nueva Comanda")))
 
 (defn render-previous-closes
@@ -809,7 +843,7 @@
   (with-page "Comandas Cerradas"
     user
     [:main]
-    (get-closed-bills)))
+    (get-closed-bills user)))
 
 (defn get-bill-items
   "Returns a form with the bill items of a bill"
