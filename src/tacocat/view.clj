@@ -10,42 +10,6 @@
   [address text]
   [:h5 [:a {:href address} text]])
 
-(def links
-  {:general [:tr
-             [:th {:width "20%"} (make-link
-                                   "/"         "Inicio")]
-             [:th {:width "20%"} (make-link
-                                   "/bills"    "Comandas")]
-             [:th {:width "20%"} (make-link
-                                   "/accts"    "Cuentas")]
-             [:th {:width "20%"} (make-link
-                                   "/services" "Servicios")]
-             [:th {:width "20%"} (make-link
-                                   "/admin"    "Admin")]]
-   :main    [:tr
-             [:th {:width "33%"} (make-link
-                                   "/old-bills"       "Entradas")]
-             [:th {:width "34%"} (make-link
-                                   "/closed-services" "Servicios Pasados")]
-             [:th {:width "33%"} (make-link
-                                   "/previous-closes" "Cierres")]]
-   :admin   [:tr
-             [:th {:width "16%"} (make-link
-                                   "/admin-options" "Opciones")]
-             [:th {:width "16%"} (make-link
-                                   "/list-users"    "Usuarios")]
-             [:th {:width "16%"} (make-link 
-                                   "/list-roles"    "Roles")]
-             [:th {:width "16%"} (make-link 
-                                   "/list-items"    "Productos")]
-             [:th {:width "16%"} (make-link 
-                                   "/log"           "Registro")]
-             [:th {:width "16%"} (make-link 
-                                   "/intl"          "Traducir")]]
-   :error   [:tr
-             [:th {:width "100%"} (make-link 
-                                    "/user-info" "Información del Usuario")]]})
-
 (def link-data
   {:general [{:destination "/"
               :string      "ln-home"}
@@ -94,50 +58,56 @@
                (make-link d (get-string s {} lang))])
             data)]])])
 
+(defn main-head
+  "normal page head tag"
+  [font header]
+  [:head
+   [:link {:rel     "apple-touch-icon"
+           :sizes   "180x180"
+           :href    "/apple-touch-icon.png"}]
+   [:link {:rel     "icon"
+           :type    "image/png"
+           :sizes   "32x32"
+           :href    "/favicon-32x32.png"}]
+   [:link {:rel     "icon"
+           :type    "image/png"
+           :sizes   "16x16"
+           :href    "/favicon-16x16.png"}]
+   [:link {:rel     "manifest"
+           :href    "/site.webmanifest"}]
+   [:link {:rel     "mask-icon"
+           :href    "/safari-pinned-tab.svg"
+           :color   "#5bbad5"}]
+   [:meta {:name    "msapplication-TileColor"
+           :content "#da532c"}]
+   [:meta {:name    "theme-color"
+           :content "#ffffff"}]
+   [:meta {:name    "viewport"
+           :content "width=device-width, initial-scale=1.0"}]
+   [:meta {:charset "UTF-8"}]
+   (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
+                     "https://www.w3schools.com/lib/w3-theme-grey.css"
+                     "/css/style.css"
+                     "/fonts/style.css")
+   [:style (str "h1, h2, h3, h4,
+                h5, h6, div, p,
+                th, td, tr {font-family: "
+                (if (or (nil? font)
+                        (empty? font))
+                  ""
+                  (str \" font "\", "))
+                "Verdana, sans-serif;}")]
+   [:title header]])
+
 (defn with-page
   "Adds content to a page"
   [header user sections & content]
   (let [lang (if (empty? user)
                (sql/retrieve-app-data-val "default-language")
-               (:language user))]
+               (:language user))
+        font (sql/retrieve-app-data-val "default-font")]
     (page/html5
-      [:head
-       [:link {:rel     "apple-touch-icon"
-               :sizes   "180x180"
-               :href    "/apple-touch-icon.png"}]
-       [:link {:rel     "icon"
-               :type    "image/png"
-               :sizes   "32x32"
-               :href    "/favicon-32x32.png"}]
-       [:link {:rel     "icon"
-               :type    "image/png"
-               :sizes   "16x16"
-               :href    "/favicon-16x16.png"}]
-       [:link {:rel     "manifest"
-               :href    "/site.webmanifest"}]
-       [:link {:rel     "mask-icon"
-               :href    "/safari-pinned-tab.svg"
-               :color   "#5bbad5"}]
-       [:meta {:name    "msapplication-TileColor"
-               :content "#da532c"}]
-       [:meta {:name    "theme-color"
-               :content "#ffffff"}]
-       [:meta {:name    "viewport"
-               :content "width=device-width, initial-scale=1.0"}]
-       [:meta {:charset "UTF-8"}]
-       (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
-                         "https://www.w3schools.com/lib/w3-theme-grey.css"
-                         "/css/style.css"
-                         "/fonts/style.css")
-       [:style (str "h1, h2, h3, h4,
-                     h5, h6, div, p,
-                     th, td, tr {font-family: "
-                    (let [font (sql/retrieve-app-data-val "default-font")]
-                      (if (or (nil? font) (empty? font))
-                        ""
-                        (str \" font "\", ")))
-                    "Verdana, sans-serif;}")]
-       [:title header]]
+      (main-head font header)
       [:body
        (get-links lang [:general])
        (get-links lang sections)
@@ -149,54 +119,80 @@
         [:center
          [:h5
           (if (empty? user)
-            (make-link "/login" "Entrar")
+            (make-link "/login" (get-string "ln-login" {}))
             [:span
              (make-link "/user-info" (:name user))
-             (make-link "/login" "Cambiar")])]]]])))
+             (make-link "/login"
+                        (get-string "ln-change-user" {}))])]]]])))
+
+(defn print-head
+  "Head tag for printing"
+  [font header]
+  [:head
+   [:link {:rel     "apple-touch-icon"
+           :sizes   "180x180"
+           :href    "/apple-touch-icon.png"}]
+   [:link {:rel     "icon"
+           :type    "image/png"
+           :sizes   "32x32"
+           :href    "/favicon-32x32.png"}]
+   [:link {:rel     "icon"
+           :type    "image/png"
+           :sizes   "16x16"
+           :href    "/favicon-16x16.png"}]
+   [:link {:rel     "manifest"
+           :href    "/site.webmanifest"}]
+   [:link {:rel     "mask-icon"
+           :href    "/safari-pinned-tab.svg"
+           :color   "#5bbad5"}]
+   [:meta {:name    "msapplication-TileColor"
+           :content "#da532c"}]
+   [:meta {:name    "theme-color"
+           :content "#ffffff"}]
+   [:meta {:name    "viewport"
+           :content "width=device-width, initial-scale=1.0"}]
+   [:meta {:charset "UTF-8"}]
+   (page/include-css "/css/style.css"
+                     "/fonts/style.css"
+                     "/css/printing-style.css")
+   [:style (str "h1, h2, h3, h4,
+                h5, h6, div, p,
+                th, td, tr {font-family: "
+                (if (or (nil? font)
+                        (empty? font))
+                  ""
+                  (str \" font "\", "))
+                "Verdana, sans-serif;}")]
+   [:title header]])
 
 (defn with-printing-page
   "Makes a page suitable for printing"
   [header id & content]
-  (page/html5
-    [:head
-     [:link {:rel  "apple-touch-icon"       :sizes "180x180" :href "/apple-touch-icon.png"}]
-     [:link {:rel  "icon" :type "image/png" :sizes "32x32"   :href "/favicon-32x32.png"}]
-     [:link {:rel  "icon" :type "image/png" :sizes "16x16"   :href "/favicon-16x16.png"}]
-     [:link {:rel  "manifest"                                :href "/site.webmanifest"}]
-     [:link {:rel  "mask-icon"                               :href "/safari-pinned-tab.svg" :color "#5bbad5"}]
-     [:meta {:name "msapplication-TileColor" :content "#da532c"}]
-     [:meta {:name "theme-color"             :content "#ffffff"}]
-     [:meta {:name "viewport"                :content "width=device-width, initial-scale=1.0"}]
-     [:meta {:charset "UTF-8"}]
-     (page/include-css ;"https://www.w3schools.com/w3css/4/w3pro.css"
-                       ;"https://www.w3schools.com/lib/w3-theme-grey.css"
-                       "/css/style.css"
-                       "/fonts/style.css"
-                       "/css/printing-style.css")
-     [:style (str "h1, h2, h3, h4, h5, h6, div, p, th, td, tr {font-family: "
-                  (let [font (sql/retrieve-app-data-val "default-font")]
-                    (if (or (nil? font) (empty? font))
-                      ""
-                      (str \" font "\", ")))
-                  "Verdana, sans-serif;}")]
-     [:title header]] 
-    [:body
-     [:center
-      [:header {:class "w3-container w3-card"}
-       [:h1 (sql/retrieve-app-data-val "business-name")]]
-      [:small
-       [:p
-        (sql/retrieve-app-data-val "business-address") ", "
-        (sql/retrieve-app-data-val "business-post-code") ", "
-        (sql/retrieve-app-data-val "business-state")
-        [:br]        
-        "Tel: " (sql/retrieve-app-data-val "business-telephone")
-        [:br]
-        (sql/retrieve-app-data-val "business-website")]]
-      [:header {:class "w3-container w3-card"}
-       [:h2 "Cuenta para: " header " (#" id ")"]]
-      content]
-     [:script {:language "javascript"} "window.print();"]]))
+  ; Printing only in system-wide language
+  (let [lang (sql/retrieve-app-data-val "default-language")
+        font (sql/retrieve-app-data-val "default-font")
+        tel  (sql/retrieve-app-data-val "business-telephone")]
+    (page/html5
+      (print-head font header)
+      [:body
+       [:center
+        [:header
+         [:h1 (sql/retrieve-app-data-val "business-name")]]
+        [:small
+         [:p
+          (sql/retrieve-app-data-val "business-address") ", "
+          (sql/retrieve-app-data-val "business-post-code") ", "
+          (sql/retrieve-app-data-val "business-state")
+          [:br]
+          ; Tel: 34567789
+          (get-string "str-tel/number" {:number tel})
+          [:br]
+          (sql/retrieve-app-data-val "business-website")]]
+        [:header
+         ; "Cuenta para: " header " (#" id ")"
+         [:h2 (get-string "str-bill-for/location/id" {:location header :id id})]]
+        content]
+       [:script {:language "javascript"} "window.print();"]])))
 
 (defmacro with-form
   "Wraps a form"
@@ -653,13 +649,13 @@
         (with-table
           [:key       :src_val  :key      :dst_val]
           ["Etiqueta" lang-from "Default" lang-to]
-          [(fn [k _] [:h5 k])
-           (fn [v i] [:h5
+          [(fn [k _] [:small k])
+           (fn [v i] [:small
                       (if (nil? v)
                         (sql/retrieve-internationalised-string
                           (:key i) lang-from)
                         v)])
-           (fn [k _] [:h5
+           (fn [k _] [:small
                       (sql/retrieve-internationalised-string
                         k lang-to)])
            (fn [v i] 
@@ -667,7 +663,7 @@
                (form/hidden-field {:value (:key i)}  "translate")
                (form/hidden-field {:value lang-from} "lang-from")
                (form/hidden-field {:value lang-to}   "lang-to")
-               [:h5
+               [:small
                 (form/text-field "value" v)
                 (form/submit-button "Cambiar")]))]
           (sql/retrieve-intl lang-from lang-to))))))
