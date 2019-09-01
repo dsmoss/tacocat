@@ -1423,7 +1423,7 @@
       [:admin]
       (make-link "/add-new-role"
                  (get-string "ln-add-new-role" {} lang))
-      (with-table
+      (with-table lang
         [:name      :id               :id]
         ["str-role" "str-permissions" ""]
         [(fn [n r] (make-link (str "/view-role/" (:id r)) n))
