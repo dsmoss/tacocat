@@ -1,0 +1,6 @@
+#!/bin/bash
+
+sudo -u postgres psql <<EOF
+drop database tacocat;
+drop role tacocat;
+EOF

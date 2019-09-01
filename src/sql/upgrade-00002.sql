@@ -218,6 +218,8 @@ insert into intl_key (name)
                    , ('str-entries-limit')
 		   , ('str-action')
                    , ('str-detail')
+		   , ('btn-close')
+		   , ('str-register')
 ;
 
 COPY public.intl (key, lang, val) FROM stdin;
