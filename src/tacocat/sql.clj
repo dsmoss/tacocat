@@ -1,5 +1,6 @@
 (ns tacocat.sql
   (:require [clojure.java.jdbc :as j]
+            [tacocat.intl      :refer [get-string]]
             [tacocat.util      :refer :all]))
 
 (def connection-string "postgresql://tacocat:Tacocat2019@localhost:5432/tacocat")
@@ -203,7 +204,8 @@
   "Inserts a new close"
   [user]
   (j/with-db-transaction [t-con db-spec]
-    (let [{total    :total
+    (let [lang                     (retrieve-app-data-val "default-language" t-con)
+          {total    :total
            intakes  :intakes
            expenses :expenses}     (first
                                      (j/query t-con
@@ -242,10 +244,13 @@
       (upd user t-con :intakes  {:id_close id-close} ["id_close is null"])
       (upd user t-con :expenses {:id_close id-close} ["id_close is null"])
       (upd user t-con :services {:id_close id-close} ["id_close is null"])
-      (ins user t-con :expenses {:concept "Caja" :amount business-total})
+      (ins user t-con :expenses {:concept (get-string "str-register" {} lang)
+                                 :amount  business-total})
       (ins user t-con :services {:amount        services-amount
-                                  :running_total (+ services-amount (if (nil? running) 0 running))
-                                  :concept       (str "Cierre " id-close)}))))
+                                  :running_total (+ services-amount
+                                                    (if (nil? running) 0 running))
+                                  :concept       (get-string "str-close/number"
+                                                             {:number id-close} lang)}))))
 
 (defn insert-services-charge
   "Insert a service payment to db"
@@ -254,7 +259,7 @@
     (let [{running :running_total} (first (j/query t-con
                                                    ["select running_total
                                                      from   services
-                                                     where   date = (select max(date)
+                                                     where  date = (select max(date)
                                                      from   services)"]))]
       (ins user t-con :services {:amount amount
                                   :concept concept

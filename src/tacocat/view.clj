@@ -724,7 +724,7 @@
       (make-link
         "/log" (get-string "ln-log" {} lang))
       (make-link
-        "/intl" (get-string "ln-ntl" {} lang)))))
+        "/intl" (get-string "ln-intl" {} lang)))))
 
 (defn render-intl
   "Renders the internationalisation page"
