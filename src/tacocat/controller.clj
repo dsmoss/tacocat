@@ -9,9 +9,9 @@
 
 (defn make-close
   "Closes the current period"
-  [user]
+  [user str-register str-close]
   (println "Closing current period")
-  (sql/insert-new-close user))
+  (sql/insert-new-close user str-register str-close))
 
 (defn edit-bill-location
   "Edits the location for a bill"

@@ -1,6 +1,6 @@
 (ns tacocat.sql
   (:require [clojure.java.jdbc :as j]
-            [tacocat.intl      :refer [get-string]]
+            [tacocat.str-var   :refer [translate-vars]]
             [tacocat.util      :refer :all]))
 
 (def connection-string "postgresql://tacocat:Tacocat2019@localhost:5432/tacocat")
@@ -202,7 +202,7 @@
 
 (defn insert-new-close
   "Inserts a new close"
-  [user]
+  [user str-register str-close]
   (j/with-db-transaction [t-con db-spec]
     (let [lang                     (retrieve-app-data-val "default-language" t-con)
           {total    :total
@@ -244,13 +244,12 @@
       (upd user t-con :intakes  {:id_close id-close} ["id_close is null"])
       (upd user t-con :expenses {:id_close id-close} ["id_close is null"])
       (upd user t-con :services {:id_close id-close} ["id_close is null"])
-      (ins user t-con :expenses {:concept (get-string "str-register" {} lang)
+      (ins user t-con :expenses {:concept str-register
                                  :amount  business-total})
       (ins user t-con :services {:amount        services-amount
                                   :running_total (+ services-amount
                                                     (if (nil? running) 0 running))
-                                  :concept       (get-string "str-close/number"
-                                                             {:number id-close} lang)}))))
+                                  :concept       (translate-vars str-close {:number id-close})}))))
 
 (defn insert-services-charge
   "Insert a service payment to db"

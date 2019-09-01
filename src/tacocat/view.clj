@@ -559,7 +559,7 @@
        (with-form "/list-items"
          (form/hidden-field {:value true} "add-new-menu-group")
          (form/label {:for "menu-group-name"} "menu-group-name"
-                     (get-string "lbl-name" lang))
+                     (get-string "lbl-name" {} lang))
          (form/text-field {:id "menu-group-name"} "menu-group-name")
          [:br]
          (btn-add lang))])))

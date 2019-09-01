@@ -8,7 +8,8 @@
             [tacocat.view               :as    view]
             [tacocat.store              :as    store]
             [tacocat.util               :refer :all]
-            [tacocat.controller         :as    controller]))
+            [tacocat.controller         :as    controller]
+            [tacocat.intl               :refer [get-string]]))
 
 (defn get-user
   [request]
@@ -258,7 +259,11 @@
     request "list-closed-accounts" view/render-previous-closes
     {:trigger    "make-close"
      :permission "close-accounts"
-     :action     (controller/make-close (get-user request))}))
+     ; Use system language
+     :action     (controller/make-close
+                   (get-user request)
+                   (get-string "str-register" {})
+                   (get-string "str-close/number" {}))}))
 
 (defn handle-single-close
   "Shows a single close item"
