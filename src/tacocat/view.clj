@@ -807,7 +807,7 @@
   "Gets the product page"
   [user]
   (let [lang (:language user)]
-    (with-page (get-string "str-items")
+    (with-page (get-string "str-items" {} lang)
       user
       [:admin]
       (make-link "/add-new-item"
