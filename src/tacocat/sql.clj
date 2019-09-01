@@ -922,7 +922,7 @@
 
 (defn retrieve-intl
   "Gets all internationalised strings"
-  [src-lang dest-lang]
+  [src-lang dest-lang key-filter]
   ; Weird-ass select.... not to mention the product is massive
   (j/query db-spec ["select k.name    as key
                           , sl.name   as src_lang
@@ -933,7 +933,7 @@
                      join   intl_lang as sl
                        on   1 = 1
                      join   intl_lang as dl
-                       on   1 = 1
+                       on   sl.name != dl.name
                      left   outer
                      join   intl      as s
                        on   sl.name = s.lang
@@ -943,8 +943,10 @@
                        on   dl.name = d.lang
                        and  k.name = d.key
                      where  sl.name = ?
-                       and  dl.name = ?                    
+                       and  dl.name = ?
+                       and  k.name like ?
                      order
                        by   key"
                     src-lang
-                    dest-lang]))
+                    dest-lang
+                    key-filter]))

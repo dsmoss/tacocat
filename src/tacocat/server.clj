@@ -690,9 +690,10 @@
   (let [{lang-to   "lang-to"
          lang-from "lang-from"
          key-name  "translate"
+         ffilter   "filter"
          value     "value"} (-> request :params)]
     (with-check-permissions request "can-translate"
-      (view/render-intl lang-from lang-to)
+      (view/render-intl lang-from lang-to ffilter)
       {:trigger    "translate"
        :permission "can-translate"
        :action     (controller/set-translation
