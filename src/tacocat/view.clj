@@ -950,7 +950,7 @@
   "Returns a form with the bill items of a bill"
   [user id]
   (let [lang (:language user)]
-    (with-table user
+    (with-table lang
       [:date      :person      :item      :charge      :nil]
       ["str-time" "str-person" "str-item" "str-charge" ""]
       [(fn [t _] (format-time t))
@@ -1014,7 +1014,8 @@
 (defn get-old-bill-items
   "Returns a form with the bill items of a closed bill"
   ([user id tag sep]
-   (with-table user
+   ;(println user id tag sep)
+   (with-table (:language user)
      [:date  :person  :item      :charge]
      [""     "str-p#" "str-item" "str-charge"]
      [(fn [t _] (format-time t tag))
@@ -1041,56 +1042,68 @@
       (with-form "/accts"
         (form/hidden-field {:value true} "add-expense")
         [:h5
-         (form/label {:for "concept"} "concept" "Concepto: ")
+         (form/label {:for "concept"} "concept"
+                     (get-string "lbl-concept" {} lang))
          (form/text-field {:id "concept"} "concept")
          [:br]
-         (form/label {:for "amount"} "amount" "Monto: ")
-         (form/text-field {:id "amount" :type "number" :step "0.01"} "amount")
+         (form/label {:for "amount"} "amount"
+                     (get-string "lbl-charge" {} lang))
+         (form/text-field {:id "amount" :type "number" :step "0.01"}
+                          "amount")
          [:br]
-         (form/submit-button "Añadir")]))))
+         (form/submit-button (get-string "btn-add" {} lang))]))))
 
 (defn render-closed-bill
   "Renders a single closed bill"
   [user id]
   (let [{date     :date
          location :location
-         charge   :charge}  (sql/retrieve-bill id)]
+         charge   :charge}  (sql/retrieve-bill id)
+        lang                (:language user)]
     (with-page location
       user
       [:main]
-      (make-link (str "/print-bill/" id) "Imprimir")
+      (make-link (str "/print-bill/" id)
+                 (get-string "ln-print" {} lang))
       (get-old-bill-items user id)
-      (format-money charge "Total:" :h2)
-      (with-table
-        [:person   :charge]
-        ["Persona" "Total"]
+      (format-money charge (get-string "str-total" {} lang) :h2)
+      (with-table lang
+        [:person      :charge]
+        ["str-person" "str-charge"]
         [(fn [p _] [:h5 (if (nil? p)
                           ""
-                          (str "Persona " p))])
+                          (get-string
+                            "str-person/number" {:number p} lang))])
          (fn [m _] (format-money m))]
         (sql/retrieve-bill-charges-per-person id))
       [:p date]
-      (make-link (str "/print-bill/" id) "Imprimir"))))
+      (make-link (str "/print-bill/" id)
+                 (get-string "ln-print" {} lang)))))
 
 (defn render-print-bill
   [user id]
   (let [id                  (int-or-null id)
         {date     :date
          location :location
-         charge   :charge}  (sql/retrieve-bill id)]
+         charge   :charge}  (sql/retrieve-bill id)
+        ; Printing always happens on system language
+        lang                (sql/retrieve-app-data-val
+                              "default-language")]
     (with-printing-page location id
-      (get-old-bill-items user id :p :span)
+      (get-old-bill-items {:language lang} id :p :span)
       [:header {:class "w3-container w3-card"}
-       [:center (format-money charge "Total:" :h2)]]
+       [:center (format-money
+                  charge (get-string "str-total" {} lang) :h2)]]
       (let [per-person (sql/retrieve-bill-charges-per-person id)]
         (if (= 1 (count per-person))
           nil
-          (with-table
-            [:person   :charge]
-            ["Persona" "Total"]
+          (with-table lang
+            [:person      :charge]
+            ["str-person" "str-charge"]
             [(fn [p _] [:p (if (nil? p)
                              ""
-                             (str "Persona " p))])
+                             (get-string "str-person/number"
+                               {:number p} lang))])
              (fn [m _] (format-money m "" :p))]
             per-person)))
       [:p date])))
@@ -1101,17 +1114,26 @@
   (let [{date     :date
          location :location
          charge   :charge}  (sql/retrieve-bill id)
-        mult                (float-or-null (sql/retrieve-app-data-val "card-multiplicative"))]
+        mult                (float-or-null
+                              (sql/retrieve-app-data-val
+                                "card-multiplicative"))
+        lang                (:language user)]
     (with-page location
       user
       [:main]
-      (make-link (str "/add-item/" id) "Añadir a comanda")
-      (make-link (str "/charge-bill/" id) "Cobrar")
+      (make-link (str "/add-item/" id)
+                 (get-string "ln-add-to-bill" {} lang))
+      (make-link (str "/charge-bill/" id)
+                 (get-string "ln-charge" {} lang))
       (get-bill-items user id)
-      (format-money charge "Total:" :h2)
-      (format-money (* mult charge) "Con Tarjeta:")
-      (make-link (str "/add-item/" id) "Añadir a comanda")
-      (make-link (str "/charge-bill/" id) "Cobrar")
+      (format-money charge
+                    (get-string "str-total" {} lang) :h2)
+      (format-money (* mult charge)
+                    (get-string "str-card-payment" {} lang))
+      (make-link (str "/add-item/" id)
+                 (get-string "ln-add-to-bill" {} lang))
+      (make-link (str "/charge-bill/" id)
+                 (get-string "ln-charge" {} lang))
       [:p date])))
 
 (defn render-set-person
@@ -1120,22 +1142,32 @@
   (let [{person  :person
          item    :item
          options :options
-         id-bill :id_bill} (sql/retrieve-bill-item id)]
-    (with-page (str "Asignar " item
-                    (if (nil? options)
-                      ""
-                      (str " (" options ")")))
+         id-bill :id_bill} (sql/retrieve-bill-item id)
+        lang               (:language user)]
+    (with-page (get-string "str-assign-item/item/options"
+                           {:item    item
+                            :options (if (nil? options)
+                                       ""
+                                       (str " (" options ")"))}
+                           lang)
       user
       [:main]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
          (form/drop-down "set-person"
-                         (map (fn [n] [(if (= "null" n) "Nadie" (str "Persona " n)) n])
+                         (map (fn [n]
+                                [(if (= "null" n)
+                                   (get-string "str-nobody" {} lang)
+                                   (get-string "str-person/number"
+                                               {:number n} lang))
+                                 n])
                               (conj (range 1 50) "null"))
-                         (if (nil? person) "null" person))
+                         (if (nil? person)
+                           "null"
+                           person))
          [:br]
-         (form/submit-button "Cambiar")]))))
+         (form/submit-button (get-string "btn-change" {} lang))]))))
 
 (defn render-set-bill-item
   "Renders the page where we set the a bill item and its options"
@@ -1144,13 +1176,17 @@
          item    :item
          options :options
          id-bill :id_bill
-         item-id :id_item}     (sql/retrieve-bill-item id)
-        item-group             (:menu_group (sql/retrieve-item-by-id item-id))]
-    (println "Item:" item "id:" item-id)
-    (with-page (str "Cambiar " item
-                    (if (nil? options)
-                      ""
-                      (str " (" options ")")))
+         item-id :id_item} (sql/retrieve-bill-item id)
+        item-group         (:menu_group
+                             (sql/retrieve-item-by-id item-id))
+        lang               (:language user)]
+    ;(println "Item:" item "id:" item-id)
+    (with-page (get-string "str-change-item/item/options"
+                           {:item    item
+                            :options (if (nil? options)
+                                       ""
+                                       (str " (" options ")"))}
+                           lang)
       user
       [:main]
       (with-form (str "/bill/" id-bill)
@@ -1162,7 +1198,7 @@
                                 item-group))
                          item-id)
          [:br]
-         (form/submit-button "Cambiar")]))))
+         (form/submit-button (get-string "btn-change" {} lang))]))))
 
 (defn render-set-bill-item-options
   "Renders the bill item optiions page"

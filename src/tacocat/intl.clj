@@ -26,9 +26,11 @@
 (defn get-string
   "Gets a string in a specific language from the db"
   ([k m lang]
-   (translate-vars
-     (retrieve-internationalised-string k lang)
-     m))
+   (if (empty? k)
+     k
+     (translate-vars
+       (retrieve-internationalised-string k lang)
+       m)))
   ([k m]
    (get-string k m (retrieve-app-data-val "default-language")))
   ([k]
