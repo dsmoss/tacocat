@@ -902,10 +902,6 @@
     (with-page (get-string "str-items" {} lang)
       user
       [:admin :list-items]
-      (make-link "/add-new-item"
-                 (get-string "ln-create-new-item" {} lang))
-      (make-link "/add-new-menu-group"
-                 (get-string "ln-create-new-menu-group" {} lang))
       (with-table lang
         [:name      :menu_group      :charge      :in_stock      :id]
         ["str-item" "str-menu-group" "str-charge" "str-in-stock" ""]
@@ -923,11 +919,7 @@
                      (btn-change lang)))
          (fn [i _] (make-link (str "/delete-item/" i)
                               (get-string "btn-delete" {} lang)))]
-        (sql/retrieve-all-items))
-      (make-link "/add-new-item"
-                 (get-string "ln-create-new-item" {} lang))
-      (make-link "/add-new-menu-group"
-                 (get-string "ln-create-new-menu-group" {} lang)))))
+        (sql/retrieve-all-items)))))
 
 (defn render-services
   "Services screen"
@@ -936,11 +928,7 @@
     (with-page (get-string "ln-services" {} lang)
       user
       [:home :services]
-      (make-link "/add-services-expense"
-                 (get-string "ln-add-services-expense" {} lang))
-      (make-services-table user (sql/retrieve-current-services))
-      (make-link "/add-services-expense"
-                 (get-string "ln-add-services-expense" {} lang)))))
+      (make-services-table user (sql/retrieve-current-services)))))
 
 (defn render-closed-services
   "Services for prior closes"
@@ -986,9 +974,7 @@
     (with-page (get-string "ln-bills" {} lang)
       user
       [:home :bills]
-      (make-link "new-bill" (get-string "ln-new-bill" {} lang))
-      (get-existing-bills user)
-      (make-link "new-bill" (get-string "ln-new-bill" {} lang)))))
+      (get-existing-bills user))))
 
 (defn render-previous-closes
   "Shows the previous closes"
@@ -1433,10 +1419,6 @@
     (with-page (get-string "ln-accts" {} lang)
       user
       [:home :accts]
-      (make-link "/add-expense"
-                 (get-string "ln-add-expense" {} lang))
-      (make-link "/close-acct"
-                 (get-string "ln-close-accounting" {} lang))
       (with-table lang
         [:date      :concept      :amount]
         ["str-date" "str-concept" "str-amount"]
@@ -1448,13 +1430,12 @@
              expenses :expenses
              intakes  :intakes} (sql/retrieve-current-accounting-totals)]
         [:span
-         (format-money total (get-string "fmt-total" {} lang) :h2)
-         (format-money expenses (get-string "fmt-expenses" {} lang))
-         (format-money intakes (get-string "fmt-intakes" {} lang))])
-      (make-link "/add-expense"
-                 (get-string "ln-add-expense" {} lang))
-      (make-link "/close-acct"
-                 (get-string "ln-close-accounting" {} lang)))))
+         (format-money
+           total    (get-string "fmt-total" {} lang) :h2)
+         (format-money
+           expenses (get-string "fmt-expenses" {} lang))
+         (format-money
+           intakes  (get-string "fmt-intakes" {} lang))]))))
 
 (defn render-list-users
   "Page listing all registered users"
@@ -1463,8 +1444,6 @@
     (with-page (get-string "str-registered-users" {} lang)
       user
       [:admin :list-users]
-      (make-link "/add-new-user"
-                 (get-string "ln-add-new-user" {} lang))
       (let
         [make-role-string (fn [roles]
                             (apply str
@@ -1492,9 +1471,7 @@
                        (btn-change lang)))
            (fn [i _] (make-link (str "/delete-user/" i)
                                (get-string "btn-delete" {} lang)))]
-          (sql/retrieve-registered-users)))
-      (make-link "/add-new-user"
-                 (get-string "ln-add-new-user" {} lang)))))
+          (sql/retrieve-registered-users))))))
 
 (defn render-list-roles
   "Gets the list roles page"
@@ -1503,8 +1480,6 @@
     (with-page (get-string "str-registerd-roles" {} lang)
       user
       [:admin :list-roles]
-      (make-link "/add-new-role"
-                 (get-string "ln-add-new-role" {} lang))
       (with-table lang
         [:name      :id               :id]
         ["str-role" "str-permissions" ""]
@@ -1513,9 +1488,7 @@
                      (sort (sql/retrieve-permissions-for-role i))))
          (fn [i _] (make-link (str "/delete-role/" i)
                               (get-string "btn-delete" {} lang)))]
-        (sql/retrieve-all-roles))
-      (make-link "/add-new-role" 
-                 (get-string "ln-add-new-role" {} lang)))))
+        (sql/retrieve-all-roles)))))
 
 (defn render-new-option-group
   "Page to add an option group"
