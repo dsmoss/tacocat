@@ -408,15 +408,15 @@
 (defn render-delete-user
   "Delete user page"
   [user id]
-  (with-page (get-string "str-delete-user/name"
-                         (-> id int-or-null sql/retrieve-user-by-id)
-                         (:language user))
-    user
-    [:admin]
-    [:h5
-     (with-form "/list-users"
-       (form/hidden-field {:value id} "delete-user")
-       (btn-delete (:language user)))]))
+  (let [lang (:language user)
+        u    (-> id int-or-null sql/retrieve-user-by-id)]
+    (with-page (get-string "str-delete-user/name" u lang)
+      user
+      [:admin]
+      [:h5
+       (with-form "/list-users"
+         (form/hidden-field {:value id} "delete-user")
+         (btn-delete lang))])))
 
 (defn render-change-user-name
   "Screen to change users full name"
@@ -437,10 +437,11 @@
 (defn render-change-user-language
   "Language selection screen"
   [user id]
-  (let [lang  (-> id
-                  int-or-null
-                  sql/retrieve-user-by-id
-                  :language)
+  (let [lang    (:language user)
+        t-lang  (-> id
+                    int-or-null
+                    sql/retrieve-user-by-id
+                    :language)
         langs (sql/retrieve-langs)]
     (with-page (get-string "str-lang" {} lang)
       user
@@ -453,7 +454,7 @@
                          (map (fn [{n :name f :full_name}]
                                 [(get-string f {} lang) n])
                               langs)
-                         lang)
+                         t-lang)
          [:br]
          (btn-change lang))])))
 
