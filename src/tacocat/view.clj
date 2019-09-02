@@ -24,9 +24,7 @@
   ;                      ["previous-closes"]]
   ;             ["services" ["add-services-expense"]
   ;                         ["closed-services"]]]
-  ;     ["system" ["login"]
-  ;               ["user-info"]
-  ;               ["admin-options"]
+  ;     ["system" ["admin-options"]
   ;               ["log"]
   ;               ["intl"]]]
   {:general    [{:destination "/"
@@ -69,11 +67,7 @@
                  :string      "ln-add-services-expense"}
                 {:destination "/closed-services"
                  :string      "ln-closed-services"}]
-   :system     [;{:destination "/login"
-                ; :string      "ln-login"}
-                ;{:destination "/user-info"
-                ; :string      "ln-user-info"}
-                {:destination "/admin-options"
+   :system     [{:destination "/admin-options"
                  :string      "ln-admin-options"}
                 {:destination "/log"
                  :string      "ln-log"}
@@ -81,38 +75,6 @@
                  :string      "ln-intl"}]
    :error      [{:destination "/user-info"
                  :string      "ln-user-info"}]})
-
-#_(def link-data
-  {:general [{:destination "/"
-              :string      "ln-home"}
-             {:destination "/bills"
-              :string      "ln-bills"}
-             {:destination "/accts"
-              :string      "ln-accts"}
-             {:destination "/services"
-              :string      "ln-services"}
-             {:destination "/admin"
-              :string      "ln-admin"}]
-   :admin    [{:destination "/admin-options"
-              :string      "ln-admin-options"}
-             {:destination "/list-users"
-              :string      "ln-list-users"}
-             {:destination "/list-roles"
-              :string      "ln-list-roles"}
-             {:destination "/list-items"
-              :string      "ln-list-items"}
-             {:destination "/log"
-              :string      "ln-log"}
-             {:destination "/intl"
-              :string      "ln-intl"}]
-   :main    [{:destination "/old-bills"
-              :string      "ln-old-bills"}
-             {:destination "/closed-services"
-              :string      "ln-closed-services"}
-             {:destination "/previous-closes"
-              :string      "ln-previous-closes"}]
-   :error   [{:destination "/user-info"
-              :string      "ln-user-info"}]})
 
 (defn get-links
   "Gets the links for a section"
