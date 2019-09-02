@@ -1,6 +1,5 @@
 # TODO
 
-- Get the server to run behind SSL
 - Make a page-set for debt tracking
 - Properly deal with exceptions and output proper, meaningful errors
     - Make a tracker in the DB for said errors
