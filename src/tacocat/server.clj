@@ -693,10 +693,6 @@
   "Shows the internationalisation screen"
   [request]
   ;(println request)
-  ; {translate btn-view-translations,
-  ;  lang-from es,
-  ;  lang-to   en,
-  ;  value     some}
   (let [{lang-to   "lang-to"
          lang-from "lang-from"
          key-name  "translate"
@@ -709,6 +705,12 @@
        :action     (controller/set-translation
                      (get-user request) key-name lang-to value)})))
 
+(defn handle-system
+  "Shows the System page"
+  [request]
+  ;(println request)
+  (response request view/render-system))
+
 (def id [#"\d+" :id])
 
 (def handler
@@ -719,6 +721,7 @@
       ["css"                           handle-css]                   ; done
       ["fonts"                         handle-fonts]                 ; done
       [""                              handle-index]                 ; done
+      ["system"                    {"" handle-system}]
       ["admin"                     {"" handle-admin}]                ; done
       ["admin-options"             {"" handle-admin-options}]        ; done
       ["list-users"                {"" handle-list-users}]           ; done
@@ -740,7 +743,7 @@
       [["change-user-name/"        id] handle-change-user-name]      ; done
       [["change-password/"         id] handle-change-password]       ; done
       [["change-user-roles/"       id] handle-change-user-roles]     ; done
-      [["change-user-language/"    id] handle-change-user-language]
+      [["change-user-language/"    id] handle-change-user-language]  ; done
       [["view-role/"               id] handle-view-role]             ; done
       ["add-new-role"              {"" handle-add-new-role}]         ; done
       [["delete-role/"             id] handle-delete-role]           ; done
@@ -768,8 +771,8 @@
       ["add-services-expense"      {"" handle-add-services-expense}] ; done
       ["services"                  {"" handle-services}]             ; done
       ["accts"                     {"" handle-accts}]                ; done
-      ["log"                       {"" handle-log}]
-      ["intl"                      {"" handle-intl}]
+      ["log"                       {"" handle-log}]                  ; done
+      ["intl"                      {"" handle-intl}]                 ; done
       [true (fn [req] {:status 404 :body "404 not found"})]]]))
 
 (defn app

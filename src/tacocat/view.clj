@@ -13,6 +13,76 @@
    (make-link address text :h5)))
 
 (def link-data
+  ;["/" ["admin" ["list-users" ["add-new-user"]]
+  ;              ["list-roles" ["add-new-role"]]
+  ;              ["list-items" ["add-new-item"]
+  ;                            ["add-new-menu-group"]]]
+  ;     ["home" ["bills" ["old-bills"]
+  ;                      ["new-bill"]]
+  ;             ["accts" ["add-expense"]
+  ;                      ["close-acct"]
+  ;                      ["previous-closes"]]
+  ;             ["services" ["add-services-expense"]
+  ;                         ["closed-services"]]]
+  ;     ["system" ["login"]
+  ;               ["user-info"]
+  ;               ["admin-options"]
+  ;               ["log"]
+  ;               ["intl"]]]
+  {:general    [{:destination "/"
+                 :string      "ln-home"}
+                {:destination "/admin"
+                 :string      "ln-admin"}
+                {:destination "/system"
+                 :string      "ln-system"}]
+   :admin      [{:destination "/list-users"
+                 :string      "ln-list-users"}
+                {:destination "/list-roles"
+                 :string      "ln-list-roles"}
+                {:destination "/list-items"
+                 :string      "ln-list-items"}]
+   :list-users [{:destination "/add-new-user"
+                 :string      "ln-add-new-user"}]
+   :list-roles [{:destination "/add-new-role"
+                 :string      "ln-add-new-role"}]
+   :list-items [{:destination "/add-new-item"
+                 :string      "ln-create-new-item"}
+                {:destination "/add-new-menu-group"
+                 :string      "ln-create-new-menu-group"}]
+   :home       [{:destination "/bills"
+                 :string      "ln-bills"}
+                {:destination "/accts"
+                 :string      "ln-accts"}
+                {:destination "/services"
+                 :string      "ln-services"}]
+   :bills      [{:destination "/new-bill"
+                 :string      "ln-new-bill"}
+                {:destination "/old-bills"
+                 :string      "ln-old-bills"}]
+   :accts      [{:destination "/add-expense"
+                 :string      "ln-add-expense"}
+                {:destination "/close-acct"
+                 :string      "ln-close-accounting"}
+                {:destination "/previous-closes"
+                 :string      "ln-previous-closes"}]
+   :services   [{:destination "/add-services-expense"
+                 :string      "ln-add-services-expense"}
+                {:destination "/closed-services"
+                 :string      "ln-closed-services"}]
+   :system     [;{:destination "/login"
+                ; :string      "ln-login"}
+                ;{:destination "/user-info"
+                ; :string      "ln-user-info"}
+                {:destination "/admin-options"
+                 :string      "ln-admin-options"}
+                {:destination "/log"
+                 :string      "ln-log"}
+                {:destination "/intl"
+                 :string      "ln-intl"}]
+   :error      [{:destination "/user-info"
+                 :string      "ln-user-info"}]})
+
+#_(def link-data
   {:general [{:destination "/"
               :string      "ln-home"}
              {:destination "/bills"
@@ -50,7 +120,8 @@
   [:center
    (for [s    sections
          :let [data    (s link-data)
-               percent (float (/ 100 (count data)))]]
+               c       (count data)
+               percent (float (/ 100 (if (= 0 c) 1 c)))]]
      [:table {:width "100%"
               :style "w3-cell w3-container"
               :cellpadding 10}
@@ -116,7 +187,7 @@
        [:header {:class "w3-container w3-card w3-theme-l4"}
         [:center [:h1 header]]]
        [:center content]
-       (get-links lang sections)
+       (get-links lang (reverse sections))
        [:header {:class "w3-container w3-card w3-theme-l4"}
         [:center
          [:h5
@@ -228,11 +299,7 @@
                (:language user))]
     (with-page (sql/retrieve-app-data-val "business-name")
       user
-      [:main]
-      (make-link "/bills"    (get-string "ln-bills"    {} lang))
-      (make-link "/accts"    (get-string "ln-accts"    {} lang))
-      (make-link "/services" (get-string "ln-services" {} lang))
-      (make-link "/admin"    (get-string "ln-admin"    {} lang)))))
+      [:home])))
 
 (defn headers
   "Make the [:th ...] section of a table"
@@ -417,7 +484,7 @@
         u    (-> id int-or-null sql/retrieve-user-by-id)]
     (with-page (get-string "str-delete-user/name" u lang)
       user
-      [:admin]
+      [:admin :list-users]
       [:h5
        (with-form "/list-users"
          (form/hidden-field {:value id} "delete-user")
@@ -430,7 +497,7 @@
         lang (:language user)]
     (with-page (get-string "str-change-user-name/name" u lang)
       user
-      [:admin]
+      [:admin :list-users]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "change-user-name")
@@ -450,7 +517,7 @@
         langs (sql/retrieve-langs)]
     (with-page (get-string "str-lang" {} lang)
       user
-      [:admin]
+      [:admin :list-users]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "set-user-language")
@@ -484,7 +551,7 @@
              machines        (sql/retrieve-logged-in-to id)]
          (with-page (get-string "str-user-info/name" u lang)
            user
-           [:admin]
+           [:system]
            [:h5 (get-string "str-username/user_name" u lang)]
            (make-link (str "/change-user-name/"  id)
                       (get-string "ln-full-name/name" u lang))
@@ -523,7 +590,7 @@
         lang          (:language user)]
     (with-page (get-string "str-roles-for/name" edit-user lang)
       user
-      [:admin]
+      [:admin :list-users]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value true} "set-user-roles")
@@ -547,7 +614,7 @@
         lang          (:language user)]
     (with-page rname
       user
-      [:admin]
+      [:admin :list-roles]
       (with-table lang
         [:name            :id]
         ["str-permission" ""]
@@ -567,7 +634,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-add-role" {} lang)
       user
-      [:admin]
+      [:admin :list-roles]
       [:h5
        (with-form "/list-roles"
          (form/hidden-field {:value true} "add-role")
@@ -583,7 +650,7 @@
                          (-> id int-or-null sql/retrieve-role-by-id)
                          (:language user))
     user
-    [:admin]
+    [:admin :list-roles]
     [:h5
      (with-form "/list-roles"
        (form/hidden-field {:value id} "delete-role")
@@ -595,7 +662,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-add-new-menu-group" {} lang)
       user
-      [:admin]
+      [:admin :list-items]
       [:h5
        (with-form "/list-items"
          (form/hidden-field {:value true} "add-new-menu-group")
@@ -610,7 +677,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-add-item" {} lang)
       user
-      [:admin]
+      [:admin :list-items]
       [:h5
        (with-form "/list-items"
          (form/hidden-field {:value true} "add-new-item")
@@ -663,7 +730,7 @@
         lang                  (:language user)]
     (with-page iname
       user
-      [:admin]
+      [:admin :list-items]
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-name")
@@ -708,7 +775,7 @@
              (btn-remove lang))))
 
        [:h4 {:class "w3-container w3-card"}
-        (get-string "str-other-options")]
+        (get-string "str-other-options" {} lang)]
        (with-options-table lang id
          (filter (fn [{i :id}]
                    (not (contains? item-options i)))
@@ -725,7 +792,7 @@
         lang (:language user)]
     (with-page (get-string "str-change-password/name" u lang)
       user
-      [:admin]
+      [:system]
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value true} "change-user-password")
@@ -734,27 +801,25 @@
          [:br]
          (btn-change lang))])))
 
+(defn render-system
+  "Gets the system page"
+  [user]
+  (let [lang (if (empty? user)
+               (sql/retrieve-app-data-val "default-language")
+               (:language user))]
+    (with-page (get-string "ln-system" {} lang)
+      user
+      [:system])))
+
 (defn render-admin
   "Gets the admin page"
   [user]
   (let [lang (if (empty? user)
                (sql/retrieve-app-data-val "default-language")
                (:language user))]
-    (with-page "Admin"
+    (with-page (get-string "ln-admin" {} lang)
       user
-      [:admin]
-      (make-link
-        "/admin-options" (get-string "ln-admin-options" {} lang))
-      (make-link
-        "/list-users" (get-string "ln-list-users" {} lang))
-      (make-link
-        "/list-roles" (get-string "ln-list-roles" {} lang))
-      (make-link
-        "/list-items" (get-string "ln-list-items" {} lang))
-      (make-link
-        "/log" (get-string "ln-log" {} lang))
-      (make-link
-        "/intl" (get-string "ln-intl" {} lang)))))
+      [:admin])))
 
 (defn render-intl
   "Renders the internationalisation page"
@@ -763,7 +828,7 @@
         langs (sql/retrieve-langs)]
     (with-page (get-string "str-internationalisation" {} lang)
       user
-      [:admin]
+      [:system]
       (with-form "/intl"
         (lbl-from "lang-from" lang)
         (form/drop-down {:id "lang-from"} "lang-from"
@@ -818,7 +883,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-app-options" {} lang)
       user
-      [:admin]
+      [:system]
       [:h5
        (with-form "/admin-options"
          (form/hidden-field {:value true} "make-admin-changes")
@@ -836,7 +901,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-items" {} lang)
       user
-      [:admin]
+      [:admin :list-items]
       (make-link "/add-new-item"
                  (get-string "ln-create-new-item" {} lang))
       (make-link "/add-new-menu-group"
@@ -857,7 +922,7 @@
                      (format-bool b (:id i))
                      (btn-change lang)))
          (fn [i _] (make-link (str "/delete-item/" i)
-                              (get-string "btn-delete")))]
+                              (get-string "btn-delete" {} lang)))]
         (sql/retrieve-all-items))
       (make-link "/add-new-item"
                  (get-string "ln-create-new-item" {} lang))
@@ -870,7 +935,7 @@
   (let [lang (:language user)]
     (with-page (get-string "ln-services" {} lang)
       user
-      [:main]
+      [:home :services]
       (make-link "/add-services-expense"
                  (get-string "ln-add-services-expense" {} lang))
       (make-services-table user (sql/retrieve-current-services))
@@ -883,7 +948,7 @@
   (let [lang (:language user)]
     (with-page (get-string "ln-closed-services" {} lang)
       user
-      [:main]
+      [:home :services]
       (with-table lang
         [:date      :id]
         ["str-date" "str-close"]
@@ -900,7 +965,7 @@
     (with-page (get-string "str-services-for-close/number"
                            {:number id} lang)
       user
-      [:main]
+      [:home :services]
       (make-services-table
         user (sql/retrieve-services-for-close id)))))
 
@@ -920,7 +985,7 @@
   (let [lang (:language user)]
     (with-page (get-string "ln-bills" {} lang)
       user
-      [:main]
+      [:home :bills]
       (make-link "new-bill" (get-string "ln-new-bill" {} lang))
       (get-existing-bills user)
       (make-link "new-bill" (get-string "ln-new-bill" {} lang)))))
@@ -931,7 +996,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-closes" {} lang)
       user
-      [:main]
+      [:home :accts]
       (with-table lang
         [:date      :expense_amount :intake_amount :earnings     :id]
         ["str-date" "str-expenses"  "str-intake"   "str-earning" ""]
@@ -949,7 +1014,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-close-of-accounting" {} lang)
       user
-      [:main]
+      [:home :accts]
       (with-form "/previous-closes"
         (form/hidden-field {:value true} "make-close")
         [:h5 (btn-close lang)]))))
@@ -960,7 +1025,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-add-services-charge" {} lang)
       user
-      [:main]
+      [:home :services]
       (with-form "/services"
         (form/hidden-field {:value true} "add-service-charge")
         [:h5
@@ -977,7 +1042,7 @@
   [user]
   (with-page (get-string "str-closed-bills" {} (:language user))
     user
-    [:main]
+    [:home :bills]
     (get-closed-bills user)))
 
 (defn get-bill-items
@@ -1027,7 +1092,7 @@
         lang               (:language user)]
     (with-page (get-string "str-delete/name" {:name item} lang)
       user
-      [:main]
+      [:home :bills]
       [:h5
        (with-form (str "/bill/" id-bill)
          (form/hidden-field {:value id} "delete-bill-item")
@@ -1040,7 +1105,7 @@
         lang     (:language user)]
     (with-page (get-string "str-change-location" {} lang)
       user
-      [:main]
+      [:home :bills]
       (with-form (str "/bill/" id)
         (form/hidden-field {:value id} "edit-bill-location")
         [:h5
@@ -1074,7 +1139,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-add-expense" {} lang)
       user
-      [:main]
+      [:home :accts]
       (with-form "/accts"
         (form/hidden-field {:value true} "add-expense")
         [:h5
@@ -1095,7 +1160,7 @@
         lang                (:language user)]
     (with-page location
       user
-      [:main]
+      [:home :bills]
       (make-link (str "/print-bill/" id)
                  (get-string "ln-print" {} lang))
       (get-old-bill-items user id)
@@ -1153,7 +1218,7 @@
         lang                (:language user)]
     (with-page location
       user
-      [:main]
+      [:home :bills]
       (make-link (str "/add-item/" id)
                  (get-string "ln-add-to-bill" {} lang))
       (make-link (str "/charge-bill/" id)
@@ -1184,7 +1249,7 @@
                                        (str " (" options ")"))}
                            lang)
       user
-      [:main]
+      [:home :bills]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
@@ -1221,7 +1286,7 @@
                                        (str " (" options ")"))}
                            lang)
       user
-      [:main]
+      [:home :bills]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
@@ -1255,7 +1320,7 @@
                                       (str " (" options ")"))}
                           lang)
       user
-      [:main]
+      [:home :bills]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         (form/hidden-field {:value true} "set-options")
@@ -1297,7 +1362,7 @@
                                       (str " (" options ")"))}
                           lang)
       user
-      [:main]
+      [:home :bills]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
@@ -1311,7 +1376,7 @@
   (let [lang (:language user)]
     (with-page (get-string "ln-add-to-bill" {} lang)
       user
-      [:main]
+      [:home :bills]
       (doall
         (map (fn [m]
                [:div
@@ -1334,7 +1399,7 @@
   (let [lang (:language user)]
     (with-page (get-string "ln-new-bill" {} lang)
       user
-      [:main]
+      [:home :bills]
       (with-form "/bills"
         (form/hidden-field {:value true} "new-bill")
         [:h5
@@ -1353,7 +1418,7 @@
     (with-page (get-string "str-charge-for/location"
                            {:location location} lang)
       user
-      [:main]
+      [:home :bills]
       [:p date]
       (with-form (str "/closed-bill/" id)
         (form/hidden-field {:value charge} "bill-charge")
@@ -1367,7 +1432,7 @@
   (let [lang (:language user)]
     (with-page (get-string "ln-accts" {} lang)
       user
-      [:main]
+      [:home :accts]
       (make-link "/add-expense"
                  (get-string "ln-add-expense" {} lang))
       (make-link "/close-acct"
@@ -1397,7 +1462,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-registered-users" {} lang)
       user
-      [:admin]
+      [:admin :list-users]
       (make-link "/add-new-user"
                  (get-string "ln-add-new-user" {} lang))
       (let
@@ -1429,7 +1494,7 @@
                                (get-string "btn-delete" {} lang)))]
           (sql/retrieve-registered-users)))
       (make-link "/add-new-user"
-                 (get-string "ln-add-user" {} lang)))))
+                 (get-string "ln-add-new-user" {} lang)))))
 
 (defn render-list-roles
   "Gets the list roles page"
@@ -1437,7 +1502,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-registerd-roles" {} lang)
       user
-      [:admin]
+      [:admin :list-roles]
       (make-link "/add-new-role"
                  (get-string "ln-add-new-role" {} lang))
       (with-table lang
@@ -1458,7 +1523,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-new-option-group" {} lang)
       user
-      [:admin]
+      [:admin :list-items]
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value true} "add-new-option-group")
@@ -1472,7 +1537,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-new-option" {} lang)
       user
-      [:admin]
+      [:admin :list-items]
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value true} "add-new-option")
@@ -1501,7 +1566,7 @@
         lang                     (:language user)]
     (with-page (str option-group "/" oname)
       user
-      [:admin]
+      [:admin :list-items]
       [:h5
        (with-form post-page
          (form/hidden-field {:value true} "set-option-name")
@@ -1539,7 +1604,7 @@
         lang                (:language user)]
     (with-page iname
       user
-      [:admin]
+      [:admin :list-items]
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-menu-group")
@@ -1559,7 +1624,7 @@
         lang             (:language user)]
     (with-page iname
       user
-      [:admin]
+      [:admin :list-items]
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-charge")
@@ -1576,7 +1641,7 @@
         lang          (:language user)]
     (with-page (get-string "str-delete/name" {:name iname} lang)
       user
-      [:admin]
+      [:admin :list-items]
       [:h5 (get-string "str-wrn-on-item-delete" {} lang)
        (with-form "/list-items"
          (form/hidden-field {:value id} "delete-item")
@@ -1588,7 +1653,7 @@
   (let [lang (:language user)]
     (with-page (get-string "str-register-user" {} lang)
       user
-      [:admin]
+      [:admin :list-users]
       [:h5
        (with-form "/list-users"
          (form/hidden-field {:value true} "add-user")
@@ -1617,7 +1682,7 @@
          partner-take :partner_take} (sql/retrieve-single-close id)]
     (with-page (get-string "str-close/number" {:number id} lang)
       user
-      [:main]
+      [:home :accts]
       [:span
        [:p date]
        (with-table lang
@@ -1648,7 +1713,7 @@
   (let [lang (:language user)]
     (with-page (get-string "ln-log" {} lang)
       user
-      [:admin]
+      [:system]
       [:p (get-string "str-entries-limit" {} lang)]
       (with-table lang
         [:date      :id_app_user  :action      :details]
