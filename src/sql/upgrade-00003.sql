@@ -2,13 +2,16 @@ insert into app_upgrade (upgrade) values ('upgrade-00003.sql');
 
 insert into intl_key (name) values ('btn-copy')
                                  , ('ln-system')
+				 , ('str-username/user_name')
 ;
 
-insert into intl (key       , lang, val)
-          values ('btn-copy', 'en', 'Copy')
-	       , ('btn-copy', 'es', 'Copiar')
-	       , ('ln-system', 'en', 'System')
-	       , ('ln-system', 'es', 'Sistema')
+insert into intl (key                     , lang, val)
+          values ('btn-copy'              , 'en', 'Copy')
+	       , ('btn-copy'              , 'es', 'Copiar')
+	       , ('ln-system'             , 'en', 'System')
+	       , ('ln-system'             , 'es', 'Sistema')
+	       , ('str-username/user_name', 'en', 'Username: %user_name')
+	       , ('str-username/user_name', 'es', 'Usuario: %user_name')
 ;
 
 alter table item_option

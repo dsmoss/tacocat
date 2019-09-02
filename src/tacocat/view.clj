@@ -76,22 +76,30 @@
    :error      [{:destination "/user-info"
                  :string      "ln-user-info"}]})
 
+(defn make-link-table
+  "Makes a link table"
+  ([data lang m]
+   (let [c  (count data)
+         pc (float (/ 100 (if (= 0 c) 1 c)))]
+     [:table
+      {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
+      [:tr
+       (map (fn [{d :destination s :string}]
+              [:th {:width (str pc "%")}
+               (make-link d (get-string s m lang))])
+            data)]]))
+  ([data lang]
+   (make-link-table data lang {}))
+  ([data]
+   (make-link-table
+     data (sql/retrieve-app-data-val "default-language"))))
+
 (defn get-links
   "Gets the links for a section"
   [lang sections]
   [:center
-   (for [s    sections
-         :let [data    (s link-data)
-               c       (count data)
-               percent (float (/ 100 (if (= 0 c) 1 c)))]]
-     [:table {:width "100%"
-              :style "w3-cell w3-container"
-              :cellpadding 10}
-      [:tr
-       (map (fn [{d :destination s :string}]
-              [:th {:width (str percent "%")}
-               (make-link d (get-string s {} lang))])
-            data)]])])
+   (for [s sections]
+     (make-link-table (s link-data) lang))])
 
 (defn main-head
   "normal page head tag"
@@ -689,10 +697,18 @@
                                 (map :id_option
                                   (sql/retrieve-valid-options id)))
         all-options           (sql/retrieve-all-options)
-        lang                  (:language user)]
+        lang                  (:language user)
+        lt         (make-link-table
+                     [{:destination (str "/create-new-option-group/"
+                                         id)
+                       :string "ln-create-new-option-group"}
+                      {:destination (str "/create-new-option/" id)
+                       :string "ln-create-new-option"}]
+                     lang)]
     (with-page iname
       user
       [:admin :list-items]
+      lt
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-name")
@@ -720,12 +736,7 @@
          (lbl-in-stock "in-stock" lang)
          (form/check-box {:id "in-stock"} "in-stock" in-stock?)
          (btn-change lang))
-       
-       (make-link (str "/create-new-option-group/" id)
-                  (get-string "ln-create-new-option-group" {} lang))
-       (make-link (str "/create-new-option/" id)
-                  (get-string "ln-create-new-option" {} lang))
-       
+
        [:h4 {:class "w3-container w3-card"}
         (get-string "str-item-options" {} lang)]
        (with-options-table lang id
@@ -745,7 +756,8 @@
          (fn [i _]
            (with-form (str "/view-item/" id)
              (form/hidden-field {:value i} "add-option-to-item")
-             (btn-add lang))))])))
+             (btn-add lang))))]
+      lt)))
 
 (defn render-change-user-password
   "User password change screen"
@@ -1068,7 +1080,7 @@
      [:date  :person  :item      :charge]
      [""     "str-p#" "str-item" "str-charge"]
      [(fn [t _] (format-time t tag))
-      (fn [p _] [tag (if (nil? p) "" [:center p])])
+      (fn [p _] [tag [:center (if (nil? p) "-" p)]])
       (fn [i c] [tag i " " 
                  (let [options (:options c)]
                    (if (nil? options)
@@ -1105,26 +1117,28 @@
   (let [{date     :date
          location :location
          charge   :charge}  (sql/retrieve-bill id)
-        lang                (:language user)]
+        lang                (:language user)
+        lt                  (make-link-table
+                              [{:destination (str "/print-bill/" id)
+                                :string      "ln-print"}]
+                              lang)]
     (with-page location
       user
       [:home :bills]
-      (make-link (str "/print-bill/" id)
-                 (get-string "ln-print" {} lang))
-      (get-old-bill-items user id)
+      lt
+      [:p date]
       (format-money charge (get-string "fmt-total" {} lang) :h2)
+      (get-old-bill-items user id)
       (with-table lang
         [:person      :charge]
         ["str-person" "str-charge"]
         [(fn [p _] [:h5 (if (nil? p)
-                          ""
+                          "-"
                           (get-string
                             "str-person/number" {:number p} lang))])
          (fn [m _] (format-money m))]
         (sql/retrieve-bill-charges-per-person id))
-      [:p date]
-      (make-link (str "/print-bill/" id)
-                 (get-string "ln-print" {} lang)))))
+      lt)))
 
 (defn render-print-bill
   [user id]
@@ -1147,7 +1161,7 @@
             [:person      :charge]
             ["str-person" "str-charge"]
             [(fn [p _] [:p (if (nil? p)
-                             ""
+                             "-"
                              (get-string "str-person/number"
                                {:number p} lang))])
              (fn [m _] (format-money m "" :p))]
@@ -1163,24 +1177,24 @@
         mult                (float-or-null
                               (sql/retrieve-app-data-val
                                 "card-multiplicative"))
-        lang                (:language user)]
+        lang                (:language user)
+        lt                  (make-link-table
+                              [{:destination (str "/add-item/" id)
+                                :string      "ln-add-to-bill"}
+                               {:destination (str "/charge-bill/" id)
+                                :string      "ln-charge"}]
+                              lang)]
     (with-page location
       user
       [:home :bills]
-      (make-link (str "/add-item/" id)
-                 (get-string "ln-add-to-bill" {} lang))
-      (make-link (str "/charge-bill/" id)
-                 (get-string "ln-charge" {} lang))
-      (get-bill-items user id)
+      lt
+      [:p date]
       (format-money charge
                     (get-string "fmt-total" {} lang) :h2)
       (format-money (* mult charge)
                     (get-string "str-card-payment" {} lang))
-      (make-link (str "/add-item/" id)
-                 (get-string "ln-add-to-bill" {} lang))
-      (make-link (str "/charge-bill/" id)
-                 (get-string "ln-charge" {} lang))
-      [:p date])))
+      (get-bill-items user id)
+      lt)))
 
 (defn render-set-person
   "Renders the page where we set the person for a bill item"
@@ -1381,23 +1395,20 @@
     (with-page (get-string "ln-accts" {} lang)
       user
       [:home :accts]
+      (let [{total    :total
+             expenses :expenses
+             intakes  :intakes} (sql/retrieve-current-accounting-totals)]
+        [:span
+         (format-money total (get-string "fmt-total" {} lang) :h2)
+         (format-money expenses (get-string "fmt-expenses" {} lang))
+         (format-money intakes (get-string "fmt-intakes" {} lang))])
       (with-table lang
         [:date      :concept      :amount]
         ["str-date" "str-concept" "str-amount"]
         [(fn [d _] (format-date d))
          (fn [c _] [:h5 c])
          (fn [m _] (format-money m))]
-        (sql/retrieve-current-accounting))
-      (let [{total    :total
-             expenses :expenses
-             intakes  :intakes} (sql/retrieve-current-accounting-totals)]
-        [:span
-         (format-money
-           total    (get-string "fmt-total" {} lang) :h2)
-         (format-money
-           expenses (get-string "fmt-expenses" {} lang))
-         (format-money
-           intakes  (get-string "fmt-intakes" {} lang))]))))
+        (sql/retrieve-current-accounting)))))
 
 (defn render-list-users
   "Page listing all registered users"
