@@ -1,4 +1,4 @@
-# tacocat
+# TacOcaT
 
 A simple bar/restaurant manager app
 
@@ -18,6 +18,8 @@ A simple bar/restaurant manager app
 
 An initial user will be created for you, tacocat, with password TacOcaT2019.
 I suggest you change that on your first login.
+
+If you want to change your favicon.ico and related resources, just overwrite the contents of `resources/ico` and run `lein uberjar` afterwards.
 
 ## HTTPS and Apache
 
