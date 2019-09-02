@@ -375,7 +375,15 @@
   ([id default]
    (form/text-field {:id id} id default))
   ([id]
-   (tf id "")))
+   (tf id nil)))
+
+(defn nf
+  "Makes a number field"
+  ([id default]
+   (form/text-field {:id id :type "number" :step "0.01"}
+                    id default))
+  ([id]
+   (nf id nil)))
 
 (defn render-login
   "Show the login page"
@@ -390,8 +398,7 @@
        (with-form "/user-info"
          (form/hidden-field {:value true} "perform-login")
          (lbl-user-name "user-name" lang)
-         (form/text-field {:id "user-name"}
-                          "user-name" (:user_name user))
+         (tf "user-name" (:user_name user))
          [:br]
          (lbl-password "password" lang)
          (form/password-field {:id "password"} "password")
@@ -423,7 +430,7 @@
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "change-user-name")
          (lbl-full-name "name" lang)
-         (form/text-field {:id id} "name" (:name u))
+         (tf "name" (:name u))
          [:br]
          (btn-change lang))])))
 
@@ -558,7 +565,7 @@
        (with-form "/list-roles"
          (form/hidden-field {:value true} "add-role")
          (lbl-role "role" lang)
-         (form/text-field {:id "role"} "role")
+         (tf "role")
          [:br]
          (btn-add lang))])))
 
@@ -586,7 +593,7 @@
        (with-form "/list-items"
          (form/hidden-field {:value true} "add-new-menu-group")
          (lbl-name "menu-group-name" lang)
-         (form/text-field {:id "menu-group-name"} "menu-group-name")
+         (tf "menu-group-name")
          [:br]
          (btn-add lang))])))
 
@@ -601,7 +608,7 @@
        (with-form "/list-items"
          (form/hidden-field {:value true} "add-new-item")
          (lbl-item "item-name" lang)
-         (form/text-field {:id "item-name"} "item-name")
+         (tf "item-name")
          [:br]
          (lbl-group "menu-group" lang)
          (form/drop-down {:id "menu-group"} "menu-group"
@@ -611,8 +618,7 @@
                                (sql/retrieve-menu-groups)))))
          [:br]
          (lbl-charge "amount" lang)
-         (form/text-field {:id "amount" :type "number" :step "0.01"}
-                          "amount")
+         (nf "amount")
          [:br]
          (btn-add lang))])))
 
@@ -655,7 +661,7 @@
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-name")
          (lbl-item "name" lang)
-         (form/text-field {:id "name"} "name" iname)
+         (tf "name" iname)
          (btn-change lang))
        
        (with-form (str "/view-item/" id)
@@ -670,8 +676,7 @@
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-charge")
          (lbl-charge "amount" lang)
-         (form/text-field {:id "amount" :type "number" :step "0.01"}
-                          "amount" amount)
+         (nf "amount" amount)
          (btn-change lang))
        
        (with-form (str "/view-item/" id)
@@ -768,7 +773,7 @@
                         lang-to)
         [:br]
         (lbl-filter "filter" lang)
-        (form/text-field {:id "filter"} "filter" ffilter)
+        (tf "filter" ffilter)
         [:p (get-string "s-filter-instructions" {} lang)]
         (btn-view-translations lang))
       (if (and (not (nil? lang-from))
@@ -793,7 +798,7 @@
                (form/hidden-field {:value lang-from} "lang-from")
                (form/hidden-field {:value lang-to}   "lang-to")
                [:small
-                (form/text-field "value" v)
+                (tf "value" v)
                 (btn-change lang)]))]
           (sql/retrieve-intl lang-from lang-to
                              (if (empty? ffilter)
@@ -814,7 +819,7 @@
            [:key      :val]
            ["str-key" "str-val"]
            [(fn [k _] [:h5 k])
-            (fn [v o] [:h5 (form/text-field (:key o) v)])]
+            (fn [v o] [:h5 (tf (:key o) v)])]
            (sql/retrieve-app-data))
          (btn-change lang))])))
 
@@ -953,11 +958,10 @@
         (form/hidden-field {:value true} "add-service-charge")
         [:h5
          (lbl-concept "concept" lang)
-         (form/text-field {:id "concept"} "concept")
+         (tf "concept")
          [:br]
          (lbl-charge "amount" lang)
-         (form/text-field {:id "amount" :type "number" :step "0.01"}
-                          "amount")
+         (nf "amount")
          [:br]
          (btn-add lang)]))))
 
@@ -1030,7 +1034,7 @@
       (with-form (str "/bill/" id)
         (form/hidden-field {:value id} "edit-bill-location")
         [:h5
-         (form/text-field "location" location)
+         (tf "location" location)
          [:br]
          (btn-change lang)]))))
 
@@ -1065,11 +1069,10 @@
         (form/hidden-field {:value true} "add-expense")
         [:h5
          (lbl-concept "concept" lang)
-         (form/text-field {:id "concept"} "concept")
+         (tf "concept")
          [:br]
          (lbl-charge "amount" lang)
-         (form/text-field {:id "amount" :type "number" :step "0.01"}
-                          "amount")
+         (nf "amount")
          [:br]
          (btn-add lang)]))))
 
@@ -1292,8 +1295,7 @@
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
-         (form/text-field {:type "number" :step "0.01"}
-                          "charge-override" charge)
+         (nf "charge-override" charge)
          [:br]
          (btn-change lang)]))))
 
@@ -1331,8 +1333,7 @@
         (form/hidden-field {:value true} "new-bill")
         [:h5
          (lbl-location "bill-location" lang)
-         (form/text-field {:id "bill-location" :type "text"}
-                          "bill-location")
+         (tf "bill-location")
          [:br]
          (btn-create lang)]))))
 
@@ -1456,8 +1457,7 @@
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value true} "add-new-option-group")
          (lbl-new-group "new-option-group" lang)
-         (form/text-field {:id "new-option-group"}
-                          "new-option-group")
+         (tf "new-option-group")
          (btn-create lang))])))
 
   (defn render-new-option
@@ -1471,7 +1471,7 @@
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value true} "add-new-option")
          (lbl-new-option "new-option" lang)
-         (form/text-field {:id "new-option"} "new-option")
+         (tf "new-option")
          [:br]
          (lbl-group "option-group" lang)
          (form/drop-down {:id "option-group"} "option-group"
@@ -1500,7 +1500,7 @@
        (with-form post-page
          (form/hidden-field {:value true} "set-option-name")
          (lbl-option "option-name" lang)
-         (form/text-field {:id "option-name"} "option-name" oname)
+         (tf "option-name" oname)
          (btn-change lang))
        (with-form post-page
          (form/hidden-field {:value true} "set-option-group")
@@ -1514,9 +1514,7 @@
        (with-form post-page
          (form/hidden-field {:value true} "set-option-charge")
          (lbl-extra-charge "option-charge" lang)
-         (form/text-field
-           {:id "option-charge" :type "number" :step "0.01"}
-           "option-charge" extra-charge)
+         (nf "option-charge" extra-charge)
          (btn-change lang))
        (with-form post-page
          (form/hidden-field {:value true} "set-option-in-stock")
@@ -1560,8 +1558,7 @@
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-charge")
          (lbl-charge "amount" lang)
-         (form/text-field {:id "amount" :type "number" :step "0.01"}
-                          "amount" charge)
+         (nf "amount" charge)
          [:br]
          (btn-change lang))])))
 
@@ -1590,10 +1587,10 @@
        (with-form "/list-users"
          (form/hidden-field {:value true} "add-user")
          (lbl-user-name "username" lang)
-         (form/text-field {:id "username"} "username")
+         (tf "username")
          [:br]
          (lbl-full-name "name" lang)
-         (form/text-field {:id "name"} "name")
+         (tf "name")
          [:br]
          (lbl-password "password" lang)
          (form/password-field {:id "password"} "password")
