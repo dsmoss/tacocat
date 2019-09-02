@@ -1,4 +1,4 @@
-# tacocat
+# TacOcaT
 
 A simple bar/restaurant manager app
 
