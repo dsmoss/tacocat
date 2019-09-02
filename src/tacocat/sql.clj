@@ -191,6 +191,29 @@
   [user id-bill location]
   (upd user db-spec :bill {:location location} ["id = ?" id-bill]))
 
+(defn insert-copy-of-bill-item
+  "Copies a bill item and inserts it into the bill"
+  [user id-bill-item]
+  (j/with-db-transaction [t-con db-spec]
+    (let [bill-item    (first
+                         (j/query t-con ["select id_bill
+                                               , person
+                                               , id_item
+                                               , charge_override
+                                          from   bill_item
+                                          where  id = ?"
+                                         id-bill-item]))
+          item-options (j/query t-con ["select id_option
+                                        from   bill_item_option
+                                        where  id_bill_item = ?"
+                                       id-bill-item])
+          {id-new :id} (first
+                         (ins user t-con :bill_item bill-item))]
+      (doall
+        (for [{id-op :id_option} item-options]
+          (ins user t-con :bill_item_option
+               {:id_bill_item id-new :id_option id-op}))))))
+
 (defn retrieve-app-data-val
   "Finds a value from the app_data table"
   ([k spec]

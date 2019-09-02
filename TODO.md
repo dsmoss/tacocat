@@ -8,6 +8,6 @@
     - Make them more dynamic
     - Make them more relevant
 - Localise money
-- Add button in bill to copy an item
 - Add localisation for App Option Keys
 - Add localisation for Permissions
+- Make `/intl` full text search

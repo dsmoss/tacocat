@@ -7,8 +7,10 @@
 
 (defn make-link
   "Makes the link form"
-  [address text]
-  [:h5 [:a {:href address} text]])
+  ([address text tag]
+   [tag [:a {:href address} text]])
+  ([address text]
+   (make-link address text :h5)))
 
 (def link-data
   {:general [{:destination "/"
@@ -267,10 +269,12 @@
 
 (defn format-full-date
   "Full date format"
-  [date]
-  [:h5
-   (-> (java.text.SimpleDateFormat. "yy:MM:dd:HH:mm:ss")
-       (.format date))])
+  ([date tag]
+   [tag
+    (-> (java.text.SimpleDateFormat. "yy-MM-dd@HH:mm:ss")
+        (.format date))])
+  ([date]
+   (format-full-date date :h5)))
 
 (defn format-time
   "Gets the format for a time"
@@ -343,6 +347,7 @@
 (def btn-enter             (partial btn "btn-enter"            ))
 (def btn-remove            (partial btn "btn-remove"           ))
 (def btn-view-translations (partial btn "btn-view-translations"))
+(def btn-copy              (partial btn "btn-copy"             ))
 
 (defn lbl
   "Make a localised label"
@@ -450,11 +455,12 @@
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "set-user-language")
          (lbl-lang "language" lang)
-         (form/drop-down {:id "language"} "language"
-                         (map (fn [{n :name f :full_name}]
-                                [(get-string f {} lang) n])
-                              langs)
-                         t-lang)
+         (form/drop-down
+           {:id "language"} "language"
+           (map (fn [{n :name f :full_name}]
+                  [(get-string f {} lang) n])
+                langs)
+           t-lang)
          [:br]
          (btn-change lang))])))
 
@@ -977,10 +983,18 @@
 (defn get-bill-items
   "Returns a form with the bill items of a bill"
   [user id]
-  (let [lang (:language user)]
+  (let [lang   (:language user)
+        ln-fn  (fn [id options lang]
+                (make-link
+                  (str "/set-bill-item-options/" id)
+                  (if (nil? options)
+                    (get-string "ln-add-options" {} lang)
+                    options)
+                  :small))
+        op-cnt #(sql/retrieve-bill-item-option-count %)]
     (with-table lang
-      [:date      :person      :item      :charge      :nil]
-      ["str-time" "str-person" "str-item" "str-charge" ""]
+      [:date      :person      :item      :charge      :id :id]
+      ["str-time" "str-person" "str-item" "str-charge" ""  ""]
       [(fn [t _] (format-time t))
        (fn [p c] (make-link
                    (str "/set-person/" (:id c))
@@ -990,21 +1004,16 @@
                        "ln-person/number" {:number p} lang))))
        (fn [i c] [:div
                   (make-link (str "/set-bill-item/" (:id c)) i)
-                  (if (= 0 (sql/retrieve-bill-item-option-count
-                             (:id c)))
+                  (if (= 0 (op-cnt (:id c)))
                     nil
-                    (let [options (:options c)]
-                      [:span
-                       (make-link (str "/set-bill-item-options/"
-                                       (:id c))
-                                  [:small
-                                   (if (nil? options)
-                                     (get-string
-                                       "ln-add-options" {} lang)
-                                     options)])]))])
+                    (ln-fn (:id c) (:options c) lang))])
        (fn [m c] (make-link (str "/set-charge-override/" (:id c))
                             (format-money m)))
-       (fn [_ c] (make-link (str "/delete-bill-item/" (:id c))
+       (fn [i _] (with-form (str "/bill/" id)
+                   (form/hidden-field {:value id} "replicate-bill-item")
+                   (form/hidden-field {:value i} "id-item")
+                   (btn-copy lang)))
+       (fn [i _] (make-link (str "/delete-bill-item/" i)
                             (get-string "btn-delete" {} lang)))]
       (sql/retrieve-bill-items id))))
 
@@ -1179,17 +1188,18 @@
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
-         (form/drop-down "set-person"
-                         (map (fn [n]
-                                [(if (= "null" n)
-                                   (get-string "str-nobody" {} lang)
-                                   (get-string "str-person/number"
-                                               {:number n} lang))
-                                 n])
-                              (conj (range 1 50) "null"))
-                         (if (nil? person)
-                           "null"
-                           person))
+         (form/drop-down
+           "set-person"
+           (map (fn [n]
+                  [(if (= "null" n)
+                     (get-string "str-nobody" {} lang)
+                     (get-string
+                       "str-person/number" {:number n} lang))
+                   n])
+                (conj (range 1 50) "null"))
+           (if (nil? person)
+             "null"
+             person))
          [:br]
          (btn-change lang)]))))
 
@@ -1250,28 +1260,23 @@
         (form/hidden-field {:value id} "id-bill-item")
         (form/hidden-field {:value true} "set-options")
         [:h5
-         (let [ordered-options (into (sorted-map)
-                                 (map (fn [i] {(key i)
-                                        (map (fn [{n :option_name
-                                                   i :id_option}]
-                                               [:h5
-                                                (form/label {:for i}
-                                                  n (str " " n))
-                                                (form/check-box
-                                                  {:id i} i
-                                                  (contains?
-                                                    current-options
-                                                    i))])
-                                               (val i))})
-                                      (group-by :option_group
-                                                valid-options)))
-               option-groups (keys ordered-options)]
+         (let [innerfn (fn [{n :option_name
+                             i :id_option}]
+                         [:h5
+                          (form/label {:for i} n (str " " n))
+                          (form/check-box
+                            {:id i} i (contains? current-options i))])
+               oo (into (sorted-map)
+                    (map (fn [i]
+                           {(key i) (map innerfn (val i))})
+                         (group-by :option_group
+                                   valid-options)))
+               option-groups (keys oo)]
            (with-table lang
              option-groups
              option-groups
-             (repeat (count ordered-options)
-                     (fn [k _] k))
-             [ordered-options]))
+             (repeat (count oo) (fn [k _] k))
+             [oo]))
          (btn-change lang)]))))
 
 (defn render-set-charge-override
@@ -1648,10 +1653,10 @@
       (with-table lang
         [:date      :id_app_user  :action      :details]
         ["str-date" "str-user"    "str-action" "str-detail"]
-        [(fn [d _] (format-full-date d))
-         (fn [i l] (let [u (sql/retrieve-user-by-id i)]
-                     (make-link (str "/view-user/" i)
-                                (:user_name u))))
-         (fn [a _] a)
-         (fn [d _] d)]
+        [(fn [d _] [:small (format-full-date d :p)])
+         (fn [i l] [:small (let [u (sql/retrieve-user-by-id i)]
+                             (make-link (str "/view-user/" i)
+                                        (:user_name u) :p))])
+         (fn [a _] [:small a])
+         (fn [d _] [:small d])]
         (sql/retrieve-log)))))

@@ -13,6 +13,11 @@
   (println "Closing current period")
   (sql/insert-new-close user str-register str-close))
 
+(defn copy-bill-item
+  "Copy a bill item"
+  [user id-bill-item]
+  (sql/insert-copy-of-bill-item user (int-or-null id-bill-item)))
+
 (defn edit-bill-location
   "Edits the location for a bill"
   [user id location]

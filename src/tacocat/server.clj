@@ -97,12 +97,17 @@
          id-bill         "id-bill"
          new-item        "new-item"
          delete-item     "delete-bill-item"
-         id-bill-item    "id-bill-item"} params
+         id-bill-item    "id-bill-item"
+         cp-bill-item    "id-item"} params
         filtered-options (filter 
                            #(re-matches #"\d+" (name (key %)))
                            params)]
     (with-check-permissions
       request "view-open-bill" (view/render-bill (request-id request))
+      {:trigger    "replicate-bill-item"
+       :permission "create-bill-item"
+       :action     (controller/copy-bill-item
+                     (get-user request) cp-bill-item)}
       {:trigger    "edit-bill-location"
        :permission "change-bill-location"
        :action     (controller/edit-bill-location
