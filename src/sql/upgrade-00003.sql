@@ -20,3 +20,5 @@ drop  constraint item_option_id_item_fkey,
       foreign key (id_item)
       references item(id)
       on delete cascade;
+
+update intl set val = val || '&nbsp;' where key like 'lbl-%';

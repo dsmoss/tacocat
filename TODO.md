@@ -10,4 +10,3 @@
 - Add localisation for App Option Keys
 - Add localisation for Permissions
 - Make `/intl` full text search
-- Add `&nbsp;` to lbl-*
