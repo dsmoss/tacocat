@@ -427,6 +427,23 @@
   ([id]
    (nf id nil)))
 
+(defmacro with-form-table
+  "Makes a table container for a form"
+  ; [1 2 [some some]]
+  ; [1 2 [some some]]
+  ; [2 1 [some some]]
+  ; [[some some some]]
+  ; => [:table [:tr [:th some] [:th {:colspan 2} some]]
+  ;            [:tr [:td some] [:td {:colspan 2} some]]
+  ;            [:tr [:td {:colspan 2} some] [:td some]]
+  ;            [:tr [:td some] [:td some] [:td some]]]
+  ; Or:
+  ; nil
+  ; [[some some]]
+  ; => [:table [:tr [:td some] [:td some]]]
+  [header & data]
+  )
+
 (defn render-login
   "Show the login page"
   [user]
