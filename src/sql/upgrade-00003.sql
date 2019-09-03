@@ -3,6 +3,7 @@ insert into app_upgrade (upgrade) values ('upgrade-00003.sql');
 insert into intl_key (name) values ('btn-copy')
                                  , ('ln-system')
 				 , ('str-username/user_name')
+				 , ('lbl-person')
 ;
 
 insert into intl (key                     , lang, val)
@@ -12,6 +13,8 @@ insert into intl (key                     , lang, val)
 	       , ('ln-system'             , 'es', 'Sistema')
 	       , ('str-username/user_name', 'en', 'Username: %user_name')
 	       , ('str-username/user_name', 'es', 'Usuario: %user_name')
+	       , ('lbl-person', 'es', 'Person: ')
+	       , ('lbl-person', 'en', 'Persona: ')
 ;
 
 alter table item_option
