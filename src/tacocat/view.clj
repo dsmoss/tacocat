@@ -82,10 +82,11 @@
    (let [c  (count data)
          pc (float (/ 100 (if (= 0 c) 1 c)))]
      [:table
-      {:width "100%" :style "w3-cell w3-container" :cellpadding 10}
+      {:width "100%" :cellpadding 0 :cellspacing 0 :border 0}
       [:tr
        (map (fn [{d :destination s :string}]
-              [:th {:width (str pc "%")}
+              [:th {:width (str pc "%")
+                    :style "border: 0; padding: 0;"}
                (make-link d (get-string s m lang))])
             data)]]))
   ([data lang]
@@ -130,7 +131,7 @@
    [:meta {:charset "UTF-8"}]
    (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
                      "https://www.w3schools.com/lib/w3-theme-grey.css"
-                     "/css/style.css"
+                     (str "/css/style.css?" (rand))
                      "/fonts/style.css")
    [:style (str "h1, h2, h3, h4,
                 h5, h6, div, p,
@@ -1290,7 +1291,7 @@
          (let [innerfn (fn [{n :option_name
                              i :id_option}]
                          [:h5
-                          (form/label {:for i} n (str " " n))
+                          (form/label {:for i} n (str n " "))
                           (form/check-box
                             {:id i} i (contains? current-options i))])
                oo (into (sorted-map)
