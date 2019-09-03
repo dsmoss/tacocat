@@ -131,7 +131,7 @@
    [:meta {:charset "UTF-8"}]
    (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
                      "https://www.w3schools.com/lib/w3-theme-grey.css"
-                     (str "/css/style.css?" (rand))
+                     "/css/style.css"
                      "/fonts/style.css")
    [:style (str "h1, h2, h3, h4,
                 h5, h6, div, p,
