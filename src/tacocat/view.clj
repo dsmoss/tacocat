@@ -83,7 +83,7 @@
          pc (float (/ 100 (if (= 0 c) 1 c)))]
      [:table
       {:width "100%" :cellpadding 0 :cellspacing 0 :border 0}
-      [:tr {:style "border: 0;"}
+      [:tr {:style "padding: 0; border: 0;"}
        (map (fn [{d :destination s :string}]
               [:th {:width (str pc "%")
                     :style "border: 0; padding: 0;"}
@@ -130,7 +130,7 @@
    [:meta {:charset "UTF-8"}]
    (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
                      "https://www.w3schools.com/lib/w3-theme-grey.css"
-                     "/css/style.css"
+                     (str "/css/style.css" "?" (rand))
                      "/fonts/style.css")
    [:style (str "h1, h2, h3, h4,
                 h5, h6, div, p,
@@ -256,7 +256,12 @@
 (defn format-bool
   "Makes a bool into a form"
   [b id]
-  (form/check-box id b))
+  [:h5 (form/check-box {:id id} id b)])
+
+(defn make-option-string
+  "Makes an option string"
+  [options]
+  (if (empty? options) "" (str " (" options ")")))
 
 (defn render-index
   "Index page of the application"
@@ -391,6 +396,7 @@
   [text id lang]
   (form/label {:for id} id (get-string text {} lang)))
 
+(def lbl-person       (partial lbl "lbl-person"      ))
 (def lbl-charge       (partial lbl "lbl-charge"      ))
 (def lbl-concept      (partial lbl "lbl-concept"     ))
 (def lbl-extra-charge (partial lbl "lbl-extra-charge"))
@@ -427,22 +433,36 @@
   ([id]
    (nf id nil)))
 
-(defmacro with-form-table
-  "Makes a table container for a form"
-  ; [1 2 [some some]]
-  ; [1 2 [some some]]
-  ; [2 1 [some some]]
-  ; [[some some some]]
+(defn with-form-table
+  "Makes a table suitable for holding form items"
+  [[hs & ts] header & data]
+  (let [row (fn [tag cs items]
+              [:tr {:class "form-table"}
+               (map (fn [c d]
+                      [tag {:class "form-table"
+                            :colspan (if (nil? c) 1 c)} d])
+                    (if (nil? cs) (repeat (count items) 1) cs)                           items)])]
+    [:table {:class "form-table"}
+     (if (not (empty? header))
+       (row :th hs header))
+     (map row
+          (repeat (count data) :td)
+          (if (empty? ts) (repeat (count data) nil) ts)
+          data)]))
+  ; [[1 2] [1 2] [2 1] nil]
+  ; [some some]
+  ; [some some]
+  ; [some some]
+  ; [some some some]
   ; => [:table [:tr [:th some] [:th {:colspan 2} some]]
   ;            [:tr [:td some] [:td {:colspan 2} some]]
   ;            [:tr [:td {:colspan 2} some] [:td some]]
   ;            [:tr [:td some] [:td some] [:td some]]]
   ; Or:
   ; nil
-  ; [[some some]]
+  ; nil
+  ; [some some]
   ; => [:table [:tr [:td some] [:td some]]]
-  [header & data]
-  )
 
 (defn render-login
   "Show the login page"
@@ -456,20 +476,12 @@
       [:h5
        (with-form "/user-info"
          (form/hidden-field {:value true} "perform-login")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-user-name "user-name" lang)]
-           [:td {:class "form-table"}
-            (tf "user-name" (:user_name user))]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-password "password" lang)]
-           [:td {:class "form-table"}
-            (form/password-field {:id "password"} "password")]]
-          [:tr
-           [:td {:colspan 2 :class "form-table"}
-            (btn-enter lang)]]])])))
+         (with-form-table [nil nil nil [2]] nil
+           [(lbl-user-name "user-name" lang)
+            (tf "user-name" (:user_name user))]
+           [(lbl-password "password" lang)
+            (form/password-field {:id "password"} "password")]
+           [(btn-enter lang)]))])))
 
 (defn render-delete-user
   "Delete user page"
@@ -482,9 +494,8 @@
       [:h5
        (with-form "/list-users"
          (form/hidden-field {:value id} "delete-user")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"} (btn-delete lang)]]])])))
+         (with-form-table nil nil
+           [(btn-delete lang)]))])))
 
 (defn render-change-user-name
   "Screen to change users full name"
@@ -497,15 +508,10 @@
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "change-user-name")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-full-name "name" lang)]
-           [:td {:class "form-table"}
-            (tf "name" (:name u))]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-change lang)]]])])))
+         (with-form-table [nil nil [2]] nil
+           [(lbl-full-name "name" lang)
+            (tf "name" (:name u))]
+           [(btn-change lang)]))])))
 
 (defn render-change-user-language
   "Language selection screen"
@@ -522,20 +528,15 @@
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value id} "set-user-language")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-lang "language" lang)]
-           [:td {:class "form-table"}
+         (with-form-table [nil nil [2]] nil
+           [(lbl-lang "language" lang)
             (form/drop-down
               {:id "language"} "language"
               (map (fn [{n :name f :full_name}]
                      [(get-string f {} lang) n])
                    langs)
-              t-lang)]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-change lang)]]])])))
+              t-lang)]
+           [(btn-change lang)]))])))
 
 (defn render-user-info
   "Shows user info page or login error"
@@ -559,24 +560,16 @@
            user
            [:system]
            [:h5 (get-string "str-username/user_name" u lang)]
-           [:table {:class "form-table"}
-            [:tr {:class "form-table"}
-             [:td {:class "form-table"}
-              (make-link (str "/change-user-name/"  id)
-                         (get-string "ln-full-name/name" u lang))]]
-            [:tr {:class "form-table"}
-             [:td {:class "form-table"}
-              (make-link (str "/change-password/"   id)
-                         (get-string "ln-change-password" {} lang))]]
-            [:tr {:class "form-table"}
-             [:td {:class "form-table"}
-              (make-link (str "/change-user-roles/" id)
-                         (get-string "ln-change-roles" {} lang))]]
-            [:tr {:class "form-table"}
-             [:td {:class "form-table"}
-              (make-link (str "/change-user-language/" id)
+           (with-form-table nil nil
+             [(make-link (str "/change-user-name/"  id)
+                         (get-string "ln-full-name/name" u lang))]
+             [(make-link (str "/change-password/"   id)
+                         (get-string "ln-change-password" {} lang))]
+             [(make-link (str "/change-user-roles/" id)
+                         (get-string "ln-change-roles" {} lang))]
+             [(make-link (str "/change-user-language/" id)
                          (get-string
-                           "ln-change-language/language" u lang))]]]
+                           "ln-change-language/language" u lang))])
            (with-table lang
              [:roles      :permissions      :machines]
              ["str-roles" "str-permissions" "str-machines"]
@@ -614,12 +607,10 @@
            ["str-role" ""]
            [(fn [n r] (form/label {:for (:id r)}
                                   (:name r) (:name r)))
-            (fn [i _] (form/check-box {:id i} i
-                                      (contains? id-user-roles i)))]
+            (fn [i _] (format-bool (contains? id-user-roles i) i))]
            all-roles)
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"} (btn-change lang)]]])])))
+         (with-form-table nil nil
+           [(btn-change lang)]))])))
 
 (defn render-view-role
   "Role page"
@@ -641,12 +632,9 @@
             (with-form (str "/view-role/" id)
               (form/hidden-field
                 {:value i} "change-permission")
-              [:table {:class "form-table"}
-               [:tr {:class "form-table"}
-                [:td {:class "form-table"}
-                 (form/check-box
-                   i (contains? role-perms (:name r)))]
-                [:td {:class "form-table"} (btn-change lang)]]])])]
+              (with-form-table nil nil
+                [(format-bool (contains? role-perms (:name r)) i)
+                 (btn-change lang)]))])]
         all-perms))))
 
 (defn render-add-new-role
@@ -659,31 +647,24 @@
       [:h5
        (with-form "/list-roles"
          (form/hidden-field {:value true} "add-role")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-role "role" lang)]
-           [:td {:class "form-table"}
-            (tf "role")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-add lang)]]])])))
+         (with-form-table [nil nil [2]] nil
+           [(lbl-role "role" lang)
+            (tf "role")]
+           [(btn-add lang)]))])))
 
 (defn render-delete-role
   "Delete role page"
   [user id]
-  (with-page (get-string "str-delete-role/name"
-                         (-> id int-or-null sql/retrieve-role-by-id)
-                         (:language user))
+  (let [lang (:language user)
+        role (sql/retrieve-role-by-id (int-or-null id))]
+    (with-page (get-string "str-delete-role/name" role lang)
     user
     [:admin :list-roles]
     [:h5
      (with-form "/list-roles"
        (form/hidden-field {:value id} "delete-role")
-       [:table {:class "form-table"}
-        [:tr {:class "form-table"}
-         [:td {:class "form-table"}
-       (btn-delete (:language user))]]])]))
+       (with-form-table nil nil
+         [(btn-delete lang)]))])))
 
 (defn render-add-new-menu-group
   "New Menu Group page"
@@ -695,15 +676,10 @@
       [:h5
        (with-form "/list-items"
          (form/hidden-field {:value true} "add-new-menu-group")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-name "menu-group-name" lang)]
-           [:td {:class "form-table"}
-            (tf "menu-group-name")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-add lang)]]])])))
+         (with-form-table [nil nil [2]] nil
+           [(lbl-name "menu-group-name" lang)
+            (tf "menu-group-name")]
+           [(btn-add lang)]))])))
 
 (defn render-add-new-item
   "New item page"
@@ -715,30 +691,19 @@
       [:h5
        (with-form "/list-items"
          (form/hidden-field {:value true} "add-new-item")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-item "item-name" lang)]
-           [:td {:class "form-table"}
-            (tf "item-name")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-group "menu-group" lang)]
-           [:td {:class "form-table"}
+         (with-form-table [nil nil nil nil [2]] nil
+           [(lbl-item "item-name" lang)
+            (tf "item-name")]
+           [(lbl-group "menu-group" lang)
             (form/drop-down
               {:id "menu-group"} "menu-group"
               (map (fn [g] [g g])
                    (sort
                      (map :name
-                          (sql/retrieve-menu-groups)))))]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-charge "amount" lang)]
-           [:td {:class "form-table"}
-            (nf "amount")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-add lang)]]])])))
+                          (sql/retrieve-menu-groups)))))]
+           [(lbl-charge "amount" lang)
+            (nf "amount")]
+           [(btn-add lang)]))])))
 
 (defn with-options-table
   "Make a table for showing item options"
@@ -748,16 +713,13 @@
     ["str-option" "str-in-stock"  ""]
     [(fn [n {i :id g :option_group m :extra_charge}]
        (make-link (str "/view-option/" i)
-                  (str g "/" n " ($" m ")")))
+                  (str g "/" n " ($" m ")")));TODO: format-money
      (fn [b o]
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value (:id o)} "set-option-in-stock")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (form/check-box "set-option" b)]
-           [:td {:class "form-table"}
-            (btn-change lang)]]]))
+         (with-form-table nil nil
+           [(format-bool b "set-option")
+            (btn-change lang)])))
      action]
     options))
 
@@ -790,50 +752,34 @@
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-name")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-item "name" lang)]
-           [:td {:class "form-table"}
-            (tf "name" iname)]
-           [:td {:class "form-table"}
-            (btn-change lang)]]])
+         (with-form-table nil nil
+           [(lbl-item "name" lang)
+            (tf "name" iname)
+            (btn-change lang)]))
 
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-menu-group")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-group "menu-group" lang)]
-           [:td {:class "form-table"}
+         (with-form-table nil nil
+           [(lbl-group "menu-group" lang)
             (form/drop-down {:id "menu-group"} "menu-group"
                             (map (fn [g] [g g])
                                  (sort (map :name menu-groups)))
-                            mgroup)]
-           [:td {:class "form-table"}
-            (btn-change lang)]]])
+                            mgroup)
+            (btn-change lang)]))
 
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-charge")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-charge "amount" lang)]
-           [:td {:class "form-table"}
-            (nf "amount" amount)]
-           [:td {:class "form-table"}
-            (btn-change lang)]]])
+         (with-form-table nil nil
+           [(lbl-charge "amount" lang)
+            (nf "amount" amount)
+            (btn-change lang)]))
 
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-in-stock")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-in-stock "in-stock" lang)]
-           [:td {:class "form-table"}
-            (form/check-box {:id "in-stock"} "in-stock" in-stock?)]
-           [:td {:class "form-table"}
-            (btn-change lang)]]])
+         (with-form-table nil nil
+           [(lbl-in-stock "in-stock" lang)
+            (format-bool in-stock? "in-stock")
+            (btn-change lang)]))
 
        [:h4 {:class "w3-container w3-card"}
         (get-string "str-item-options" {} lang)]
@@ -843,9 +789,7 @@
          (fn [i _]
            (with-form (str "/view-item/" id)
              (form/hidden-field {:value i} "remove-option-from-item")
-             [:table {:class "form-table"}
-              [:tr {:class "form-table"}
-               [:td {:class "form-table"} (btn-remove lang)]]])))
+               (btn-remove lang))))
 
        [:h4 {:class "w3-container w3-card"}
         (get-string "str-other-options" {} lang)]
@@ -856,9 +800,7 @@
          (fn [i _]
            (with-form (str "/view-item/" id)
              (form/hidden-field {:value i} "add-option-to-item")
-             [:table {:class "form-table"}
-              [:tr {:class "form-table"}
-               [:td {:class "form-table"} (btn-add lang)]]])))]
+             (btn-add lang))))]
       lt)))
 
 (defn render-change-user-password
@@ -872,15 +814,10 @@
       [:h5
        (with-form (str "/user-info/" id)
          (form/hidden-field {:value true} "change-user-password")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-new-password "password" lang)]
-           [:td {:class "form-table"}
-            (form/password-field {:id "password"} "password")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-change lang)]]])])))
+         (with-form-table [nil nil [2]] nil
+           [(lbl-new-password "password" lang)
+            (form/password-field {:id "password"} "password")]
+           [(btn-change lang)]))])))
 
 (defn render-system
   "Gets the system page"
@@ -905,51 +842,41 @@
 (defn render-intl
   "Renders the internationalisation page"
   [user lang-from lang-to ffilter]
-  (let [lang  (:language user)
-        langs (sql/retrieve-langs)]
+  (let [lang   (:language user)
+        langs  (sql/retrieve-langs)
+        gr     (group-by :name langs)
+        name-f (-> gr (get lang-from) first :full_name)
+        name-t (-> gr (get lang-to)   first :full_name)]
     (with-page (get-string "str-internationalisation" {} lang)
       user
       [:system]
       (with-form "/intl"
-        [:table {:class "form-table"}
-         [:tr {:class "form-table"}
-          [:td {:class "form-table"}
-           (lbl-from "lang-from" lang)]
-          [:td {:class "form-table"}
+        (with-form-table [nil nil nil nil [2]] nil
+          [(lbl-from "lang-from" lang)
            (form/drop-down
              {:id "lang-from"} "lang-from"
              (map (fn [{l :full_name n :name}]
                     [(get-string l {} lang) n])
                   langs)
-             lang-from)]]
-         [:tr {:class "form-table"}
-          [:td {:class "form-table"}
-           (lbl-to "lang-to" lang)]
-          [:td {:class "form-table"}
+             lang-from)]
+          [(lbl-to "lang-to" lang)
            (form/drop-down
              {:id "lang-to"} "lang-to"
              (map (fn [{l :full_name n :name}]
                     [(get-string l {} lang) n])
                   langs)
-             lang-to)]]
-         [:tr {:class "form-table"}
-          [:td {:class "form-table"}
-           (lbl-filter "filter" lang)]
-          [:td {:class "form-table"}
-           (tf "filter" ffilter)]]
-         [:tr {:class "form-table"}
-          [:td {:class "form-table" :colspan 2}
-           [:p (get-string "s-filter-instructions" {} lang)]]]]
-        [:table {:class "form-table"}
-         [:tr {:class "form-table"}
-          [:td {:class "form-table"}
-           (btn-view-translations lang)]]])
+             lang-to)]
+          [(lbl-filter "filter" lang)
+           (tf "filter" ffilter)]
+          [[:p (get-string "s-filter-instructions" {} lang)]])
+        (with-form-table nil nil
+          [(btn-view-translations lang)]))
       (if (and (not (nil? lang-from))
                (not (nil? lang-to))
                (not (= lang-from lang-to)))
         (with-table lang
-          [:key        :src_val  :key          :dst_val]
-          ["str-label" lang-from "str-default" lang-to]
+          [:key        :src_val :key          :dst_val]
+          ["str-label" name-f   "str-default" name-t]
           [(fn [k _] [:small k])
            (fn [v i] [:small
                       (if (nil? v)
@@ -966,12 +893,9 @@
                (form/hidden-field {:value lang-from} "lang-from")
                (form/hidden-field {:value lang-to}   "lang-to")
                [:small
-                [:table {:class "form-table"}
-                 [:tr {:class "form-table"}
-                  [:td {:class "form-table"}
-                   (tf "value" v)]
-                  [:td {:class "form-table"}
-                   (btn-change lang)]]]]))]
+                (with-form-table nil nil
+                  [(tf "value" v)
+                   (btn-change lang)])]))]
           (sql/retrieve-intl lang-from lang-to
                              (if (empty? ffilter)
                                "%"
@@ -993,9 +917,8 @@
            [(fn [k _] [:h5 k])
             (fn [v o] [:h5 (tf (:key o) v)])]
            (sql/retrieve-app-data))
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"} (btn-change lang)]]])])))
+         (with-form-table nil nil
+           [(btn-change lang)]))])))
 
 (defn render-list-items
   "Gets the product page"
@@ -1017,12 +940,9 @@
          (fn [b i] (with-form "/list-items"
                      (form/hidden-field {:value (:id i)}
                                         "change-in-stock")
-                     [:table {:class "form-table"}
-                      [:tr {:class "form-table"}
-                       [:td {:class "form-table"}
-                        (format-bool b (:id i))]
-                       [:td {:class "form-table"}
-                        (btn-change lang)]]]))
+                     (with-form-table nil nil
+                       [(format-bool b (:id i))
+                        (btn-change lang)])))
          (fn [i _] (make-link (str "/delete-item/" i)
                               (get-string "btn-delete" {} lang)))]
         (sql/retrieve-all-items)))))
@@ -1110,9 +1030,8 @@
       (with-form "/previous-closes"
         (form/hidden-field {:value true} "make-close")
         [:h5
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"} (btn-close lang)]]]]))))
+         (with-form-table nil nil
+           [(btn-close lang)])]))))
 
 (defn render-add-services-expense
   "Makes a form to add a service expense"
@@ -1124,20 +1043,12 @@
       (with-form "/services"
         (form/hidden-field {:value true} "add-service-charge")
         [:h5
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-concept "concept" lang)]
-           [:td {:class "form-table"}
-            (tf "concept")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-charge "amount" lang)]
-           [:td {:class "form-table"}
-            (nf "amount")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-add lang)]]]]))))
+         (with-form-table [nil nil nil [2]] nil
+           [(lbl-concept "concept" lang)
+            (tf "concept")]
+           [(lbl-charge "amount" lang)
+            (nf "amount")]
+           [(btn-add lang)])]))))
 
 (defn render-old-bills
   "Shows the closed bills page"
@@ -1198,9 +1109,8 @@
       [:h5
        (with-form (str "/bill/" id-bill)
          (form/hidden-field {:value id} "delete-bill-item")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"} (btn-delete lang)]]])])))
+         (with-form-table nil nil
+           [(btn-delete lang)]))])))
 
 (defn render-edit-bill-location
   "Returns the edit location for a bill form"
@@ -1213,15 +1123,10 @@
       (with-form (str "/bill/" id)
         (form/hidden-field {:value id} "edit-bill-location")
         [:h5
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-location "location" lang)]
-           [:td {:class "form-table"}
-            (tf "location" location)]]
-         [:tr {:class "form-table"}
-          [:td {:class "form-table" :colspan 2}
-           (btn-change lang)]]]]))))
+         (with-form-table [nil nil [2]] nil
+           [(lbl-location "location" lang)
+            (tf "location" location)]
+           [(btn-change lang)])]))))
 
 (defn get-old-bill-items
   "Returns a form with the bill items of a closed bill"
@@ -1253,20 +1158,12 @@
       (with-form "/accts"
         (form/hidden-field {:value true} "add-expense")
         [:h5
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-concept "concept" lang)]
-           [:td {:class "form-table"}
-            (tf "concept")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-charge "amount" lang)]
-           [:td {:class "form-table"}
-            (nf "amount")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-add lang)]]]]))))
+         (with-form-table [nil nil nil [2]] nil
+           [(lbl-concept "concept" lang)
+            (tf "concept")]
+           [(lbl-charge "amount" lang)
+            (nf "amount")]
+           [(btn-add lang)])]))))
 
 (defn render-closed-bill
   "Renders a single closed bill"
@@ -1363,19 +1260,16 @@
         lang               (:language user)]
     (with-page (get-string "str-assign-item/item/options"
                            {:item    item
-                            :options (if (nil? options)
-                                       ""
-                                       (str " (" options ")"))}
+                            :options (make-option-string options)}
                            lang)
       user
       [:home :bills]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (form/drop-down
+         (with-form-table [nil nil [2]] nil
+           [(lbl-person "set-person" lang)
+            (form/drop-down {:id "set-person"}
               "set-person"
               (map (fn [n]
                      [(if (= "null" n)
@@ -1386,10 +1280,8 @@
                    (conj (range 1 50) "null"))
               (if (nil? person)
                 "null"
-                person))]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (btn-change lang)]]]]))))
+                person))]
+           [(btn-change lang)])]))))
 
 (defn render-set-bill-item
   "Renders the page where we set the a bill item and its options"
@@ -1406,24 +1298,25 @@
         lang               (:language user)]
     (with-page (get-string "str-change-item/item/options"
                            {:item    item
-                            :options (if (nil? options)
-                                       ""
-                                       (str " (" options ")"))}
+                            :options (make-option-string options)}
                            lang)
       user
       [:home :bills]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
+         (with-form-table [nil nil [2]] nil
+           [(lbl-item "set-item" lang)
             (form/drop-down "set-item"
                             (map (fn [{id :id nm :name}] [nm id])
                                  items)
-                         item-id)]
-           [:td {:class "form-table"}
-            (btn-change lang)]]]]))))
+                            item-id)]
+           [(btn-change lang)])]))))
+
+(defn make-option-string
+  "Makes an option string"
+  [options]
+  (if (empty? options) "" (str " (" options ")")))
 
 (defn render-set-bill-item-options
   "Renders the bill item optiions page"
@@ -1442,9 +1335,7 @@
         lang               (:language user)]
     (with-page (get-string "str-options-for-item/item/options"
                           {:item    item
-                           :options (if (nil? options)
-                                      ""
-                                      (str " (" options ")"))}
+                           :options (make-option-string options)}
                           lang)
       user
       [:home :bills]
@@ -1455,15 +1346,11 @@
          (let [innerfn (fn [{n :option_name
                              i :id_option}]
                          [:h5
-                          [:table {:class "form-table"}
-                           [:tr {:class "form-table"}
-                            [:td {:class "form-table"}
-                             (form/label {:for i}
-                                         n (str n "&nbsp;"))]
-                            [:td {:class "form-table"}
-                             (form/check-box
-                               {:id i} i
-                               (contains? current-options i))]]]])
+                          (with-form-table nil nil
+                            [(form/label {:for i}
+                                         n (str n "&nbsp;"))
+                             (format-bool
+                               (contains? current-options i) i)])])
                oo (into (sorted-map)
                     (map (fn [i]
                            {(key i) (map innerfn (val i))})
@@ -1475,9 +1362,8 @@
              option-groups
              (repeat (count oo) (fn [k _] k))
              [oo]))
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"} (btn-change lang)]]]]))))
+         (with-form-table nil nil
+           [(btn-change lang)])]))))
 
 (defn render-set-charge-override
   "Displays a page where we can select a change
@@ -1492,21 +1378,16 @@
         lang              (:language user)]
     (with-page (get-string "str-charge-for/item/options"
                           {:item    item
-                           :options (if (nil? options)
-                                      ""
-                                      (str " (" options ")"))}
+                           :options (make-option-string options)}
                           lang)
       user
       [:home :bills]
       (with-form (str "/bill/" id-bill)
         (form/hidden-field {:value id} "id-bill-item")
         [:h5
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (nf "charge-override" charge)]
-           [:td {:class "form-table"}
-            (btn-change lang)]]]]))))
+         (with-form-table nil nil
+           [(nf "charge-override" charge)
+            (btn-change lang)])]))))
 
 (defn render-add-item
   "Displays a page where we add an item to a bill"
@@ -1518,21 +1399,15 @@
       (doall
         (map (fn [m]
                (with-form (str "/bill/" id)
+                 (form/hidden-field {:value id} "id-bill")
                  [:h5
-                  [:table {:class "form-table"}
-                   [:tr {:class "form-table"}
-                    [:th {:class "form-table" :colspan 2}
-                     (key m)]]
-                   [:tr {:class "form-table"}
-                    [:td {:class "form-table"}
-                     (form/hidden-field {:value id} "id-bill")
-                     (form/drop-down
+                  (with-form-table [[2] nil] [(key m)]
+                    [(form/drop-down
                        "new-item"
                        (sort
                          (map (fn [{id :id nm :name}] [nm id])
-                              (val m))))]
-                    [:td {:class "form-table"}
-                     (btn-add lang)]]]]))
+                              (val m))))
+                     (btn-add lang)])]))
              (group-by :menu_group
                        (sql/retrieve-items-in-stock)))))))
 
@@ -1546,15 +1421,10 @@
       (with-form "/bills"
         (form/hidden-field {:value true} "new-bill")
         [:h5
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-location "bill-location" lang)]
-           [:td {:class "form-table"}
-            (tf "bill-location")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-create lang)]]]]))))
+         (with-form-table [nil nil [2]] nil
+           [(lbl-location "bill-location" lang)
+            (tf "bill-location")]
+           [(btn-create lang)])]))))
 
 (defn render-charge-bill
   "Displays a page where a bill is paid"
@@ -1573,9 +1443,8 @@
         (form/hidden-field {:value id}     "bill-id")
         (format-money charge (get-string "fmt-total" {} lang) :h2)
         [:h5
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"} (btn-charge lang)]]]]))))
+         (with-form-table nil nil
+           [(btn-charge lang)])]))))
 
 (defn render-accts
   "Displays the accounts page"
@@ -1632,13 +1501,9 @@
            (fn [b u] (with-form "/list-users"
                        (form/hidden-field {:value (:id u)}
                                           "change-user-enabled")
-                       [:table {:class "form-table"}
-                        [:tr {:class "form-table"}
-                         [:td {:class "form-table"}
-                          (form/check-box {:id "enabled"}
-                                              "enabled" b)]
-                         [:td {:class "form-table"}
-                          [:h5 (btn-change lang)]]]]))
+                       (with-form-table nil nil
+                         [(format-bool b "enabled")
+                          [:h5 (btn-change lang)]])))
            (fn [i _] (make-link (str "/delete-user/" i)
                                (get-string "btn-delete" {} lang)))]
           (sql/retrieve-registered-users))))))
@@ -1670,17 +1535,12 @@
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value true} "add-new-option-group")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-new-group "new-option-group" lang)]
-           [:td {:class "form-table"}
-            (tf "new-option-group")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-create lang)]]])])))
+         (with-form-table [nil nil [2]] nil
+           [(lbl-new-group "new-option-group" lang)
+            (tf "new-option-group")]
+           [(btn-create lang)]))])))
 
-  (defn render-new-option
+(defn render-new-option
   "Page to add an option"
   [user id]
   (let [lang (:language user)]
@@ -1690,25 +1550,17 @@
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value true} "add-new-option")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-new-option "new-option" lang)]
-           [:td {:class "form-table"}
-            (tf "new-option")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-group "option-group" lang)]
-           [:td {:class "form-table"}
+         (with-form-table [nil nil nil [2]] nil
+           [(lbl-new-option "new-option" lang)
+            (tf "new-option")]
+           [(lbl-group "option-group" lang)
             (form/drop-down
               {:id "option-group"} "option-group"
               (map (fn [g] [g g])
                    (sort
-                     (map :name 
-                          (sql/retrieve-option-groups)))))]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-create lang)]]])])))
+                     (map :name
+                          (sql/retrieve-option-groups)))))]
+           [(btn-create lang)]))])))
 
 (defn render-view-option
   "Shows an option"
@@ -1727,49 +1579,32 @@
       [:h5
        (with-form post-page
          (form/hidden-field {:value true} "set-option-name")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-option "option-name" lang)]
-           [:td {:class "form-table"}
-            (tf "option-name" oname)]
-           [:td {:class "form-table" :colspan 2}
-            (btn-change lang)]]])
+         (with-form-table nil nil
+           [(lbl-option "option-name" lang)
+            (tf "option-name" oname)
+            (btn-change lang)]))
        (with-form post-page
          (form/hidden-field {:value true} "set-option-group")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-group "option-group" lang)]
-           [:td {:class "form-table"}
+         (with-form-table nil nil
+           [(lbl-group "option-group" lang)
             (form/drop-down {:id "option-group"} "option-group"
                             (sort
                               (map :name
                                    all-option-groups))
-                            option-group)]
-           [:td {:class "form-table" :colspan 2}
-            (btn-change lang)]]])
+                            option-group)
+            (btn-change lang)]))
        (with-form post-page
          (form/hidden-field {:value true} "set-option-charge")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-extra-charge "option-charge" lang)]
-           [:td {:class "form-table"}
-            (nf "option-charge" extra-charge)]
-           [:td {:class "form-table"}
-            (btn-change lang)]]])
+         (with-form-table nil nil
+           [(lbl-extra-charge "option-charge" lang)
+            (nf "option-charge" extra-charge)
+            (btn-change lang)]))
        (with-form post-page
          (form/hidden-field {:value true} "set-option-in-stock")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-in-stock "option-in-stock" lang)]
-           [:td {:class "form-table"}
-            (form/check-box {:id "option-in-stock"}
-                            "option-in-stock" in-stock?)]
-           [:td {:class "form-table"}
-            (btn-change lang)]]])])))
+         (with-form-table nil nil
+           [(lbl-in-stock "option-in-stock" lang)
+            (format-bool in-stock? "option-in-stock")
+            (btn-change lang)]))])))
 
 (defn render-change-item-menu-group
   "Page to change an items menu group"
@@ -1785,17 +1620,12 @@
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-menu-group")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-group "menu-group" lang)]
-           [:td {:class "form-table"}
+         (with-form-table [nil nil [2]] nil
+           [(lbl-group "menu-group" lang)
             (form/drop-down {:id "menu-group"} "menu-group"
                             (map (fn [g] [g g]) (sort all-groups))
-                            group)]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-change lang)]]])])))
+                            group)]
+           [(btn-change lang)]))])))
 
 (defn render-change-item-charge
   "Page to set price of an item"
@@ -1810,15 +1640,10 @@
       [:h5
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value id} "set-item-charge")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-charge "amount" lang)]
-           [:td {:class "form-table"}
-            (nf "amount" charge)]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-change lang)]]])])))
+         (with-form-table [nil nil [2]] nil
+           [(lbl-charge "amount" lang)
+            (nf "amount" charge)]
+           [(btn-change lang)]))])))
 
 (defn render-delete-item
   "Page to confirm item deletion"
@@ -1832,9 +1657,8 @@
       [:h5 (get-string "str-wrn-on-item-delete" {} lang)
        (with-form "/list-items"
          (form/hidden-field {:value id} "delete-item")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"} (btn-delete lang)]]])])))
+         (with-form-table nil nil
+           [(btn-delete lang)]))])))
 
 (defn render-add-user
   "User registration page"
@@ -1846,26 +1670,14 @@
       [:h5
        (with-form "/list-users"
          (form/hidden-field {:value true} "add-user")
-         [:table {:class "form-table"}
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-user-name "username" lang)]
-           [:td {:class "form-table"}
-            (tf "username" "")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table"}
-            (lbl-full-name "name" lang)]
-           [:td {:class "form-table"}
-            (tf "name" "")]]
-          [:tr
-           [:td {:class "form-table"}
-            (lbl-password "password" lang)]
-           [:td {:class "form-table"}
-            (form/password-field
-              {:id "password"} "password" "")]]
-          [:tr {:class "form-table"}
-           [:td {:class "form-table" :colspan 2}
-            (btn-create lang)]]])])))
+         (with-form-table [nil nil nil nil [2]] nil
+           [(lbl-user-name "username" lang)
+            (tf "username")]
+           [(lbl-full-name "name" lang)
+            (tf "name")]
+           [(lbl-password "password" lang)
+            (form/password-field {:id "password"} "password")]
+           [(btn-create lang)]))])))
 
 (defn render-close
   "Displays a close"

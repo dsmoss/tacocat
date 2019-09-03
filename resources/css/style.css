@@ -10,12 +10,13 @@ td, th             {border:           1px solid #ddd;
                     padding:          8px;}
 th                 {background:       lightgrey;}
 select             {width:            200pt;
-                    height:           33px;
+                    height:           40px;
                     border:           1px solid lightgrey;}
 .red               {color: red;}
 .green             {color: green;}
 a:hover,
-input:hover        {background-color: #555;
+input:hover,
+select:hover       {background-color: #555;
                     color: white;}
 a, input           {padding: 4pt;
                     width: 100%;
@@ -27,7 +28,28 @@ a, input           {padding: 4pt;
 	            border-bottom: 1pt solid rgba(3, 3, 3, 0.2);
 	            border-left: 1pt solid rgba(220, 220, 220, 0.3);
 	            border-top:  1pt solid rgba(220, 220, 220, 0.3);}
-input              {font: inherit; color: black;}
+input              {font: inherit;
+                    color: black;}
 .form-table        {border: none;
 	            padding: 0;
 	            text-align: center;}
+input[type='checkbox'] {-webkit-appearance: none;
+                        width: 30px;
+                        height: 30px;
+                        background: white;
+                        border-radius: 5px;
+                        border: 2px solid #555;
+		        font-size: 30pt;
+		        font-weight: bold;}
+input[type='checkbox']:checked {background: #abd;}
+input[type="checkbox"]:checked:after {content: "✓";
+	                              color: #000;
+				      text-align: center;
+				      position: absolute;
+				      /*left: 50%;
+    top: 50%;*/
+    -webkit-transform: translate(0, -30%);
+    -moz-transform: translate(0, -30%);
+    -ms-transform: translate(0, -30%);
+    transform: translate(0, -30%);
+}
