@@ -10,6 +10,4 @@
 - Add localisation for App Option Keys
 - Add localisation for Permissions
 - Make `/intl` full text search
-- Change table links to buttons
-- Buttonify
 - Add `&nbsp;` to lbl-*
