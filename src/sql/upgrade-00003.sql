@@ -264,6 +264,6 @@ values ('str-money-symbol'            , 'es'   , '$')
      , ('str-money-symbol'            , 'es-MX', '$')
      , ('str-money-symbol'            , 'en'   , '$')
      , ('str-money-symbol'            , 'en-GB', '£')
-     , ('str-money-fmt/symbol/ammount', 'en', '%{symbol}%{amount}')
-     , ('str-money-fmt'               , 'en', '%.2f')
+     , ('str-money-fmt/symbol/ammount', 'en'   , '%{symbol}%{amount}')
+     , ('str-money-fmt'               , 'en'   , '%,.2f')
 ;
