@@ -283,9 +283,14 @@
   ([m s]
    (format-money m s :h5))
   ([m s t]
-   [t s
-    [:span {:class (if (< m 0) "red" "green")}
-     (format (str " $%.2f") m)]]))
+   ; Always use system language for money
+   (let [ms   (get-string "str-money-symbol")
+         mf   (get-string "str-money-fmt")
+         cash (format mf m)
+         fmt  (get-string "str-money-fmt/symbol/ammount"
+                           {:amount cash :symbol ms})]
+     [t (if (not (empty? s)) (str s "&nbsp;"))
+      [:span {:class (if (< m 0) "red" "green")} fmt]])))
 
 (defn format-bool
   "Makes a bool into a form"
@@ -719,11 +724,12 @@
   "Make a table for showing item options"
   [lang id options action]
   (with-table lang
-    [:name        :in_stock       :id]
-    ["str-option" "str-in-stock"  ""]
-    [(fn [n {i :id g :option_group m :extra_charge}]
+    [:name        :extra_charge :in_stock       :id]
+    ["str-option" "str-charge"  "str-in-stock"  ""]
+    [(fn [n {i :id g :option_group}]
        (make-link (str "/view-option/" i)
-                  (str g "/" n " ($" m ")")));TODO: format-money
+                  (str g "/" n)))
+     (fn [m _] (format-money m))
      (fn [b o]
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value (:id o)} "set-option-in-stock")

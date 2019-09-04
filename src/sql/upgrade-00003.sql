@@ -26,7 +26,6 @@ drop  constraint item_option_id_item_fkey,
 
 update intl set val = val || '&nbsp;' where key like 'lbl-%';
 
-
 insert into intl_key (name)
 values ('dta-business-name')
      , ('dta-profit-business-share')
@@ -253,4 +252,18 @@ values ('Añadir Gasto'                                  , 'es', 'prm-add-expens
      , ('View Other Users'                              , 'en', 'prm-view-other-users')
      , ('Ver Rol'                                       , 'es', 'prm-view-role')
      , ('View Role'                                     , 'en', 'prm-view-role')
+;
+
+insert into intl_key (name) values ('str-money-symbol')
+                                   ('str-money-fmt/symbol/ammount')
+				   ('str-money-fmt')
+;
+
+insert into intl (key, lang, val)
+values ('str-money-symbol'            , 'es'   , '$')
+     , ('str-money-symbol'            , 'es-MX', '$')
+     , ('str-money-symbol'            , 'en'   , '$')
+     , ('str-money-symbol'            , 'en-GB', '£')
+     , ('str-money-fmt/symbol/ammount', 'en', '%{symbol}%{amount}')
+     , ('str-money-fmt'               , 'en', '%.2f')
 ;
