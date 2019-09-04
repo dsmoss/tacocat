@@ -267,3 +267,8 @@ values ('str-money-symbol'            , 'es'   , '$')
      , ('str-money-fmt/symbol/ammount', 'en'   , '%{symbol}%{amount}')
      , ('str-money-fmt'               , 'en'   , '%,.2f')
 ;
+
+insert into intl_key (name)
+values ('str-error-ocurred')
+     , ('ln-error-logged/number')
+;

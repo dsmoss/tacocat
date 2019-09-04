@@ -366,6 +366,20 @@
   ([tme]
    (format-time tme :h5)))
 
+(defn render-exception
+  "Shows an exception"
+  [user msg id]
+  (let [lang (:language user)]
+    (with-page (get-string "str-error-ocurred" {} lang)
+      user
+      [:error]
+      [:h5 {:style "color: red;"} msg]
+      (with-form-table nil nil
+        [(make-link
+           (str "/error-log/" id)
+           (get-string "ln-error-logged/number"
+                       {:number id} lang))]))))
+
 (defn NOT-ALLOWED
   [user & permissions-required]
   (let [lang (if (empty? user)
@@ -727,8 +741,7 @@
     [:name        :extra_charge :in_stock       :id]
     ["str-option" "str-charge"  "str-in-stock"  ""]
     [(fn [n {i :id g :option_group}]
-       (make-link (str "/view-option/" i)
-                  (str g "/" n)))
+       (make-link (str "/view-option/" i) (str g "/" n)))
      (fn [m _] (format-money m))
      (fn [b o]
        (with-form (str "/view-item/" id)

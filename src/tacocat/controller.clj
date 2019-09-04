@@ -2,6 +2,11 @@
   (:require [tacocat.sql  :as    sql]
             [tacocat.util :refer :all]))
 
+(defn log-exception
+  "Log an exception"
+  [user e]
+  1)
+
 (defn find-logged-in-user
   "Finds which (if any) user is logged into this machine"
   [addr]

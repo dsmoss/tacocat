@@ -1,6 +1,8 @@
 (ns tacocat.server
   (:require [com.stuartsierra.component :as    component]
-            [bidi.ring                  :refer [make-handler resources-maybe resources]]
+            [bidi.ring                  :refer [make-handler
+                                                resources-maybe
+                                                resources]]
             [aleph.http                 :as    http]
             [ring.util.response         :as    res]
             [ring.util.request          :as    req]
@@ -21,8 +23,7 @@
   "Returns the response form"
   [request fun]
   `(-> ~request
-       :remote-addr
-       controller/find-logged-in-user
+       get-user
        ~fun
        res/response))
 
@@ -775,10 +776,24 @@
       ["intl"                      {"" handle-intl}]                 ; done
       [true (fn [req] {:status 404 :body "404 not found"})]]]))
 
+(defn wrap-exception-handling
+  "Makes a nicer looking error page"
+  [handler]
+  (fn [request]
+    (try
+      (handler request)
+      (catch Exception e
+        (let [eid (controller/log-exception (get-user request) e)
+              msg (.getMessage e)]
+          (println request)
+          (-> (response request (view/render-exception msg eid))
+              (res/status 500)))))))
+
 (defn app
   [store]
   (-> handler
-      wrap-params))
+      wrap-params
+      wrap-exception-handling))
 
 (defrecord HttpServer [server]
 
