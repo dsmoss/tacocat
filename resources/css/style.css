@@ -18,13 +18,14 @@ a:hover,
 input:hover,
 select:hover       {background-color: #555;
                     color: white;}
-a, input           {padding: 4pt;
+a, input, label    {padding: 4pt;
                     width: 100%;
 	            height: 100%;
 		    display: block;
 	            text-decoration: none;
-                    background-color: inherit;
-                    border-right:  1pt solid rgba(3, 3, 3, 0.2);
+                    background-color: inherit;}
+label              {text-align: right;}
+a, input           {border-right:  1pt solid rgba(3, 3, 3, 0.2);
 	            border-bottom: 1pt solid rgba(3, 3, 3, 0.2);
 	            border-left: 1pt solid rgba(220, 220, 220, 0.3);
 	            border-top:  1pt solid rgba(220, 220, 220, 0.3);}

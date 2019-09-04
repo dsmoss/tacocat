@@ -101,6 +101,36 @@
   (for [s sections]
     (make-link-table (s link-data) lang)))
 
+(defn with-form-table
+  "Makes a table suitable for holding form items
+   (with-form-table [[1 2] [1 2] [2 1] nil] [some some]
+     [some some]
+     [some some]
+     [some some some])
+   => [:table [:tr [:th some] [:th {:colspan 2} some]]
+              [:tr [:td some] [:td {:colspan 2} some]]
+              [:tr [:td {:colspan 2} some] [:td some]]
+              [:tr [:td some] [:td some] [:td some]]]
+   Or:
+   (with-form-table nil nil
+     [some some])
+   => [:table [:tr [:td some] [:td some]]]"
+  [[hs & ts] header & data]
+  (let [row (fn [tag cs items]
+              [:tr {:class "form-table"}
+               (map (fn [c d]
+                      [tag {:class "form-table"
+                            :colspan (if (nil? c) 1 c)} d])
+                    (if (nil? cs) (repeat (count items) 1) cs)
+                    items)])]
+    [:table {:class "form-table"}
+     (if (not (empty? header))
+       (row :th hs header))
+     (map row
+          (repeat (count data) :td)
+          (if (empty? ts) (repeat (count data) nil) ts)
+          data)]))
+
 (defn main-head
   "normal page head tag"
   [font header]
@@ -155,19 +185,23 @@
        (get-links lang [:general])
        (get-links lang sections)
        [:header {:class "w3-container w3-card w3-theme-l4"}
-        [:center [:h1 header]]]
+        [:center
+         [:h1 header]
+         (if (empty? user) "" [:h5 (:name user)])]]
        [:center content]
        (get-links lang (reverse sections))
        [:header {:class "w3-container w3-card w3-theme-l4"}
         [:center
          [:h5
           (if (empty? user)
-            (make-link "/login" (get-string "ln-login" {} lang))
-            [:span
-             (make-link "/user-info" (:name user))
-             (make-link "/login"
-                        (get-string
-                          "ln-change-user" {} lang))])]]]])))
+            (with-form-table nil nil
+              [(make-link "/login" (get-string "ln-login" {} lang))])
+            (with-form-table nil nil
+              [(make-link
+                 "/user-info" (get-string "ln-user-info" {} lang))
+               (make-link
+                 "/login"
+                 (get-string "ln-change-user" {} lang))]))]]]])))
 
 (defn print-head
   "Head tag for printing"
@@ -228,12 +262,12 @@
           (sql/retrieve-app-data-val "business-post-code") ", "
           (sql/retrieve-app-data-val "business-state")
           [:br]
-          ; Tel: 34567789
           (get-string "str-tel/number" {:number tel})
           [:br]
           (sql/retrieve-app-data-val "business-website")]]
         [:header
-         [:h2 (get-string "str-bill-for/location/id" {:location header :id id})]]
+         [:h2 (get-string "str-bill-for/location/id"
+                          {:location header :id id})]]
         content]
        [:script {:language "javascript"} "window.print();"]])))
 
@@ -375,8 +409,10 @@
 
 (defn btn
   "Make a localised button"
-  [text lang]
-  (form/submit-button (get-string text {} lang)))
+  ([text lang tag]
+   [tag (form/submit-button (get-string text {} lang))])
+  ([text lang]
+   (btn text lang :h5)))
 
 ; Buttons
 (def btn-enter             (partial btn "btn-enter"            ))
@@ -432,37 +468,6 @@
                     id default))
   ([id]
    (nf id nil)))
-
-(defn with-form-table
-  "Makes a table suitable for holding form items"
-  [[hs & ts] header & data]
-  (let [row (fn [tag cs items]
-              [:tr {:class "form-table"}
-               (map (fn [c d]
-                      [tag {:class "form-table"
-                            :colspan (if (nil? c) 1 c)} d])
-                    (if (nil? cs) (repeat (count items) 1) cs)                           items)])]
-    [:table {:class "form-table"}
-     (if (not (empty? header))
-       (row :th hs header))
-     (map row
-          (repeat (count data) :td)
-          (if (empty? ts) (repeat (count data) nil) ts)
-          data)]))
-  ; [[1 2] [1 2] [2 1] nil]
-  ; [some some]
-  ; [some some]
-  ; [some some]
-  ; [some some some]
-  ; => [:table [:tr [:th some] [:th {:colspan 2} some]]
-  ;            [:tr [:td some] [:td {:colspan 2} some]]
-  ;            [:tr [:td {:colspan 2} some] [:td some]]
-  ;            [:tr [:td some] [:td some] [:td some]]]
-  ; Or:
-  ; nil
-  ; nil
-  ; [some some]
-  ; => [:table [:tr [:td some] [:td some]]]
 
 (defn render-login
   "Show the login page"
@@ -851,7 +856,7 @@
       user
       [:system]
       (with-form "/intl"
-        (with-form-table [nil nil nil nil [2]] nil
+        (with-form-table nil nil
           [(lbl-from "lang-from" lang)
            (form/drop-down
              {:id "lang-from"} "lang-from"
@@ -867,8 +872,8 @@
                   langs)
              lang-to)]
           [(lbl-filter "filter" lang)
-           (tf "filter" ffilter)]
-          [[:p (get-string "s-filter-instructions" {} lang)]])
+           (tf "filter" ffilter)])
+        [:p (get-string "s-filter-instructions" {} lang)]
         (with-form-table nil nil
           [(btn-view-translations lang)]))
       (if (and (not (nil? lang-from))
@@ -895,7 +900,7 @@
                [:small
                 (with-form-table nil nil
                   [(tf "value" v)
-                   (btn-change lang)])]))]
+                   (btn-change lang :span)])]))]
           (sql/retrieve-intl lang-from lang-to
                              (if (empty? ffilter)
                                "%"
@@ -911,12 +916,14 @@
       [:h5
        (with-form "/admin-options"
          (form/hidden-field {:value true} "make-admin-changes")
-         (with-table lang
-           [:key      :val]
-           ["str-key" "str-val"]
-           [(fn [k _] [:h5 k])
-            (fn [v o] [:h5 (tf (:key o) v)])]
-           (sql/retrieve-app-data))
+         (apply
+           (partial
+             with-form-table nil [(get-string "str-key" {} lang)
+                                  (get-string "str-val" {} lang)])
+           (map (fn [{k :key v :val}]
+                  [(lbl (str "dta-" k) k lang)
+                   (tf k v)])
+                (sql/retrieve-app-data)))
          (with-form-table nil nil
            [(btn-change lang)]))])))
 
