@@ -971,9 +971,13 @@
                        and  k.name = d.key
                      where  sl.name = ?
                        and  dl.name = ?
-                       and  k.name like ?
+                       and  (  k.name like ?
+                            or s.val  like ?
+                            or d.val  like ? )
                      order
                        by   key"
                     src-lang
                     dest-lang
+                    key-filter
+                    key-filter
                     key-filter]))

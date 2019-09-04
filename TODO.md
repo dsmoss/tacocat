@@ -7,4 +7,3 @@
 - Add a page for deleting menu groups
 - Add a page for deleting option groups
 - Localise money
-- Make `/intl` full text search
