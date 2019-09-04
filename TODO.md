@@ -7,5 +7,4 @@
 - Add a page for deleting menu groups
 - Add a page for deleting option groups
 - Localise money
-- Add localisation for Permissions
 - Make `/intl` full text search

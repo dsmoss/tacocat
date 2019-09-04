@@ -380,7 +380,9 @@
                                    (str "prm-" p) {} lang)])
                           (sort p)))]
           [{:permissions permissions-required}]))
-      (make-link "/login" (get-string "ln-change-user" {} lang)))))
+      (with-form-table nil nil
+        [(make-link "/login"
+                    (get-string "ln-change-user" {} lang))]))))
 
 (defn format-bill-list
   "Formats a list of bills"
