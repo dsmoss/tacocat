@@ -375,7 +375,10 @@
         (with-table lang
           [:permissions]
           [(get-string "str-permissions" {} lang)]
-          [(fn [p _] (map (fn [p] [:h6 p]) (sort p)))]
+          [(fn [p _] (map (fn [p]
+                            [:h6 (get-string
+                                   (str "prm-" p) {} lang)])
+                          (sort p)))]
           [{:permissions permissions-required}]))
       (make-link "/login" (get-string "ln-change-user" {} lang)))))
 
