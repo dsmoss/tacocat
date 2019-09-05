@@ -1,8 +1,7 @@
 # TODO
 
 - Make a page-set for debt tracking
-- Properly deal with exceptions and output proper, meaningful errors
-    - Make a tracker in the DB for said errors
 - Add a page for deleting options (`/delete-option/id`)
 - Add a page for deleting menu groups
 - Add a page for deleting option groups
+- Add /list-errors page

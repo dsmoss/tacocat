@@ -712,6 +712,12 @@
   ;(println request)
   (response request view/render-system))
 
+(defn handle-error-log
+  "Shows the error log details"
+  [request]
+  (with-check-permissions request "view-error-log"
+    (view/render-error-log (-> request :params :id))))
+
 (def id [#"\d+" :id])
 
 (def handler
@@ -722,7 +728,7 @@
       ["css"                           handle-css]                   ; done
       ["fonts"                         handle-fonts]                 ; done
       [""                              handle-index]                 ; done
-      ["system"                    {"" handle-system}]
+      ["system"                    {"" handle-system}]               ; done
       ["admin"                     {"" handle-admin}]                ; done
       ["admin-options"             {"" handle-admin-options}]        ; done
       ["list-users"                {"" handle-list-users}]           ; done
@@ -774,6 +780,7 @@
       ["accts"                     {"" handle-accts}]                ; done
       ["log"                       {"" handle-log}]                  ; done
       ["intl"                      {"" handle-intl}]                 ; done
+      [["error-log/"               id] handle-error-log]
       [true (fn [req] {:status 404 :body "404 not found"})]]]))
 
 (defn wrap-exception-handling
@@ -785,7 +792,7 @@
       (catch Exception e
         (let [eid (controller/log-exception (get-user request) e)
               msg (.getMessage e)]
-          (println request)
+          ;(println request)
           (-> (response request (view/render-exception msg eid))
               (res/status 500)))))))
 

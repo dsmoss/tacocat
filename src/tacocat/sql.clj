@@ -17,7 +17,21 @@
   "Logs an action"
   [db id_user action details]
   (j/insert! db :app_activity_log
-    {:id_app_user id_user :action action :details details}))
+    {:id_app_user id_user
+     :action action
+     ; truncate at 1024 for stack traces
+     :details (subs details 0 (min (count details) 1024))}))
+
+(defn retrieve-error-log
+  "Finds an error log item"
+  [id]
+  (first (j/query db-spec ["select date
+                                 , error_type
+                                 , message
+                                 , stack_trace
+                            from   error_log
+                            where  id = ?"
+                           id])))
 
 (defmacro ins
   "Makes an insert"
@@ -899,6 +913,13 @@
                      order
                        by   date desc
                      limit  1000"]))
+
+(defn insert-error-log
+  "Insert an object to the error log"
+  [user t msg stack-trace]
+  (ins user db-spec :error_log {:error_type   t
+                                :message      msg
+                                :stack_trace  stack-trace}))
 
 (defn retrieve-langs
   "gets all the languages registered for internationalisation"

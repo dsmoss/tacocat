@@ -1767,3 +1767,30 @@
          (fn [a _] [:small a])
          (fn [d _] [:small d])]
         (sql/retrieve-log)))))
+
+(defn render-error-log
+  "Show page with error log details"
+  [user id]
+  (let [lang (:language user)
+        data (sql/retrieve-error-log (int-or-null id))]
+    (with-page (get-string "ln-error-logged/number" {:number id} lang)
+      user
+      [:system]
+      (with-form-table [nil nil nil nil [2]] nil
+        [[:h5 {:style "text-align: right;"}
+          (get-string "str-error-type" {} lang) "&nbsp;"]
+         [:h5 {:style "text-align: left;
+                       font-weight: bold;"}
+          (:error_type data)]]
+        [[:h5 {:style "text-align: right;"}
+          (get-string "str-message" {} lang) "&nbsp;"]
+         [:h5 {:style "text-align: left;
+                       font-weight: bold;"}
+          (:message data)]]
+        [[:h5 {:style "text-align: right;"}
+          (get-string "str-date" {} lang) "&nbsp;"]
+         [:h5 {:style "text-align: left;
+                       font-weight: bold;"}
+          (:date data)]]
+        [[:pre (:stack_trace data)]]))))
+

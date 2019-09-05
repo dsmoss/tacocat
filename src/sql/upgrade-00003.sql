@@ -271,4 +271,41 @@ values ('str-money-symbol'            , 'es'   , '$')
 insert into intl_key (name)
 values ('str-error-ocurred')
      , ('ln-error-logged/number')
+     , ('prm-view-error-log')
+     , ('str-error-type')
+     , ('str-message')
 ;
+
+insert into intl (key, lang, val)
+values ('str-error-ocurred'     , 'en', 'An Application Error Has Occurred!')
+     , ('str-error-ocurred'     , 'es', 'Ha Ocurrido Un Error en la Aplicación!')
+     , ('ln-error-logged/number', 'en', 'Error #%{number}')
+     , ('ln-error-logged/number', 'es', 'Error #%{number}')
+     , ('prm-view-error-log'    , 'es', 'Ver Registro de Errores')
+     , ('prm-view-error-log'    , 'en', 'View Error Log')
+     , ('str-error-type'        , 'es', 'Tipo de Error')
+     , ('str-error-type'        , 'en', 'Error Type')
+     , ('str-message'           , 'es', 'Mensaje')
+     , ('str-message'           , 'en', 'Message')
+;
+
+insert into permission (name ) values ('view-error-log');
+
+insert into role_permission (id_role, id_permission)
+select r.id
+     , p.id
+from   role       as r
+join   permission as p
+  on   true
+where  r.name = 'Admin'
+  and  p.name = 'view-error-log';
+
+drop table if exists error_log cascade;
+
+create table error_log
+  ( id          serial      primary key
+  , date        timestamp   not null default now()
+  , error_type  varchar(50) not null
+  , message     text        not null
+  , stack_trace text        not null
+);
