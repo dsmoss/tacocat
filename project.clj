@@ -1,4 +1,4 @@
-(defproject tacocat "0.1.0-SNAPSHOT"
+(defproject tacocat "0.1.0"
   :description  "Cuentas y Comandas"
   :url          "http://example.com/FIXME"
   :license      {:name "Eclipse Public License"

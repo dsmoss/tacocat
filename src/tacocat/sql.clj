@@ -917,9 +917,8 @@
 (defn insert-error-log
   "Insert an object to the error log"
   [user t msg stack-trace]
-  (ins user db-spec :error_log {:error_type   t
-                                :message      msg
-                                :stack_trace  stack-trace}))
+  (ins user db-spec :error_log
+       {:error_type t :message msg :stack_trace stack-trace}))
 
 (defn retrieve-langs
   "gets all the languages registered for internationalisation"
