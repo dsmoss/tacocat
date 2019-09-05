@@ -255,8 +255,8 @@ values ('Añadir Gasto'                                  , 'es', 'prm-add-expens
 ;
 
 insert into intl_key (name) values ('str-money-symbol')
-                                   ('str-money-fmt/symbol/ammount')
-				   ('str-money-fmt')
+                                 , ('str-money-fmt/symbol/ammount')
+				 , ('str-money-fmt')
 ;
 
 insert into intl (key, lang, val)

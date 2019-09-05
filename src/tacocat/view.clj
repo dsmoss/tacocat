@@ -305,9 +305,6 @@
 (defn render-index
   "Index page of the application"
   [user]
-  ;(if (contains? (:permissions user) "view-index")
-  ;  ...
-  ;  (NOT-ALLOWED (:name user)))
   (let [lang (if (empty? user)
                (sql/retrieve-app-data-val "default-language")
                (:language user))]
@@ -588,8 +585,8 @@
          (with-page (get-string "str-user-info/name" u lang)
            user
            [:system]
-           [:h5 (get-string "str-username/user_name" u lang)]
-           (with-form-table nil nil
+           (with-form-table nil
+             [[:h5 (get-string "str-username/user_name" u lang)]]
              [(make-link (str "/change-user-name/"  id)
                          (get-string "ln-full-name/name" u lang))]
              [(make-link (str "/change-password/"   id)
@@ -607,7 +604,10 @@
                                  (str "/view-role/" (:id r))
                                  (:name r)))
                              r))
-              (fn [p _] (map (fn [p] [:h6 p]) (sort p)))
+              (fn [p _] (map (fn [p]
+                               [:h6
+                                (get-string (str "prm-" p) {} lang)])
+                             (sort p)))
               (fn [m _] (map (fn [m] [:h5 m]) (sort m)))]
              [{:roles       user-roles
                :machines    machines
@@ -655,7 +655,7 @@
       (with-table lang
         [:name            :id]
         ["str-permission" ""]
-        [(fn [n _] [:h5 n])
+        [(fn [n r] [:h5 (lbl (str "prm-" n) (:id r) lang)])
          (fn [i r]
            [:h5
             (with-form (str "/view-role/" id)
@@ -1550,7 +1550,8 @@
         [:name      :id               :id]
         ["str-role" "str-permissions" ""]
         [(fn [n r] (make-link (str "/view-role/" (:id r)) n))
-         (fn [i _] (map (fn [p] [:h6 p])
+         (fn [i _] (map (fn [p]
+                          [:h6 (get-string (str "prm-" p) {} lang)])
                      (sort (sql/retrieve-permissions-for-role i))))
          (fn [i _] (make-link (str "/delete-role/" i)
                               (get-string "btn-delete" {} lang)))]
