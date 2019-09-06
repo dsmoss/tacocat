@@ -29,6 +29,7 @@
                                  , error_type
                                  , message
                                  , stack_trace
+                                 , id_cause
                             from   error_log
                             where  id = ?"
                            id])))
@@ -916,9 +917,12 @@
 
 (defn insert-error-log
   "Insert an object to the error log"
-  [user t msg stack-trace]
-  (ins user db-spec :error_log
-       {:error_type t :message msg :stack_trace stack-trace}))
+  ([user t msg stack-trace cause]
+   (ins user db-spec :error_log
+        {:error_type  t           :message  msg
+         :stack_trace stack-trace :id_cause cause}))
+  ([user t msg stack-trace]
+   (insert-error-log user t msg stack-trace nil)))
 
 (defn retrieve-langs
   "gets all the languages registered for internationalisation"

@@ -1773,25 +1773,37 @@
   "Show page with error log details"
   [user id]
   (let [lang (:language user)
-        data (sql/retrieve-error-log (int-or-null id))]
-    (with-page (get-string "ln-error-logged/number" {:number id} lang)
+        {ty :error_type
+         st :stack_trace
+         ms :message
+         dt :date
+         ca :id_cause}   (sql/retrieve-error-log (int-or-null id))]
+    (with-page (get-string "ln-error-logged/number"
+                           {:number id} lang)
       user
       [:system]
-      (with-form-table [nil nil nil nil [2]] nil
+      (with-form-table [nil nil nil nil nil [2]] nil
         [[:h5 {:style "text-align: right;"}
           (get-string "str-error-type" {} lang) "&nbsp;"]
          [:h5 {:style "text-align: left;
-                       font-weight: bold;"}
-          (:error_type data)]]
+                       font-weight: bold;"} ty]]
         [[:h5 {:style "text-align: right;"}
           (get-string "str-message" {} lang) "&nbsp;"]
          [:h5 {:style "text-align: left;
-                       font-weight: bold;"}
-          (:message data)]]
+                       font-weight: bold;"} ms]]
         [[:h5 {:style "text-align: right;"}
           (get-string "str-date" {} lang) "&nbsp;"]
          [:h5 {:style "text-align: left;
+                       font-weight: bold;"} dt]]
+        [[:h5 {:style "text-align: right;"}
+          (get-string "str-cause" {} lang) "&nbsp;"]
+         [:h5 {:style "text-align: left;
                        font-weight: bold;"}
-          (:date data)]]
-        [[:pre (:stack_trace data)]]))))
+          (if ca
+            (with-form-table nil nil
+              [(make-link (str "/error-log/" ca)
+                          (get-string "ln-error-logged/number"
+                                      {:number ca} lang))])
+            (get-string "str-none" {} lang))]]
+        [[:pre st]]))))
 

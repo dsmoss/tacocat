@@ -5,10 +5,13 @@
 (defn log-exception
   "Log an exception"
   [user e]
-  (let [st (apply str (interpose "\n" (.getStackTrace e)))
-        ty (.getName (type e))
-        ms (.getMessage e)]
-    (-> user (sql/insert-error-log ty ms st) first :id)))
+  (if e
+    (let [st (apply str (interpose "\n" (.getStackTrace e)))
+          ty (.getName (type e))
+          ms (.getMessage e)
+          ms (if (nil? ms) "nil" ms)
+          ca (log-exception user (.getCause e))]
+      (-> user (sql/insert-error-log ty ms st ca) first :id))))
 
 (defn find-logged-in-user
   "Finds which (if any) user is logged into this machine"
