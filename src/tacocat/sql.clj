@@ -578,9 +578,17 @@
 (defn retrieve-app-data
   "Finds all values from the app_data table"
   ([c]
-   (j/query c ["select key, val from app_data"]))
+   (j/query c ["select key, val, data_type from app_data"]))
   ([]
    (retrieve-app-data db-spec)))
+
+(defn retrieve-app_data_list_values
+  "Gets the list values for an app_data entry"
+  [k]
+  (j/query db-spec ["select val
+                     from   app_data_valid_list_values
+                     where  key = ?"
+                    k]))
 
 (defn update-app-options
   "Changes the application settings"

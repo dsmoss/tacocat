@@ -133,7 +133,7 @@
 
 (defn main-head
   "normal page head tag"
-  [font header]
+  [font header theme]
   [:head
    [:link {:rel     "apple-touch-icon"
            :sizes   "180x180"
@@ -159,8 +159,11 @@
            :content "width=device-width, initial-scale=1.0"}]
    [:meta {:charset "UTF-8"}]
    (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
-                     "https://www.w3schools.com/lib/w3-theme-grey.css"
-                     (str "/css/style.css" "?" (rand))
+                     (str "https://www.w3schools.com/lib/" theme)
+                     (if (= (sql/retrieve-app-data-val "environment")
+                            "dev")
+                       (str "/css/style.css?" (rand))
+                       "/css/style.css")
                      "/fonts/style.css")
    [:style (str "h1, h2, h3, h4,
                 h5, h6, div, p,
@@ -175,12 +178,14 @@
 (defn with-page
   "Adds content to a page"
   [header user sections & content]
-  (let [lang (if (empty? user)
-               (sql/retrieve-app-data-val "default-language")
-               (:language user))
-        font (sql/retrieve-app-data-val "default-font")]
+  (let [lang  (if (empty? user)
+                (sql/retrieve-app-data-val "default-language")
+                (:language user))
+        theme (str "w3-theme-"
+                   (sql/retrieve-app-data-val "theme") ".css")
+        font  (sql/retrieve-app-data-val "default-font")]
     (page/html5
-      (main-head font header)
+      (main-head font header theme)
       [:body
        (get-links lang [:general])
        (get-links lang sections)
@@ -484,9 +489,11 @@
 
 (defn nf
   "Makes a number field"
-  ([id default]
-   (form/text-field {:id id :type "number" :step "0.01"}
+  ([id default step]
+   (form/text-field {:id id :type "number" :step step}
                     id default))
+  ([id default]
+   (nf id default "0.01"))
   ([id]
    (nf id nil)))
 
@@ -930,6 +937,18 @@
                                "%"
                                ffilter)))))))
 
+(defn get-app-option-control
+  "Get correct control for an option"
+  [{k :key dt :data_type v :val}]
+  (case dt
+    "int"    (nf k v 1)
+    "float"  (nf k v)
+    "list"   (form/drop-down {:id k}
+               k
+               (map :val (sql/retrieve-app_data_list_values k))
+               v)
+    "string" (tf k v)))
+
 (defn render-app-options
   "Gets the app options page"
   [user]
@@ -944,9 +963,10 @@
            (partial
              with-form-table nil [(get-string "str-key" {} lang)
                                   (get-string "str-val" {} lang)])
-           (map (fn [{k :key v :val}]
+           (map (fn [{k :key v :val :as o}]
                   [(lbl (str "dta-" k) k lang)
-                   (tf k v)])
+                   (get-app-option-control o)])
+                   ;(tf k v)])
                 (sql/retrieve-app-data)))
          (with-form-table nil nil
            [(btn-change lang)]))])))
@@ -1783,22 +1803,18 @@
       user
       [:system]
       (with-form-table [nil nil nil nil nil [2]] nil
-        [[:h5 {:style "text-align: right;"}
+        [[:h5 {:class "right"}
           (get-string "str-error-type" {} lang) "&nbsp;"]
-         [:h5 {:style "text-align: left;
-                       font-weight: bold;"} ty]]
-        [[:h5 {:style "text-align: right;"}
+         [:h5 {:class "left"} ty]]
+        [[:h5 {:class "right"}
           (get-string "str-message" {} lang) "&nbsp;"]
-         [:h5 {:style "text-align: left;
-                       font-weight: bold;"} ms]]
-        [[:h5 {:style "text-align: right;"}
+         [:h5 {:class "left"} ms]]
+        [[:h5 {:class "right"}
           (get-string "str-date" {} lang) "&nbsp;"]
-         [:h5 {:style "text-align: left;
-                       font-weight: bold;"} dt]]
-        [[:h5 {:style "text-align: right;"}
+         [:h5 {:class "left"} dt]]
+        [[:h5 {:class "right"}
           (get-string "str-cause" {} lang) "&nbsp;"]
-         [:h5 {:style "text-align: left;
-                       font-weight: bold;"}
+         [:h5 {:class "left"}
           (if ca
             (with-form-table nil nil
               [(make-link (str "/error-log/" ca)
