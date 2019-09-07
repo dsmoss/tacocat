@@ -1,4 +1,5 @@
 (ns tacocat.sql
+  (:gen-class)
   (:require [clojure.java.jdbc :as j]
             [tacocat.str-var   :refer [translate-vars]]
             [tacocat.util      :refer :all]))
@@ -1047,6 +1048,25 @@
                      order
                        by   c.name"]))
 
+(defn retrieve-debt-for-creditor
+  "Retrieves the breakdown and total of a debt"
+  [id-creditor]
+  (j/with-db-transaction [t-con db-spec]
+    (conj
+      {:breakdown (j/query t-con ["select date
+                                        , amount
+                                        , concept
+                                   from   debt
+                                   where  id_creditor = ?
+                                   order
+                                     by   date desc"
+                                  id-creditor])}
+      (first
+        (j/query t-con ["select sum(amount) as total
+                         from   debt
+                         where  id_creditor = ?"
+                        id-creditor])))))
+
 (defn insert-creditor
   "Inserts a creditor"
   [user creditor]
@@ -1056,6 +1076,13 @@
   "Finds all creditors"
   []
   (j/query db-spec ["select id, name from creditor order by name"]))
+
+(defn retrieve-creditor-by-id
+  "Finds a specific creditor"
+  [id]
+  (first
+    (j/query db-spec
+             ["select name from creditor where id = ?" id])))
 
 (defn insert-debt
   "Inserts a debt to the db"

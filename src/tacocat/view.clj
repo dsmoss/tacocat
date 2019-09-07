@@ -1,4 +1,5 @@
 (ns tacocat.view
+  (:gen-class)
   (:require [hiccup.page  :as    page]
             [hiccup.form  :as    form]
             [tacocat.util :refer :all]
@@ -506,7 +507,7 @@
   "Makes a number field"
   ([id default step minimum]
    (form/text-field {:id id :type "number" :step step :min minimum}
-                    id default))
+                    id (if (nil? default) minimum default)))
   ([id default step]
    (nf id default step 0))
   ([id default]
@@ -1915,6 +1916,48 @@
           [(lbl-charge "amount" lang)
            (nf "amount" 0 0.01 0)]
           [(btn-add lang)])))))
+
+(defn render-add-debt-payment
+  "Shows the add debt payment form"
+  [user]
+  (let [lang (:language user)]
+    (with-page (get-string "ln-add-debt-payment" {} lang)
+      user
+      [:home :debts]
+      (with-form "/debts"
+        (form/hidden-field {:value true} "add-debt-payment")
+        (with-form-table [nil nil nil nil [2]] nil
+          [(lbl-creditor "creditor" lang)
+           (form/drop-down
+             {:id "creditor"} "creditor"
+             (map (fn [{n :name i :id}] [n i])
+                  (sql/retrieve-creditors)))]
+          [(lbl-concept "concept" lang)
+           (tf "concept")]
+          [(lbl-charge "amount" lang)
+           (nf "amount" 0 0.01 0)]
+          [(btn-add lang)])))))
+
+(defn render-debt-detaill
+  "Page showing movements related to the debt"
+  [user id-creditor]
+  (let [lang        (:language user)
+        id-creditor (int-or-null id-creditor)
+        creditor    (sql/retrieve-creditor-by-id id-creditor)
+        debt        (sql/retrieve-debt-for-creditor id-creditor)]
+    (with-page (get-string "str-debt-for/name" creditor lang)
+      user
+      [:home :debts]
+      (format-money (-> debt :total)
+                    (get-string "fmt-total" {} lang)
+                    :h2)
+      (with-table lang
+        [:date      :concept      :amount]
+        ["str-date" "str-concept" "str-amount"]
+        [(fn [d _] (format-full-date d))
+         (fn [c _] [:h5 c])
+         (fn [m _] (format-money m))]
+        (-> debt :breakdown)))))
 
 (defn render-404
   "Shows a 404/not found page"

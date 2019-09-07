@@ -1,4 +1,5 @@
 (ns tacocat.server
+  (:gen-class)
   (:require [com.stuartsierra.component :as    component]
             [bidi.ring                  :refer [make-handler
                                                 resources-maybe
@@ -733,14 +734,19 @@
   "Shows the debts page"
   [request]
   ;(println request)
-  (let [user                  (get-user request)
+  (let [user                 (get-user request)
         {creditor "creditor"
-         amount   "amount"}   (-> request :params)]
+         amount   "amount"
+         concept  "concept"} (-> request :params)]
     (with-check-permissions request "view-debts"
       view/render-debts
       {:trigger    "add-debt"
        :permission "add-debt"
        :action     (controller/add-debt user creditor amount)}
+      {:trigger    "add-debt-payment"
+       :permission "add-debt-payment"
+       :action     (controller/add-debt-payment
+                     user creditor amount concept)}
       {:trigger    "add-creditor"
        :permission "add-creditor"
        :action     (controller/add-creditor user creditor)})))
@@ -756,6 +762,18 @@
   [request]
   (with-check-permissions request "add-debt"
     view/render-add-debt))
+
+(defn handle-add-debt-payment
+  "Shows the page to add a debt payment"
+  [request]
+  (with-check-permissions request "add-debt-payment"
+    view/render-add-debt-payment))
+
+(defn handle-debt-detail
+  "Shows the details of a debt"
+  [request]
+  (with-check-permissions request "view-debt-detail"
+    (view/render-debt-detaill (-> request :params :id))))
 
 (def id [#"\d+" :id])
 
@@ -824,7 +842,8 @@
       ["debts"                     {"" handle-debts}]                ; done
       ["add-creditor"              {"" handle-add-creditor}]         ; done
       ["add-debt"                  {"" handle-add-debt}]             ; done
-      ["add-debt-payment"          {"" handle-add-debt-payment}] ;TODO
+      ["add-debt-payment"          {"" handle-add-debt-payment}]     ; done
+      [["debt-detail/"             id] handle-debt-detail]
       [true                            handle-404]]]))               ; done
 
 (defn wrap-exception-handling

@@ -1,4 +1,5 @@
 (ns tacocat.controller
+  (:gen-class)
   (:require [tacocat.sql  :as    sql]
             [tacocat.util :refer :all]))
 
@@ -361,3 +362,13 @@
   (println "Debt for" creditor "of" amount)
   (sql/insert-debt
     user (int-or-null creditor) (* -1 (float-or-null amount)) nil))
+
+(defn add-debt-payment
+  "Add a debt payment to the system"
+  [user creditor amount concept]
+  (println "Payment of" amount "for" creditor "because" concept)
+  (let [creditor (int-or-null creditor)
+        amount   (float-or-null amount)
+        cr       (sql/retrieve-creditor-by-id creditor)]
+  (add-expense user (str (:name cr) "/" concept) amount)
+  (sql/insert-debt user creditor amount concept)))

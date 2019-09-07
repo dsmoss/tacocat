@@ -12,17 +12,20 @@
   "Returns a float or null"
   [n]
   ; 9, 9.9, 9., .9
-  (if (re-matches #"(\.\d+)|(\d+(\.(\d+)?)?)" n)
-    (Float/parseFloat n)
-    nil))
+  (cond
+    (number? n) (float n)
+    (re-matches #"(\.\d+)|(\d+(\.(\d+)?)?)" n) (Float/parseFloat n)
+    :else nil))
 
 (defn p-or-n-float-or-null
   "Returns a float or null"
   [n]
   ; 9, 9.9, 9., .9 + or -
-  (if (re-matches #"([\+|\-]?)((\.\d+)|(\d+(\.(\d+)?)?))" n)
-    (Float/parseFloat n)
-    nil))
+  (cond
+    (number? n) (float n)
+    (re-matches #"([\+|\-]?)((\.\d+)|(\d+(\.(\d+)?)?))" n)
+      (Float/parseFloat n)
+    :else nil))
 
 (defn bool-or-null
   "Returns a bool or nil"
