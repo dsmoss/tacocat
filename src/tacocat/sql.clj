@@ -966,26 +966,27 @@
   "Find the value of an internationalised string"
   ([k lang default db]
    ;(println "k" k "lang" lang "default" default)
-   (if (nil? lang)
-     default
-     (let [{v :val
-            f :fallback} (first
-                           (j/query db ["select l.fallback
-                                              , i.val
-                                         from   intl_lang as l
-                                         join   intl_key  as k
-                                           on   1 = 1
-                                         left   outer
-                                         join   intl      as i
-                                           on   i.lang = l.name
-                                           and  i.key  = k.name
-                                         where  l.name = ?
-                                           and  k.name = ?"
-                                        lang
-                                        k]))]
-       (if (nil? v)
-         (recur k f default db)
-         v))))
+   (let [lang (if (nil? lang)
+                (retrieve-app-data-val "default-language")
+                lang)
+         {v :val
+          f :fallback} (first
+                         (j/query db ["select l.fallback
+                                            , i.val
+                                       from   intl_lang as l
+                                       join   intl_key  as k
+                                         on   1 = 1
+                                       left   outer
+                                       join   intl      as i
+                                         on   i.lang = l.name
+                                         and  i.key  = k.name
+                                       where  l.name = ?
+                                         and  k.name = ?"
+                                      lang
+                                      k]))]
+     (if (nil? v)
+       (recur k f default db)
+       v)))
   ([k lang default]
    (retrieve-internationalised-string k lang default db-spec))
   ([k lang]

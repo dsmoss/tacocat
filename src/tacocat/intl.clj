@@ -1,6 +1,5 @@
 (ns tacocat.intl
-  (:require [tacocat.sql :refer [retrieve-internationalised-string
-                                 retrieve-app-data-val]]
+  (:require [tacocat.sql :refer [retrieve-internationalised-string]]
             [tacocat.str-var :refer [translate-vars]]))
 
 (defn get-string
@@ -12,6 +11,6 @@
        (retrieve-internationalised-string k lang)
        m)))
   ([k m]
-   (get-string k m (retrieve-app-data-val "default-language")))
+   (get-string k m nil))
   ([k]
    (get-string k {})))

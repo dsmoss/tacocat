@@ -1851,3 +1851,12 @@
             (get-string "str-none" {} lang))]]
         [[:pre st]]))))
 
+(defn render-404
+  "Shows a 404/not found page"
+  [user]
+  (let [lang (:language user)]
+    (with-page (get-string "str-404" {} lang)
+      user
+      [:error]
+      [:h5 {:style "color: red;"}
+       (get-string "str-404-msg" {} lang)])))

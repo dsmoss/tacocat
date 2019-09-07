@@ -84,6 +84,8 @@ values ('str-cause')
      , ('prm-view-error-list')
      , ('ln-error-list')
      , ('ln-errors')
+     , ('str-404')
+     , ('str-404-msg')
 ;
 
 insert into intl (key, lang, val)
@@ -101,6 +103,10 @@ values ('str-cause'          , 'en', 'Cause')
      , ('ln-error-list'      , 'en', 'Error Log')
      , ('ln-errors'          , 'es', 'Errores')
      , ('ln-errors'          , 'en', 'Errors')
+     , ('str-404'            , 'es', 'Error 404')
+     , ('str-404'            , 'en', '404 Error')
+     , ('str-404-msg'        , 'es', 'La página no existe o ha sido movida.')
+     , ('str-404-msg'        , 'en', 'The requested page does not exist or has been moved.')
 ;
 
 insert into permission (name)

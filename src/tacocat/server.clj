@@ -724,6 +724,11 @@
   (with-check-permissions request "view-error-list"
     view/render-error-list))
 
+(defn handle-404
+  "404/Not Found page"
+  [request]
+  (-> request (response (view/render-404)) (res/status 404)))
+
 (def id [#"\d+" :id])
 
 (def handler
@@ -786,9 +791,9 @@
       ["accts"                     {"" handle-accts}]                ; done
       ["log"                       {"" handle-log}]                  ; done
       ["intl"                      {"" handle-intl}]                 ; done
-      ["error-log"                 {"" handle-error-list
+      ["error-log"                 {"" handle-error-list             ; done
        ["/"                        id] handle-error-log}]            ; done
-      [true (fn [req] {:status 404 :body "404 not found"})]]]))
+      [true                            handle-404]]]))               ; done
 
 (defn wrap-exception-handling
   "Makes a nicer looking error page"
