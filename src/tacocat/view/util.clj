@@ -98,8 +98,7 @@
   ([data lang m]
    (let [c  (count data)
          pc (float (/ 100 (if (= 0 c) 1 c)))]
-     [:table
-      {:width "100%" :cellpadding 0 :cellspacing 0 :border 0}
+     [:table {:style "width: 100%; border: 0; padding: 0;"}
       [:tr {:style "padding: 0; border: 0;"}
        (map (fn [{d :destination s :string}]
               [:th {:width (str pc "%")

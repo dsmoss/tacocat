@@ -1102,7 +1102,8 @@
   (j/with-db-transaction [t-con db-spec]
     (doall
       (map (fn [{id :id_item :as sb}]
-             {:options (j/query t-con
+             {:item sb
+              :options (j/query t-con
                                 ["select sold
                                        , option
                                        , id_option
@@ -1111,11 +1112,11 @@
                                   order
                                     by   sold desc
                                        , option"
-                                 id])
-              :item sb})
+                                 id])})
            (j/query t-con ["select sold
                                  , item
                                  , id_item
                             from   v_sales_breakdown
                             order
-                              by   item"])))))
+                              by   sold desc
+                                 , item"])))))
