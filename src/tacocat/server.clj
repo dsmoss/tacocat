@@ -718,74 +718,79 @@
   (with-check-permissions request "view-debt-detail"
     (view/render-debt-detaill (-> request :params :id))))
 
+(defn handle-sales
+  "Shows the sales breakdown for the current period"
+  [request]
+  (with-check-permissions request "view-sales" view/render-sales))
+
 (def handler
   "Get the handler function for our routes."
   (make-handler
     ["/"
-     [[""                              handle-icons]                 ; done
-      ["css"                           handle-css]                   ; done
-      ["fonts"                         handle-fonts]                 ; done
-      [""                              handle-index]                 ; done
-      ["system"                    {"" handle-system}]               ; done
-      ["admin"                     {"" handle-admin}]                ; done
-      ["admin-options"             {"" handle-admin-options}]        ; done
-      ["list-users"                {"" handle-list-users}]           ; done
-      ["add-new-user"              {"" handle-add-new-user}]         ; done
-      ["list-roles"                {"" handle-list-roles}]           ; done
-      ["list-items"                {"" handle-list-items}]           ; done
-      ["add-new-item"              {"" handle-add-new-item}]         ; done
-      ["add-new-menu-group"        {"" handle-add-new-menu-group}]   ; done
-      [["view-item/"               id] handle-view-item]             ; done
-      [["create-new-option-group/" id] handle-new-option-group]      ; done
-      [["create-new-option/"       id] handle-new-option]            ; done
-      [["view-option/"             id] handle-view-option]           ; done
-      [["change-item-menu-group/"  id] handle-change-item-menu-group]; done
-      [["change-item-charge/"      id] handle-change-item-charge]    ; done
-      [["delete-item/"             id] handle-delete-item]           ; done
-      ["login"                     {"" handle-login}]                ; done
-      ["user-info"                 {"" handle-user-info              ; done
-       ["/"                        id] handle-user-info}]            ; done
-      [["change-user-name/"        id] handle-change-user-name]      ; done
-      [["change-password/"         id] handle-change-password]       ; done
-      [["change-user-roles/"       id] handle-change-user-roles]     ; done
-      [["change-user-language/"    id] handle-change-user-language]  ; done
-      [["view-role/"               id] handle-view-role]             ; done
-      ["add-new-role"              {"" handle-add-new-role}]         ; done
-      [["delete-role/"             id] handle-delete-role]           ; done
-      [["delete-user/"             id] handle-delete-user]           ; done
-      ["bills"                     {"" handle-bills}]                ; done
-      [["edit-location/"           id] handle-edit-bill-location]    ; done
-      ["new-bill"                  {"" handle-new-bill}]             ; done
-      [["bill/"                    id] handle-single-bill]           ; done
-      [["set-person/"              id] handle-set-person]            ; done
-      [["set-bill-item/"           id] handle-set-bill-item]         ; done
-      [["set-bill-item-options/"   id] handle-set-bill-item-options] ; done
-      [["delete-bill-item/"        id] handle-delete-bill-item]      ; done
-      [["set-charge-override/"     id] handle-charge-override]       ; done
-      [["add-item/"                id] handle-add-item]              ; done
-      [["charge-bill/"             id] handle-charge-bill]           ; done
-      ["add-expense"               {"" handle-new-expense}]          ; done
-      ["old-bills"                 {"" handle-old-bills}]            ; done
-      [["closed-bill/"             id] handle-closed-bill]           ; done
-      [["print-bill/"              id] handle-print-bill]            ; done
-      [["close/"                   id] handle-single-close]          ; done
-      ["close-acct"                {"" handle-close-acct}]           ; done
-      ["previous-closes"           {"" handle-previous-closes}]      ; done
-      ["closed-services"           {"" handle-closed-services}]      ; done
-      [["services-for-close/"      id] handle-services-for-close]    ; done
-      ["add-services-expense"      {"" handle-add-services-expense}] ; done
-      ["services"                  {"" handle-services}]             ; done
-      ["accts"                     {"" handle-accts}]                ; done
-      ["log"                       {"" handle-log}]                  ; done
-      ["intl"                      {"" handle-intl}]                 ; done
-      ["error-log"                 {"" handle-error-list             ; done
-       ["/"                        id] handle-error-log}]            ; done
-      ["debts"                     {"" handle-debts}]                ; done
-      ["add-creditor"              {"" handle-add-creditor}]         ; done
-      ["add-debt"                  {"" handle-add-debt}]             ; done
-      ["add-debt-payment"          {"" handle-add-debt-payment}]     ; done
+     [[""                              handle-icons]
+      ["css"                           handle-css]
+      ["fonts"                         handle-fonts]
+      [""                              handle-index]
+      ["system"                    {"" handle-system}]
+      ["admin"                     {"" handle-admin}]
+      ["admin-options"             {"" handle-admin-options}]
+      ["list-users"                {"" handle-list-users}]
+      ["add-new-user"              {"" handle-add-new-user}]
+      ["list-roles"                {"" handle-list-roles}]
+      ["list-items"                {"" handle-list-items}]
+      ["add-new-item"              {"" handle-add-new-item}]
+      ["add-new-menu-group"        {"" handle-add-new-menu-group}]
+      [["view-item/"               id] handle-view-item]
+      [["create-new-option-group/" id] handle-new-option-group]
+      [["create-new-option/"       id] handle-new-option]
+      [["view-option/"             id] handle-view-option]
+      [["change-item-menu-group/"  id] handle-change-item-menu-group]
+      [["change-item-charge/"      id] handle-change-item-charge]
+      [["delete-item/"             id] handle-delete-item]
+      ["login"                     {"" handle-login}]
+      ["user-info"                 {"" handle-user-info
+       ["/"                        id] handle-user-info}]
+      [["change-user-name/"        id] handle-change-user-name]
+      [["change-password/"         id] handle-change-password]
+      [["change-user-roles/"       id] handle-change-user-roles]
+      [["change-user-language/"    id] handle-change-user-language]
+      [["view-role/"               id] handle-view-role]
+      ["add-new-role"              {"" handle-add-new-role}]
+      [["delete-role/"             id] handle-delete-role]
+      [["delete-user/"             id] handle-delete-user]
+      ["bills"                     {"" handle-bills}]
+      [["edit-location/"           id] handle-edit-bill-location]
+      ["new-bill"                  {"" handle-new-bill}]
+      [["bill/"                    id] handle-single-bill]
+      [["set-person/"              id] handle-set-person]
+      [["set-bill-item/"           id] handle-set-bill-item]
+      [["set-bill-item-options/"   id] handle-set-bill-item-options]
+      [["delete-bill-item/"        id] handle-delete-bill-item]
+      [["set-charge-override/"     id] handle-charge-override]
+      [["add-item/"                id] handle-add-item]
+      [["charge-bill/"             id] handle-charge-bill]
+      ["add-expense"               {"" handle-new-expense}]
+      ["old-bills"                 {"" handle-old-bills}]
+      [["closed-bill/"             id] handle-closed-bill]
+      [["print-bill/"              id] handle-print-bill]
+      [["close/"                   id] handle-single-close]
+      ["close-acct"                {"" handle-close-acct}]
+      ["previous-closes"           {"" handle-previous-closes}]
+      ["closed-services"           {"" handle-closed-services}]
+      [["services-for-close/"      id] handle-services-for-close]
+      ["add-services-expense"      {"" handle-add-services-expense}]
+      ["services"                  {"" handle-services}]
+      ["accts"                     {"" handle-accts}]
+      ["log"                       {"" handle-log}]
+      ["intl"                      {"" handle-intl}]
+      ["error-log"                 {"" handle-error-list
+       ["/"                        id] handle-error-log}]
+      ["debts"                     {"" handle-debts}]
+      ["add-creditor"              {"" handle-add-creditor}]
+      ["add-debt-payment"          {"" handle-add-debt-payment}]
       [["debt-detail/"             id] handle-debt-detail]
-      [true                            handle-404]]]))               ; done
+      ["sales"                     {"" handle-sales}]
+      [true                            handle-404]]])) 
 
 (defn app
   [store]

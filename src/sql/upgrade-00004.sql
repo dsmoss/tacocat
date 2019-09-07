@@ -100,6 +100,9 @@ values ('str-cause')
      , ('prm-add-debt-payment')
      , ('prm-view-debt-detail')
      , ('str-debt-for/name')
+     , ('ln-sales')
+     , ('prm-view-sales')
+     , ('str-options')
 ;
 
 insert into intl (key, lang, val)
@@ -149,6 +152,12 @@ values ('str-cause'           , 'en', 'Cause')
      , ('prm-view-debt-detail', 'en', 'View Debt Detail')
      , ('str-debt-for/name'   , 'es', 'Deuda con %name')
      , ('str-debt-for/name'   , 'en', '%name Debt')
+     , ('ln-sales'            , 'es', 'Ventas')
+     , ('ln-sales'            , 'en', 'Sales')
+     , ('prm-view-sales'      , 'es', 'Ver Ventas')
+     , ('prm-view-sales'      , 'en', 'View Sales')
+     , ('str-options'         , 'es', 'Opciones')
+     , ('str-options'         , 'en', 'Options')
 ;
 
 insert into permission (name)
@@ -158,6 +167,7 @@ values ('view-error-list')
      , ('add-debt')
      , ('add-debt-payment')
      , ('view-debt-detail')
+     , ('view-sales')
 ;
 
 insert into role_permission (id_role, id_permission)
@@ -172,6 +182,7 @@ where  r.name = 'Admin'
 		 , 'add-debt'
 		 , 'add-debt-payment'
 		 , 'view-debt-detail'
+		 , 'view-sales'
 );
 
 drop table if exists creditor cascade;
@@ -191,3 +202,48 @@ create table debt
   , concept     varchar(255)  not null
 );
 
+drop view if exists v_sales_breakdown cascade;
+
+create view v_sales_breakdown as
+select count(1)  as sold
+     , it.name   as item
+     , it.id     as id_item
+from   intakes   as i
+join   bill      as b
+  on   i.id_bill = b.id
+join   bill_item as bi
+  on   b.id = bi.id_bill
+join   item      as it
+  on   bi.id_item = it.id
+where  i.id_close is null
+group
+  by   it.name
+     , it.id;
+
+drop view if exists v_sales_option_breakdown cascade;
+
+create view v_sales_option_breakdown as
+select count(1)         as sold
+     , it.name          as item
+     , it.id            as id_item
+     , o.name           as option
+     , o.id             as id_option
+from   intakes          as i
+join   bill             as b
+  on   i.id_bill = b.id
+join   bill_item        as bi
+  on   b.id = bi.id_bill
+join   item             as it
+  on   bi.id_item = it.id
+left   outer
+join   bill_item_option as bio
+  on   bio.id_bill_item = bi.id
+left   outer
+join   option           as o
+  on   o.id = bio.id_option
+where  i.id_close is null
+group
+  by  it.name
+    , o.name
+    , it.id
+    , o.id;

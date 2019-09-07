@@ -59,3 +59,6 @@ pre                {text-align: left;}
 .left              {text-align: left;
                     font-weight: bold;}
 .right             {text-align: right;}
+.expand,
+.expand table      {width: 100%;
+                    text-align: center;}

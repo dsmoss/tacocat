@@ -1461,3 +1461,31 @@
       [:error]
       [:h5 {:style "color: red;"}
        (get-string "str-404-msg" {} lang)])))
+
+(defn render-sales
+  "Shows the sales breakdown"
+  [user]
+  (let [lang (:language user)]
+    (with-page (get-string "ln-sales" {} lang)
+      user
+      [:home :accts]
+      (with-table lang
+        [:item      :item        :options]
+        ["str-item" "str-amount" "str-options"]
+        [(fn [i _] (make-link (str "/view-item/" (-> i :id_item))
+                              (-> i :item)))
+         (fn [n _] [:h5 {:class "expand"} (-> n :sold)])
+         (fn [o _] [:h5 {:class "expand"}
+                    (apply
+                      (partial with-form-table nil
+                               [(get-string "str-option" {} lang)
+                                (get-string "str-amount" {} lang)])
+                      (map (fn [{o :option i :id_option n :sold}]
+                             [[:h5
+                               (if (nil? o)
+                                 (get-string "str-none" {} lang)
+                                 (make-link
+                                   (str "/view-option/" i) o))]
+                              [:h5 n]])
+                           o))])]
+        (sql/retrieve-sales-breakdown)))))

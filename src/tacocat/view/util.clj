@@ -22,7 +22,8 @@
   ;                      ["new-bill"]]
   ;             ["accts" ["add-expense"]
   ;                      ["close-acct"]
-  ;                      ["previous-closes"]]
+  ;                      ["previous-closes"]
+  ;                      ["sales"]]
   ;             ["services" ["add-services-expense"]
   ;                         ["closed-services"]]
   ;             ["debts" ["add-debt-payment"]
@@ -71,6 +72,8 @@
                  :string      "ln-old-bills"}]
    :accts      [{:destination "/add-expense"
                  :string      "ln-add-expense"}
+                {:string      "ln-sales"
+                 :destination "/sales"}
                 {:destination "/close-acct"
                  :string      "ln-close-accounting"}
                 {:destination "/previous-closes"
