@@ -23,6 +23,18 @@
      :details (subs details 0 (min (count details) 1024))}))
 
 (defn retrieve-error-log
+  "Finds all error log items"
+  []
+  (j/query db-spec ["select id
+                          , date
+                          , id_cause
+                          , error_type
+                     from   error_log
+                     order
+                       by   date desc
+                     limit  1000"]))
+
+(defn retrieve-error-log-by-id
   "Finds an error log item"
   [id]
   (first (j/query db-spec ["select date

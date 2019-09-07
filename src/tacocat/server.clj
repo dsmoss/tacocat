@@ -718,6 +718,12 @@
   (with-check-permissions request "view-error-log"
     (view/render-error-log (-> request :params :id))))
 
+(defn handle-error-list
+  "Shows list of all errors registered"
+  [request]
+  (with-check-permissions request "view-error-list"
+    view/render-error-list))
+
 (def id [#"\d+" :id])
 
 (def handler
@@ -780,7 +786,8 @@
       ["accts"                     {"" handle-accts}]                ; done
       ["log"                       {"" handle-log}]                  ; done
       ["intl"                      {"" handle-intl}]                 ; done
-      [["error-log/"               id] handle-error-log]
+      ["error-log"                 {"" handle-error-list
+       ["/"                        id] handle-error-log}]            ; done
       [true (fn [req] {:status 404 :body "404 not found"})]]]))
 
 (defn wrap-exception-handling

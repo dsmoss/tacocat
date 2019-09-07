@@ -71,6 +71,8 @@
                  :string      "ln-admin-options"}
                 {:destination "/log"
                  :string      "ln-log"}
+                {:destination "/error-log"
+                 :string      "ln-errors"}
                 {:destination "/intl"
                  :string      "ln-intl"}]
    :error      [{:destination "/user-info"
@@ -1789,6 +1791,31 @@
          (fn [d _] [:small d])]
         (sql/retrieve-log)))))
 
+(defn render-error-list
+  "Generate the error list"
+  [user]
+  (let [lang (:language user)]
+    (with-page (get-string "ln-error-list" {} lang)
+       user
+      [:system]
+      [:p (get-string "str-entries-limit" {} lang)]
+      (with-table lang
+        [:date      :error_type      :id_cause      :id]
+        ["str-date" "str-error-type" "str-cause" ""]
+        [(fn [d _] [:small (format-full-date d :p)])
+         (fn [t _] [:small t])
+         (fn [c _] (if c
+                     (make-link (str "/error-log/" c)
+                                (get-string "ln-error-logged/number"
+                                            {:number c} lang)
+                                :small)
+                     [:small (get-string "str-none" {} lang)]))
+         (fn [i _] (make-link (str "/error-log/" i)
+                              (get-string "ln-error-logged/number"
+                                          {:number i} lang)
+                              :small))]
+        (sql/retrieve-error-log)))))
+
 (defn render-error-log
   "Show page with error log details"
   [user id]
@@ -1797,7 +1824,8 @@
          st :stack_trace
          ms :message
          dt :date
-         ca :id_cause}   (sql/retrieve-error-log (int-or-null id))]
+         ca :id_cause}   (sql/retrieve-error-log-by-id
+                           (int-or-null id))]
     (with-page (get-string "ln-error-logged/number"
                            {:number id} lang)
       user

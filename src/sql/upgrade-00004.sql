@@ -81,15 +81,36 @@ values ('str-cause')
      , ('str-none')
      , ('dta-environment')
      , ('dta-theme')
+     , ('prm-view-error-list')
+     , ('ln-error-list')
+     , ('ln-errors')
 ;
 
 insert into intl (key, lang, val)
-values ('str-cause'      , 'en', 'Cause')
-     , ('str-cause'      , 'es', 'Causa')
-     , ('str-none'       , 'en', 'None')
-     , ('str-none'       , 'es', 'Ninguna')
-     , ('dta-environment', 'en', 'Environment')
-     , ('dta-environment', 'es', 'Entorno')
-     , ('dta-theme'      , 'en', 'Theme')
-     , ('dta-theme'      , 'es', 'Tema')
+values ('str-cause'          , 'en', 'Cause')
+     , ('str-cause'          , 'es', 'Causa')
+     , ('str-none'           , 'en', 'None')
+     , ('str-none'           , 'es', 'Ninguna')
+     , ('dta-environment'    , 'en', 'Environment')
+     , ('dta-environment'    , 'es', 'Entorno')
+     , ('dta-theme'          , 'en', 'Theme')
+     , ('dta-theme'          , 'es', 'Tema')
+     , ('prm-view-error-list', 'es', 'Ver Lista de Errores')
+     , ('prm-view-error-list', 'en', 'View Error List')
+     , ('ln-error-list'      , 'es', 'Registro de Errores')
+     , ('ln-error-list'      , 'en', 'Error Log')
+     , ('ln-errors'          , 'es', 'Errores')
+     , ('ln-errors'          , 'en', 'Errors')
 ;
+
+insert into permission (name)
+values ('view-error-list')
+;
+
+insert into role_permission (id_role, id_permission)
+select r.id, p.id
+from   role as r
+join   permission as p
+  on   true
+where  r.name = 'Admin'
+  and  p.name = 'view-error-list';
