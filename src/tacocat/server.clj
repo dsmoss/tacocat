@@ -1,78 +1,22 @@
 (ns tacocat.server
   (:gen-class)
-  (:require [com.stuartsierra.component :as    component]
-            [bidi.ring                  :refer [make-handler
-                                                resources-maybe
-                                                resources]]
+  (:require [tacocat.server.util        :refer :all]
+            [com.stuartsierra.component :as    component]
+            [ring.middleware.params     :refer [wrap-params]]
             [aleph.http                 :as    http]
             [ring.util.response         :as    res]
+            [bidi.ring                  :refer [make-handler]]
             [ring.util.request          :as    req]
-            [ring.middleware.params     :refer [wrap-params]]
             [tacocat.view               :as    view]
-            [tacocat.store              :as    store]
             [tacocat.util               :refer :all]
             [tacocat.controller         :as    controller]
             [tacocat.intl               :refer [get-string]]))
-
-(defn get-user
-  [request]
-  (-> request
-      :remote-addr
-      controller/find-logged-in-user))
-
-(defmacro response
-  "Returns the response form"
-  [request fun]
-  `(-> ~request
-       get-user
-       ~fun
-       res/response))
-
-(defn get-permissions
-  "Gets the permissions to the logged-in user"
-  [request]
-  (-> request
-      :remote-addr
-      controller/find-logged-in-user
-      :permissions))
-
-(defmacro not-allowed
-  "Return not allowed page"
-  [request & permissions]
-  `(response ~request (view/NOT-ALLOWED ~@permissions)))
-
-(defmacro with-check-permissions
-  [request main-perm main-fn & other-checks]
-  `(cond (not (contains? (get-permissions ~request) ~main-perm))
-         (not-allowed ~request ~main-perm)
-         ~@(interleave
-             (map (fn [{t :trigger}]
-                    `(contains? (:params ~request) ~t))
-                  other-checks)
-             (map (fn [{p :permission
-                        a :action}]
-                    `(if (contains? (get-permissions ~request) ~p)
-                       (do
-                         ~a
-                         (response ~request ~main-fn))
-                       (not-allowed ~request ~p)))
-                  other-checks))
-         :else (response ~request ~main-fn)))
-
-(def handle-icons (resources-maybe {:prefix "ico/"}))
-(def handle-css   (resources {:prefix "/css"}))
-(def handle-fonts (resources {:prefix "/fonts"}))
 
 (defn handle-index
   "Index Page"
   [request]
   ;(println request)
   (response request view/render-index))
-
-(defn request-id
-  "Get the id of a request"
-  [request]
-  (int-or-null (:id (:route-params request))))
 
 (defn handle-bills
   "Display the bills page"
@@ -446,7 +390,6 @@
   "Shows the items page"
   [request]
   ;(println request)
-  ; Let form weird because data is like: {change-in-stock 31, 31 true}
   (let [{change-in-stock "change-in-stock"
          set-true?       change-in-stock
          item-name       "item-name"
@@ -775,8 +718,6 @@
   (with-check-permissions request "view-debt-detail"
     (view/render-debt-detaill (-> request :params :id))))
 
-(def id [#"\d+" :id])
-
 (def handler
   "Get the handler function for our routes."
   (make-handler
@@ -845,19 +786,6 @@
       ["add-debt-payment"          {"" handle-add-debt-payment}]     ; done
       [["debt-detail/"             id] handle-debt-detail]
       [true                            handle-404]]]))               ; done
-
-(defn wrap-exception-handling
-  "Makes a nicer looking error page"
-  [handler]
-  (fn [request]
-    (try
-      (handler request)
-      (catch Exception e
-        (let [eid (controller/log-exception (get-user request) e)
-              msg (.getMessage e)]
-          ;(println request)
-          (-> (response request (view/render-exception msg eid))
-              (res/status 500)))))))
 
 (defn app
   [store]
