@@ -729,6 +729,34 @@
   [request]
   (-> request (response (view/render-404)) (res/status 404)))
 
+(defn handle-debts
+  "Shows the debts page"
+  [request]
+  ;(println request)
+  (let [user                  (get-user request)
+        {creditor "creditor"
+         amount   "amount"}   (-> request :params)]
+    (with-check-permissions request "view-debts"
+      view/render-debts
+      {:trigger    "add-debt"
+       :permission "add-debt"
+       :action     (controller/add-debt user creditor amount)}
+      {:trigger    "add-creditor"
+       :permission "add-creditor"
+       :action     (controller/add-creditor user creditor)})))
+
+(defn handle-add-creditor
+  "Shows the add creditor form"
+  [request]
+  (with-check-permissions request "add-creditor"
+    view/render-add-creditor))
+
+(defn handle-add-debt
+  "Shows the debt addition page"
+  [request]
+  (with-check-permissions request "add-debt"
+    view/render-add-debt))
+
 (def id [#"\d+" :id])
 
 (def handler
@@ -793,6 +821,10 @@
       ["intl"                      {"" handle-intl}]                 ; done
       ["error-log"                 {"" handle-error-list             ; done
        ["/"                        id] handle-error-log}]            ; done
+      ["debts"                     {"" handle-debts}]                ; done
+      ["add-creditor"              {"" handle-add-creditor}]         ; done
+      ["add-debt"                  {"" handle-add-debt}]             ; done
+      ["add-debt-payment"          {"" handle-add-debt-payment}] ;TODO
       [true                            handle-404]]]))               ; done
 
 (defn wrap-exception-handling

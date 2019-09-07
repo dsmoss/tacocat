@@ -23,7 +23,11 @@
   ;                      ["close-acct"]
   ;                      ["previous-closes"]]
   ;             ["services" ["add-services-expense"]
-  ;                         ["closed-services"]]]
+  ;                         ["closed-services"]]
+  ;TODO: Debts
+  ;             ["debts" ["add-debt-payment"]
+  ;                      ["add-debt"]
+  ;                      ["add-creditor"]]]
   ;     ["system" ["admin-options"]
   ;               ["log"]
   ;               ["intl"]]]
@@ -52,7 +56,15 @@
                 {:destination "/accts"
                  :string      "ln-accts"}
                 {:destination "/services"
-                 :string      "ln-services"}]
+                 :string      "ln-services"}
+                {:destination "/debts"
+                 :string      "ln-debts"}]
+   :debts      [{:destination "/add-debt-payment"
+                 :string      "ln-add-debt-payment"}
+                {:destination "/add-debt"
+                 :string      "ln-add-debt"}
+                {:destination "/add-creditor"
+                 :string      "ln-add-creditor"}]
    :bills      [{:destination "/new-bill"
                  :string      "ln-new-bill"}
                 {:destination "/old-bills"
@@ -460,6 +472,7 @@
   [text id lang]
   (form/label {:for id} id (get-string text {} lang)))
 
+(def lbl-creditor     (partial lbl "lbl-creditor"    ))
 (def lbl-person       (partial lbl "lbl-person"      ))
 (def lbl-charge       (partial lbl "lbl-charge"      ))
 (def lbl-concept      (partial lbl "lbl-concept"     ))
@@ -491,9 +504,11 @@
 
 (defn nf
   "Makes a number field"
-  ([id default step]
-   (form/text-field {:id id :type "number" :step step}
+  ([id default step minimum]
+   (form/text-field {:id id :type "number" :step step :min minimum}
                     id default))
+  ([id default step]
+   (nf id default step 0))
   ([id default]
    (nf id default "0.01"))
   ([id]
@@ -1850,6 +1865,56 @@
                                       {:number ca} lang))])
             (get-string "str-none" {} lang))]]
         [[:pre st]]))))
+
+(defn render-debts
+  "Render the debts summary page"
+  [user]
+  (let [lang (:language user)]
+    (with-page (get-string "ln-debts" {} lang)
+      user
+      [:home :debts]
+      (with-table lang
+        [:creditor      :amount      :id_creditor]
+        ["str-creditor" "str-amount" ""]
+        [(fn [c _] [:h5 c])
+         (fn [a _] (format-money a))
+         (fn [i _]
+           (make-link (str "/debt-detail/" i)
+                      (get-string "ln-debt-detail" {} lang)))]
+        (sql/retrieve-debt-summary)))))
+
+(defn render-add-creditor
+  "Shows the creditor addition screen"
+  [user]
+  (let [lang (:language user)]
+    (with-page (get-string "ln-add-creditor" {} lang)
+      user
+      [:home :debts]
+      (with-form "/debts"
+        (form/hidden-field {:value true} "add-creditor")
+        (with-form-table [nil nil [2]] nil
+          [(lbl-name "creditor" lang)
+           (tf "creditor")]
+          [(btn-add lang)])))))
+
+(defn render-add-debt
+  "Shows the add debt form"
+  [user]
+  (let [lang (:language user)]
+    (with-page (get-string "ln-add-debt" {} lang)
+      user
+      [:home :debts]
+      (with-form "/debts"
+        (form/hidden-field {:value true} "add-debt")
+        (with-form-table [nil nil nil [2]] nil
+          [(lbl-creditor "creditor" lang)
+           (form/drop-down
+             {:id "creditor"} "creditor"
+             (map (fn [{n :name i :id}] [n i])
+                  (sql/retrieve-creditors)))]
+          [(lbl-charge "amount" lang)
+           (nf "amount" 0 0.01 0)]
+          [(btn-add lang)])))))
 
 (defn render-404
   "Shows a 404/not found page"

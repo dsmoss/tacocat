@@ -348,3 +348,16 @@
   [user id]
   (println "Deleting role" id)
   (sql/delete-role user (int-or-null id)))
+
+(defn add-creditor
+  "Adds a creditor"
+  [user creditor]
+  (println "Add Creditor" creditor)
+  (sql/insert-creditor user creditor))
+
+(defn add-debt
+  "Add a debt to the system"
+  [user creditor amount]
+  (println "Debt for" creditor "of" amount)
+  (sql/insert-debt
+    user (int-or-null creditor) (* -1 (float-or-null amount)) nil))

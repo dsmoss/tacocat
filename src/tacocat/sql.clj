@@ -49,6 +49,7 @@
 (defmacro ins
   "Makes an insert"
   [user db & stuff]
+  ;(println (:name user) db stuff)
   `(j/with-db-transaction [t-con# ~db]
      (let [ret# (j/insert! t-con# ~@stuff)]
        (log-action t-con# (:id ~user) "insert" (str ~@stuff))
@@ -966,9 +967,9 @@
   "Find the value of an internationalised string"
   ([k lang default db]
    ;(println "k" k "lang" lang "default" default)
-   (let [lang (if (nil? lang)
-                (retrieve-app-data-val "default-language")
-                lang)
+   (let [l (if (nil? lang)
+             (retrieve-app-data-val "default-language" db)
+             lang)
          {v :val
           f :fallback} (first
                          (j/query db ["select l.fallback
@@ -982,15 +983,19 @@
                                          and  i.key  = k.name
                                        where  l.name = ?
                                          and  k.name = ?"
-                                      lang
+                                      l
                                       k]))]
      (if (nil? v)
-       (recur k f default db)
+       (if (nil? f)
+         default
+         (recur k f default db))
        v)))
   ([k lang default]
    (retrieve-internationalised-string k lang default db-spec))
   ([k lang]
-   (retrieve-internationalised-string k lang k)))
+   (retrieve-internationalised-string k lang k))
+  ([k]
+   (retrieve-internationalised-string k nil)))
 
 (defn retrieve-intl
   "Gets all internationalised strings"
@@ -1026,3 +1031,41 @@
                     key-filter
                     key-filter
                     key-filter]))
+
+(defn retrieve-debt-summary
+  "Finds a summary of all the debts owed by creditor"
+  []
+  (j/query db-spec ["select c.id          as id_creditor
+                          , c.name        as creditor
+                          , sum(d.amount) as amount
+                     from   debt          as d
+                     join   creditor      as c
+                       on   d.id_creditor = c.id
+                     group
+                       by   c.id
+                          , c.name
+                     order
+                       by   c.name"]))
+
+(defn insert-creditor
+  "Inserts a creditor"
+  [user creditor]
+  (ins user db-spec :creditor {:name creditor}))
+
+(defn retrieve-creditors
+  "Finds all creditors"
+  []
+  (j/query db-spec ["select id, name from creditor order by name"]))
+
+(defn insert-debt
+  "Inserts a debt to the db"
+  [user id-creditor amount concept]
+  ;(println (:name user) id-creditor amount concept)
+  (let [concept (if (empty? concept)
+                  (retrieve-internationalised-string "str-debt")
+                  concept)]
+    ;(println user id-creditor amount concept)
+    (ins user db-spec :debt
+         {:id_creditor id-creditor
+          :amount      amount
+          :concept     concept})))
