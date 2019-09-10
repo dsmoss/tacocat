@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [hiccup.page  :as    page]
             [hiccup.form  :as    form]
+            [hiccup.core  :refer [html]]
             [tacocat.util :refer :all]
             [tacocat.sql  :as    sql]
             [tacocat.intl :refer [get-string]]))
@@ -9,7 +10,7 @@
 (defn make-link
   "Makes the link form"
   ([address text tag]
-   [tag [:a {:href address} text]])
+   (html [tag [:a {:href address} text]]))
   ([address text]
    (make-link address text :h5)))
 
@@ -98,13 +99,15 @@
   ([data lang m]
    (let [c  (count data)
          pc (float (/ 100 (if (= 0 c) 1 c)))]
-     [:table {:style "width: 100%; border: 0; padding: 0;"}
-      [:tr {:style "padding: 0; border: 0;"}
-       (map (fn [{d :destination s :string}]
-              [:th {:width (str pc "%")
-                    :style "border: 0; padding: 0;"}
-               (make-link d (get-string s m lang))])
-            data)]]))
+     (html
+       [:table {:style "width: 100%; border: 0; padding: 0;"}
+        [:tr {:style "padding: 0; border: 0;"}
+         (map (fn [{d :destination s :string}]
+                (html
+                  [:th {:width (str pc "%")
+                        :style "border: 0; padding: 0;"}
+                   (make-link d (get-string s m lang))]))
+              data)]])))
   ([data lang]
    (make-link-table data lang {}))
   ([data]
@@ -132,64 +135,68 @@
      [some some])
    => [:table [:tr [:td some] [:td some]]]"
   [[hs & ts] header & data]
-  (let [row (fn [tag cs items]
-              [:tr {:class "form-table"}
-               (map (fn [c d]
-                      [tag {:class "form-table"
-                            :colspan (if (nil? c) 1 c)} d])
-                    (if (nil? cs) (repeat (count items) 1) cs)
-                    items)])]
-    [:table {:class "form-table"}
-     (if (not (empty? header))
-       (row :th hs header))
-     (map row
-          (repeat (count data) :td)
-          (if (empty? ts) (repeat (count data) nil) ts)
-          data)]))
+  (html
+    (let [row (fn [tag cs items]
+                (html
+                  [:tr {:class "form-table"}
+                   (map (fn [c d]
+                          (html
+                            [tag {:class "form-table"
+                                  :colspan (if (nil? c) 1 c)} d]))
+                        (if (nil? cs) (repeat (count items) 1) cs)
+                        items)]))]
+      [:table {:class "form-table"}
+       (if (not (empty? header))
+         (row :th hs header))
+       (map row
+            (repeat (count data) :td)
+            (if (empty? ts) (repeat (count data) nil) ts)
+            data)])))
 
 (defn main-head
   "normal page head tag"
   [font header theme]
-  [:head
-   [:link {:rel     "apple-touch-icon"
-           :sizes   "180x180"
-           :href    "/apple-touch-icon.png"}]
-   [:link {:rel     "icon"
-           :type    "image/png"
-           :sizes   "32x32"
-           :href    "/favicon-32x32.png"}]
-   [:link {:rel     "icon"
-           :type    "image/png"
-           :sizes   "16x16"
-           :href    "/favicon-16x16.png"}]
-   [:link {:rel     "manifest"
-           :href    "/site.webmanifest"}]
-   [:link {:rel     "mask-icon"
-           :href    "/safari-pinned-tab.svg"
-           :color   "#5bbad5"}]
-   [:meta {:name    "msapplication-TileColor"
-           :content "#da532c"}]
-   [:meta {:name    "theme-color"
-           :content "#ffffff"}]
-   [:meta {:name    "viewport"
-           :content "width=device-width, initial-scale=1.0"}]
-   [:meta {:charset "UTF-8"}]
-   (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
-                     (str "https://www.w3schools.com/lib/" theme)
-                     (if (= (sql/retrieve-app-data-val "environment")
-                            "dev")
-                       (str "/css/style.css?" (rand))
-                       "/css/style.css")
-                     "/fonts/style.css")
-   [:style (str "h1, h2, h3, h4,
-                h5, h6, div, p,
-                th, td, tr {font-family: "
-                (if (or (nil? font)
-                        (empty? font))
-                  ""
-                  (str \" font "\", "))
-                "Verdana, sans-serif;}")]
-   [:title header]])
+  (html
+    [:head
+     [:link {:rel     "apple-touch-icon"
+             :sizes   "180x180"
+             :href    "/apple-touch-icon.png"}]
+     [:link {:rel     "icon"
+             :type    "image/png"
+             :sizes   "32x32"
+             :href    "/favicon-32x32.png"}]
+     [:link {:rel     "icon"
+             :type    "image/png"
+             :sizes   "16x16"
+             :href    "/favicon-16x16.png"}]
+     [:link {:rel     "manifest"
+             :href    "/site.webmanifest"}]
+     [:link {:rel     "mask-icon"
+             :href    "/safari-pinned-tab.svg"
+             :color   "#5bbad5"}]
+     [:meta {:name    "msapplication-TileColor"
+             :content "#da532c"}]
+     [:meta {:name    "theme-color"
+             :content "#ffffff"}]
+     [:meta {:name    "viewport"
+             :content "width=device-width, initial-scale=1.0"}]
+     [:meta {:charset "UTF-8"}]
+     (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
+                       (str "https://www.w3schools.com/lib/" theme)
+                       (if (= (sql/retrieve-app-data-val "environment")
+                              "dev")
+                         (str "/css/style.css?" (rand))
+                         "/css/style.css")
+                       "/fonts/style.css")
+     [:style (str "h1, h2, h3, h4,
+                  h5, h6, div, p,
+                  th, td, tr {font-family: "
+                  (if (or (nil? font)
+                          (empty? font))
+                    ""
+                    (str \" font "\", "))
+                  "Verdana, sans-serif;}")]
+     [:title header]]))
 
 (defn with-page
   "Adds content to a page"
@@ -227,42 +234,43 @@
 (defn print-head
   "Head tag for printing"
   [font header]
-  [:head
-   [:link {:rel     "apple-touch-icon"
-           :sizes   "180x180"
-           :href    "/apple-touch-icon.png"}]
-   [:link {:rel     "icon"
-           :type    "image/png"
-           :sizes   "32x32"
-           :href    "/favicon-32x32.png"}]
-   [:link {:rel     "icon"
-           :type    "image/png"
-           :sizes   "16x16"
-           :href    "/favicon-16x16.png"}]
-   [:link {:rel     "manifest"
-           :href    "/site.webmanifest"}]
-   [:link {:rel     "mask-icon"
-           :href    "/safari-pinned-tab.svg"
-           :color   "#5bbad5"}]
-   [:meta {:name    "msapplication-TileColor"
-           :content "#da532c"}]
-   [:meta {:name    "theme-color"
-           :content "#ffffff"}]
-   [:meta {:name    "viewport"
-           :content "width=device-width, initial-scale=1.0"}]
-   [:meta {:charset "UTF-8"}]
-   (page/include-css "/css/style.css"
-                     "/fonts/style.css"
-                     "/css/printing-style.css")
-   [:style (str "h1, h2, h3, h4,
-                h5, h6, div, p,
-                th, td, tr {font-family: "
-                (if (or (nil? font)
-                        (empty? font))
-                  ""
-                  (str \" font "\", "))
-                "Verdana, sans-serif;}")]
-   [:title header]])
+  (html
+    [:head
+     [:link {:rel     "apple-touch-icon"
+             :sizes   "180x180"
+             :href    "/apple-touch-icon.png"}]
+     [:link {:rel     "icon"
+             :type    "image/png"
+             :sizes   "32x32"
+             :href    "/favicon-32x32.png"}]
+     [:link {:rel     "icon"
+             :type    "image/png"
+             :sizes   "16x16"
+             :href    "/favicon-16x16.png"}]
+     [:link {:rel     "manifest"
+             :href    "/site.webmanifest"}]
+     [:link {:rel     "mask-icon"
+             :href    "/safari-pinned-tab.svg"
+             :color   "#5bbad5"}]
+     [:meta {:name    "msapplication-TileColor"
+             :content "#da532c"}]
+     [:meta {:name    "theme-color"
+             :content "#ffffff"}]
+     [:meta {:name    "viewport"
+             :content "width=device-width, initial-scale=1.0"}]
+     [:meta {:charset "UTF-8"}]
+     (page/include-css "/css/style.css"
+                       "/fonts/style.css"
+                       "/css/printing-style.css")
+     [:style (str "h1, h2, h3, h4,
+                  h5, h6, div, p,
+                  th, td, tr {font-family: "
+                  (if (or (nil? font)
+                          (empty? font))
+                    ""
+                    (str \" font "\", "))
+                  "Verdana, sans-serif;}")]
+     [:title header]]))
 
 (defn with-printing-page
   "Makes a page suitable for printing"
@@ -295,7 +303,8 @@
 (defmacro with-form
   "Wraps a form"
   [post & forms]
-  `(form/form-to [:post ~post] ~@forms))
+  `(html
+     (form/form-to [:post ~post] ~@forms)))
 
 (defn format-money
   "Gets a formatted money form"
@@ -310,13 +319,14 @@
          cash (format mf m)
          fmt  (get-string "str-money-fmt/symbol/ammount"
                            {:amount cash :symbol ms})]
-     [t (if (not (empty? s)) (str s "&nbsp;"))
-      [:span {:class (if (< m 0) "red" "green")} fmt]])))
+     (html
+       [t (if (not (empty? s)) (str s "&nbsp;"))
+        [:span {:class (if (< m 0) "red" "green")} fmt]]))))
 
 (defn format-bool
   "Makes a bool into a form"
   [b id]
-  [:h5 (form/check-box {:id id} id b)])
+  (html [:h5 (form/check-box {:id id} id b)]))
 
 (defn make-option-string
   "Makes an option string"
@@ -326,10 +336,11 @@
 (defn headers
   "Make the [:th ...] section of a table"
   [hh]
-  (-> (fn [h] [:th h])
-      (map hh)
-      (conj :tr)
-      vec))
+  (html
+    (-> (fn [h] (html [:th h]))
+        (map hh)
+        (conj :tr)
+        vec)))
 
 (defn with-table
   "Makes a [:table [:tr [:td ... ]]] structure out of a list of
@@ -338,39 +349,43 @@
   Each function must be able to take two arguments:
   The column content and the context"
   [lang columns column-display functions list-of-maps]
-  (-> (fn [d]
-        (-> (fn [c f] [:td {:valign "top"} (f (get d c) d)])
-            (map columns functions)
-            (conj :tr)
-            vec))
-      (map list-of-maps)
-      (conj (headers (map #(get-string % {} lang) column-display))
-            {:cellspacing 0 :cellpadding 1}
-            :table)
-      vec))
+  (html
+    (-> (fn [d]
+          (-> (fn [c f] (html [:td {:valign "top"} (f (get d c) d)]))
+              (map columns functions)
+              (conj :tr)
+              vec))
+        (map list-of-maps)
+        (conj (headers (map #(get-string % {} lang) column-display))
+              {:cellspacing 0 :cellpadding 1}
+              :table)
+        vec)))
 
 (defn format-date
   "Gets the format for a date"
   [date]
-  [:h5
-   (-> (java.text.SimpleDateFormat. "MM/dd HH:mm")
-       (.format date))])
+  (html
+    [:h5
+     (-> (java.text.SimpleDateFormat. "MM/dd HH:mm")
+         (.format date))]))
 
 (defn format-full-date
   "Full date format"
   ([date tag]
-   [tag
-    (-> (java.text.SimpleDateFormat. "yy-MM-dd@HH:mm:ss")
-        (.format date))])
+   (html
+     [tag
+      (-> (java.text.SimpleDateFormat. "yy-MM-dd@HH:mm:ss")
+          (.format date))]))
   ([date]
    (format-full-date date :h5)))
 
 (defn format-time
   "Gets the format for a time"
   ([tme tag]
-   [tag
-    (-> (java.text.SimpleDateFormat. "HH:mm")
-        (.format tme))])
+   (html
+     [tag
+      (-> (java.text.SimpleDateFormat. "HH:mm")
+          (.format tme))]))
   ([tme]
    (format-time tme :h5)))
 
@@ -383,7 +398,7 @@
     [(fn [d _] (format-date d))
      (fn [l c] (if editable?
                  (make-link (str "/edit-location/" (:id c)) l)
-                 [:h5 l]))
+                 (html [:h5 l])))
      (fn [c _] (format-money c))
      (fn [i _] (make-link
                  (str bill-link-root i)
@@ -397,7 +412,7 @@
     [:date      :concept      :amount      :running_total]
     ["str-date" "str-concept" "str-charge" "str-new-balance"]
     [(fn [d _] (format-date d))
-     (fn [c _] [:h5 c])
+     (fn [c _] (html [:h5 c]))
      (fn [m _] (format-money m))
      (fn [m _] (format-money m))]
     services-resultset))
@@ -405,7 +420,8 @@
 (defn btn
   "Make a localised button"
   ([text lang tag]
-   [tag (form/submit-button (get-string text {} lang))])
+   (html
+     [tag (form/submit-button (get-string text {} lang))]))
   ([text lang]
    (btn text lang :h5)))
 
