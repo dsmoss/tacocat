@@ -788,6 +788,7 @@
       ["debts"                     {"" handle-debts}]
       ["add-creditor"              {"" handle-add-creditor}]
       ["add-debt-payment"          {"" handle-add-debt-payment}]
+      ["add-debt"                  {"" handle-add-debt}]
       [["debt-detail/"             id] handle-debt-detail]
       ["sales"                     {"" handle-sales}]
       [true                            handle-404]]])) 
