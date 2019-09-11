@@ -410,14 +410,23 @@
 
 (defn make-services-table
   "Makes a services table"
-  [user services-resultset]
-  (with-table (:language user)
-    [:date      :concept      :amount      :running_total]
-    ["str-date" "str-concept" "str-charge" "str-new-balance"]
+  [lang services-resultset]
+  (with-table lang
+    [:date      :concept      :amount      :running_total    :receipt_filename]
+    ["str-date" "str-concept" "str-charge" "str-new-balance" ""]
     [(fn [d _] (format-date d))
      (fn [c _] (html [:h5 c]))
      (fn [m _] (format-money m))
-     (fn [m _] (format-money m))]
+     (fn [m _] (format-money m))
+     (fn [f r]
+       (if (nil? f)
+         ((if (nil? (:id_close r))
+            (partial make-link
+                     (str "/set-services-receipt/" (:id r)))
+            identity)
+          (get-string "ln-no-receipt-image" {} lang))
+         (make-link (str "/view-services-receipt/" (:id r))
+                    (get-string "ln-view-receipt" {} lang))))]
     services-resultset))
 
 (defn finput

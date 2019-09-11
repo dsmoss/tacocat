@@ -586,7 +586,7 @@
     (with-page (get-string "ln-services" {} lang)
       user
       [:home :services]
-      (make-services-table user (sql/retrieve-current-services)))))
+      (make-services-table lang (sql/retrieve-current-services)))))
 
 (defn render-closed-services
   "Services for prior closes"
@@ -613,7 +613,47 @@
       user
       [:home :services]
       (make-services-table
-        user (sql/retrieve-services-for-close id)))))
+        lang (sql/retrieve-services-for-close id)))))
+
+(defn render-set-services-receipt
+  "File upload for utilities receipt"
+  [user id]
+  (let [lang (:language user)]
+    (with-page (get-string "str-upload-receipt" {} lang)
+      user
+      [:home :services]
+      (with-form (str "/view-services-receipt/" id)
+        (form/hidden-field {:value id} "set-receipt")
+        (with-form-table nil nil
+          [(finput "image")]
+          [(btn-change lang)])))))
+
+(defn render-view-services-receipt
+  "Show a receipt"
+  [user id]
+  (let [lang                   (:language user)
+        id                     (int-or-null id)
+        {rc :receipt
+         rf :receipt_filename
+         rt :receipt_filetype
+         cl :id_close}         (sql/retrieve-services-receipt id)
+        editable?              (nil? cl)]
+    (with-page (get-string "ln-view-receipt" {} lang)
+      user
+      [:home :services]
+      (with-form-table nil nil
+        [((if editable?
+            (partial make-link (str "/set-services-receipt/" id))
+            identity)
+          (if (nil? rf)
+            (get-string "ln-no-receipt-image" {} lang)
+            (html
+              [:img
+               {:src (str "data:" rt
+                          ";base64,"
+                          (-> rc
+                              b64/encode-bytes
+                              String.))}])))]))))
 
 (defn render-bills
   "Shows the bills page"
@@ -667,7 +707,8 @@
         (form/hidden-field {:value true} "add-service-charge")
         (html
           [:h5
-           (with-form-table [nil nil nil [2]] nil
+           (with-form-table [nil [2] nil nil [2]] nil
+             [(finput "image")]
              [(lbl-concept "concept" lang)
               (tf "concept")]
              [(lbl-charge "amount" lang)

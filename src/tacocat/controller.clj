@@ -45,6 +45,12 @@
   (println "Setting receipt for" id)
   (sql/update-expense-receipt user (int-or-null id) image))
 
+(defn set-services-receipt
+  "Sets the receipt for a service"
+  [user id image]
+  (println "Setting receipt for services" id)
+  (sql/update-services-receipt user (int-or-null id) image))
+
 (defn add-expense
   "Adds an expense to the database"
   [user concept amount image]
@@ -96,12 +102,13 @@
 
 (defn add-service-charge
   "Add a services charge"
-  [user concept amount]
+  [user concept amount image]
   (println "Adding" amount "services charge for" concept)
   (sql/insert-services-charge
     user
     concept
-    (* -1 (float-or-null amount))))
+    (* -1 (float-or-null amount))
+    image))
 
 (defn set-person
   "Sets the person attribute of a bill item"

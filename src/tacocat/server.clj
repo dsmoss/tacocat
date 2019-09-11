@@ -231,13 +231,14 @@
   [request]
   ;(println request)
   (let [{concept "concept"
+         image   "image"
          amount  "amount"} (:params request)]
     (with-check-permissions
       request "list-services" view/render-services
       {:trigger    "add-service-charge"
        :permission "add-services-expense"
        :action     (controller/add-service-charge
-                     (get-user request) concept amount)})))
+                     (get-user request) concept amount image)})))
 
 (defn handle-closed-services
   "Shows the services screen"
@@ -758,11 +759,30 @@
        :permission "set-receipt"
        :action     (controller/set-receipt user id-exp image)})))
 
+(defn handle-view-services-receipt
+  "Shows a receipt for services"
+  [request]
+  (let [user                  (get-user request)
+        {id-srv "set-receipt"
+         image  "image"}      (-> request :params)]
+    (with-check-permissions request "view-services-receipt"
+      (view/render-view-services-receipt (-> request :params :id))
+      {:trigger    "set-receipt"
+       :permission "set-services-receipt"
+       :action     (controller/set-services-receipt
+                     user id-srv image)})))
+
 (defn handle-set-expense-receipt
   "Shows the form to upload a receipt"
   [request]
   (with-check-permissions request "set-receipt"
     (view/render-set-expense-receipt (-> request :params :id))))
+
+(defn handle-set-services-receipt
+  "Shows the services file upload page"
+  [request]
+  (with-check-permissions request "set-services-receipt"
+    (view/render-set-services-receipt (-> request :params :id))))
 
 (def handler
   "Get the handler function for our routes."
@@ -823,6 +843,8 @@
       [["services-for-close/"      id] handle-services-for-close]
       ["add-services-expense"      {"" handle-add-services-expense}]
       ["services"                  {"" handle-services}]
+      [["set-services-receipt/"    id] handle-set-services-receipt]
+      [["view-services-receipt/"   id] handle-view-services-receipt]
       ["accts"                     {"" handle-accts}]
       [["view-receipt/"            id] handle-view-receipt]
       ["log"                       {"" handle-log}]

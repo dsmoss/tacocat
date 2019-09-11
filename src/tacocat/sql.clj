@@ -336,16 +336,27 @@
 
 (defn insert-services-charge
   "Insert a service payment to db"
-  [user concept amount]
-  (j/with-db-transaction [t-con db-spec]
-    (let [{running :running_total} (first (j/query t-con
-                                                   ["select running_total
-                                                     from   services
-                                                     where  date = (select max(date)
-                                                     from   services)"]))]
-      (ins user t-con :services {:amount amount
-                                  :concept concept
-                                  :running_total (+ amount (if (nil? running) 0 running))}))))
+  [user concept amount image]
+  (let [receipt (if (empty? (:filename image))
+                  {:filename nil
+                   :tempfile (:tempfile image) ; 0B file
+                   :content-type nil}
+                  image)]
+    (j/with-db-transaction [t-con db-spec]
+      (let [{running :running_total} (first
+                                       (j/query t-con
+                                                ["select running_total
+                                                  from   services
+                                                  where  date = (select max(date)
+                                                  from   services)"]))]
+        (ins user t-con :services
+             {:amount amount
+              :concept concept
+              :running_total (+ amount (if (nil? running) 0 running))
+              :receipt          (to-byte-array
+                                  (:tempfile   receipt))
+              :receipt_filename (:filename     receipt)
+              :receipt_filetype (:content-type receipt)})))))
 
 (defn retrieve-previous-closes
   "Gets the previous closes date and id"
@@ -360,6 +371,8 @@
                           , amount
                           , running_total
                           , concept
+                          , receipt_filename
+                          , id_close
                      from   services
                      where  id_close is null
                      order
@@ -373,6 +386,8 @@
                           , amount
                           , running_total
                           , concept
+                          , receipt_filename
+                          , id_close
                      from   services
                      where  id_close = ?
                      order
@@ -542,6 +557,33 @@
                        from   expenses
                        where  id = ?"
                       id])))
+
+(defn retrieve-services-receipt
+  "Retrieves a receipt from the services db"
+  [id]
+  (first
+    (j/query db-spec ["select receipt
+                            , receipt_filename
+                            , receipt_filetype
+                            , id_close
+                       from   services
+                       where  id = ?"
+                      id])))
+
+(defn update-services-receipt
+  "Update value of services receipt"
+  [user id image]
+  (let [receipt (if (empty? (:filename image))
+                  {:filename nil
+                   :tempfile (:tempfile image) ; 0B file
+                   :content-type nil}
+                  image)]
+    (upd user db-spec :services
+         {:receipt          (to-byte-array
+                              (:tempfile   receipt))
+          :receipt_filename (:filename     receipt)
+          :receipt_filetype (:content-type receipt)}
+         ["id = ?" id])))
 
 (defn update-expense-receipt
   "Update value of expense receipt"

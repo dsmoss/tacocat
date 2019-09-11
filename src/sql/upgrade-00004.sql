@@ -110,6 +110,8 @@ values ('str-cause')
      , ('ln-no-receipt-image')
      , ('prm-set-receipt')
      , ('str-upload-receipt')
+     , ('prm-set-services-receipt')
+     , ('prm-view-services-receipt')
 ;
 
 insert into intl (key, lang, val)
@@ -181,6 +183,10 @@ values ('str-cause'           , 'en', 'Cause')
      , ('prm-set-receipt'     , 'en', 'Set Receipt')
      , ('str-upload-receipt'  , 'es', 'Subir Recibo')
      , ('str-upload-receipt'  , 'en', 'Receipt Upload')
+     , ('prm-set-services-receipt', 'en', 'Subir Recibo de Servicios')
+     , ('prm-set-services-receipt', 'es', 'Set Utilities Receipt')
+     , ('prm-view-services-receipt', 'es', 'Ver Recibo de Servicios')
+     , ('prm-view-services-receipt', 'en', 'View Utilities Receipt')
 ;
 
 insert into permission (name)
@@ -194,6 +200,8 @@ values ('view-error-list')
      , ('change-other-users-picture')
      , ('view-receipt')
      , ('set-receipt')
+     , ('set-services-receipt')
+     , ('view-services-receipt')
 ;
 
 insert into role_permission (id_role, id_permission)
@@ -212,6 +220,8 @@ where  r.name = 'Admin'
 		 , 'change-other-users-picture'
 		 , 'view-receipt'
 		 , 'set-receipt'
+		 , 'set-services-receipt'
+		 , 'view-services-receipt'
 );
 
 drop table if exists creditor cascade;
@@ -286,6 +296,11 @@ alter table app_user
   add column picture          bytea        null,
   add column picture_filename varchar(255) null,
   add column picture_filetype varchar(32)  null;
+
+alter table services
+  add column receipt          bytea        null,
+  add column receipt_filename varchar(255) null,
+  add column receipt_filetype varchar(15)  null;
 
 create or replace view v_accounting as
 select b.id || ' (' || b.location || ')' as concept
