@@ -41,12 +41,13 @@
 
 (defn add-expense
   "Adds an expense to the database"
-  [user concept amount]
+  [user concept amount image]
   (println "Adding expense of" amount "for" concept)
   (sql/insert-new-expense
     user
     concept
-    (* -1 (float-or-null amount))))
+    (* -1 (float-or-null amount))
+    image))
 
 (defn add-bill
   "Adds a new bill to the system"
@@ -371,10 +372,10 @@
 
 (defn add-debt-payment
   "Add a debt payment to the system"
-  [user creditor amount concept]
+  [user creditor amount concept image]
   (println "Payment of" amount "for" creditor "because" concept)
   (let [creditor (int-or-null creditor)
         amount   (float-or-null amount)
         cr       (sql/retrieve-creditor-by-id creditor)]
-  (add-expense user (str (:name cr) "/" concept) amount)
+  (add-expense user (str (:name cr) "/" concept) amount image)
   (sql/insert-debt user creditor amount concept)))

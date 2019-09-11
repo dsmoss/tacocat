@@ -105,6 +105,8 @@ values ('str-cause')
      , ('str-options')
      , ('ln-get-user-image')
      , ('prm-change-other-users-picture')
+     , ('ln-view-receipt')
+     , ('prm-view-receipt')
 ;
 
 insert into intl (key, lang, val)
@@ -166,6 +168,10 @@ values ('str-cause'           , 'en', 'Cause')
 	                      , 'en', 'Change Other Users Picture')
      , ('prm-change-other-users-picture'
 	                      , 'es', 'Cambiar Imagen de Otros Usuarios')
+     , ('ln-view-receipt'     , 'es', 'Ver Recibo')
+     , ('ln-view-receipt'     , 'en', 'View Receipt')
+     , ('prm-view-receipt'    , 'es', 'Ver Recibo')
+     , ('prm-view-receipt'    , 'en', 'View Receipt')
 ;
 
 insert into permission (name)
@@ -177,6 +183,7 @@ values ('view-error-list')
      , ('view-debt-detail')
      , ('view-sales')
      , ('change-other-users-picture')
+     , ('view-receipt')
 ;
 
 insert into role_permission (id_role, id_permission)
@@ -193,6 +200,7 @@ where  r.name = 'Admin'
 		 , 'view-debt-detail'
 		 , 'view-sales'
 		 , 'change-other-users-picture'
+		 , 'view-receipt'
 );
 
 drop table if exists creditor cascade;
@@ -267,4 +275,27 @@ alter table app_user
   add column picture          bytea        null,
   add column picture_filename varchar(255) null,
   add column picture_filetype varchar(32)  null;
+
+create or replace view v_accounting as
+select b.id || ' (' || b.location || ')' as concept
+     , i.date                            as date
+     , i.amount                          as amount
+     , i.id_close                        as id_close
+     , null                              as receipt_filename
+     , null                              as id_expense
+     , i.id_bill                         as id_intake
+from   intakes                           as i
+join   bill                              as b
+  on   i.id_bill = b.id
+union
+select e.concept                         as concept
+     , e.date                            as date
+     , e.amount                          as amount
+     , e.id_close                        as id_close
+     , e.receipt_filename                as receipt_filename
+     , e.id                              as id_expense
+     , null                              as id_intake
+from   expenses                          as e
+order
+  by   date desc;
 

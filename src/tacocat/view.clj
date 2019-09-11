@@ -787,7 +787,8 @@
         (form/hidden-field {:value true} "add-expense")
         (html
           [:h5
-           (with-form-table [nil nil nil [2]] nil
+           (with-form-table [nil [2] nil nil [2]] nil
+             [(finput "image")]
              [(lbl-concept "concept" lang)
               (tf "concept")]
              [(lbl-charge "amount" lang)
@@ -1100,11 +1101,16 @@
            (format-money expenses (get-string "fmt-expenses" {} lang))
            (format-money intakes (get-string "fmt-intakes" {} lang))])
         (with-table lang
-          [:date      :concept      :amount]
-          ["str-date" "str-concept" "str-amount"]
+          [:date      :concept      :amount      :receipt_filename]
+          ["str-date" "str-concept" "str-amount" ""]
           [(fn [d _] (format-date d))
            (fn [c _] (html [:h5 c]))
-           (fn [m _] (format-money m))]
+           (fn [m _] (format-money m))
+           (fn [f a] (if (nil? f)
+                       nil
+                       (make-link
+                         (str "/view-receipt/" (:id_expense a))
+                         (get-string "ln-view-receipt" {} lang))))]
           (sql/retrieve-current-accounting))))))
 
 (defn render-list-users
@@ -1512,7 +1518,8 @@
       [:home :debts]
       (with-form "/debts"
         (form/hidden-field {:value true} "add-debt-payment")
-        (with-form-table [nil nil nil nil [2]] nil
+        (with-form-table [nil [2] nil nil nil [2]] nil
+          [(finput "image")]
           [(lbl-creditor "creditor" lang)
            (form/drop-down
              {:id "creditor"} "creditor"

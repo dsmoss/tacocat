@@ -217,8 +217,19 @@
 
 (defn insert-new-expense
   "Insert an expense"
-  [user concept amount]
-  (ins user db-spec :expenses {:concept concept :amount amount}))
+  [user concept amount image]
+  (let [receipt (if (empty? (:filename image))
+                  {:filename nil
+                   :tempfile (:tempfile image) ; 0B file
+                   :content-type nil}
+                  image)]
+    (ins user db-spec :expenses
+         {:concept          concept
+          :amount           amount
+          :receipt          (to-byte-array
+                              (:tempfile   receipt))
+          :receipt_filename (:filename     receipt)
+          :receipt_filetype (:content-type receipt)})))
 
 (defn update-charge-override-for-bill-item
   "Sets the charge override for a bill item"
@@ -526,6 +537,8 @@
   (j/query db-spec ["select concept
                           , date
                           , amount
+                          , receipt_filename
+                          , id_expense
                      from   v_accounting
                      where  id_close = ?
                      order
@@ -557,6 +570,8 @@
   (j/query db-spec ["select concept
                           , date
                           , amount
+                          , receipt_filename
+                          , id_expense
                      from   v_accounting
                      where  id_close is null
                      order

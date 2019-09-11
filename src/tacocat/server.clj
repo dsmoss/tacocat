@@ -180,13 +180,14 @@
   [request]
   ;(println request)
   (let [{concept "concept"
+         image   "image"
          amount  "amount"} (:params request)]
     (with-check-permissions
       request "view-accounts" view/render-accts
       {:trigger    "add-expense"
        :permission "add-expense"
        :action     (controller/add-expense
-                     (get-user request) concept amount)})))
+                     (get-user request) concept amount image)})))
 
 (defn handle-edit-bill-location
   "Show the edit bill location"
@@ -691,6 +692,7 @@
   (let [user                 (get-user request)
         {creditor "creditor"
          amount   "amount"
+         image    "image"
          concept  "concept"} (-> request :params)]
     (with-check-permissions request "view-debts"
       view/render-debts
@@ -700,7 +702,7 @@
       {:trigger    "add-debt-payment"
        :permission "add-debt-payment"
        :action     (controller/add-debt-payment
-                     user creditor amount concept)}
+                     user creditor amount concept image)}
       {:trigger    "add-creditor"
        :permission "add-creditor"
        :action     (controller/add-creditor user creditor)})))
