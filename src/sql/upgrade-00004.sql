@@ -107,6 +107,9 @@ values ('str-cause')
      , ('prm-change-other-users-picture')
      , ('ln-view-receipt')
      , ('prm-view-receipt')
+     , ('ln-no-receipt-image')
+     , ('prm-set-receipt')
+     , ('str-upload-receipt')
 ;
 
 insert into intl (key, lang, val)
@@ -172,6 +175,12 @@ values ('str-cause'           , 'en', 'Cause')
      , ('ln-view-receipt'     , 'en', 'View Receipt')
      , ('prm-view-receipt'    , 'es', 'Ver Recibo')
      , ('prm-view-receipt'    , 'en', 'View Receipt')
+     , ('ln-no-receipt-image' , 'es', 'Sin Recibo')
+     , ('ln-no-receipt-image' , 'en', 'No Receipt')
+     , ('prm-set-receipt'     , 'es', 'Subir Recibo')
+     , ('prm-set-receipt'     , 'en', 'Set Receipt')
+     , ('str-upload-receipt'  , 'es', 'Subir Recibo')
+     , ('str-upload-receipt'  , 'en', 'Receipt Upload')
 ;
 
 insert into permission (name)
@@ -184,6 +193,7 @@ values ('view-error-list')
      , ('view-sales')
      , ('change-other-users-picture')
      , ('view-receipt')
+     , ('set-receipt')
 ;
 
 insert into role_permission (id_role, id_permission)
@@ -201,6 +211,7 @@ where  r.name = 'Admin'
 		 , 'view-sales'
 		 , 'change-other-users-picture'
 		 , 'view-receipt'
+		 , 'set-receipt'
 );
 
 drop table if exists creditor cascade;

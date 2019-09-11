@@ -39,6 +39,12 @@
     (int-or-null id)
     (str location)))
 
+(defn set-receipt
+  "Sets the receipt image for an expense"
+  [user id image]
+  (println "Setting receipt for" id)
+  (sql/update-expense-receipt user (int-or-null id) image))
+
 (defn add-expense
   "Adds an expense to the database"
   [user concept amount image]

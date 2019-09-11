@@ -746,6 +746,24 @@
       (with-check-permissions request "change-other-users-picture"
         (view/render-set-user-image r-id)))))
 
+(defn handle-view-receipt
+  "Shows a receipt image"
+  [request]
+  (let [user                  (get-user request)
+        {id-exp "set-receipt"
+         image  "image"}      (-> request :params)]
+    (with-check-permissions request "view-receipt"
+      (view/render-view-receipt (-> request :params :id))
+      {:trigger    "set-receipt"
+       :permission "set-receipt"
+       :action     (controller/set-receipt user id-exp image)})))
+
+(defn handle-set-expense-receipt
+  "Shows the form to upload a receipt"
+  [request]
+  (with-check-permissions request "set-receipt"
+    (view/render-set-expense-receipt (-> request :params :id))))
+
 (def handler
   "Get the handler function for our routes."
   (make-handler
@@ -794,6 +812,7 @@
       [["add-item/"                id] handle-add-item]
       [["charge-bill/"             id] handle-charge-bill]
       ["add-expense"               {"" handle-new-expense}]
+      [["set-expense-receipt/"     id] handle-set-expense-receipt]
       ["old-bills"                 {"" handle-old-bills}]
       [["closed-bill/"             id] handle-closed-bill]
       [["print-bill/"              id] handle-print-bill]
@@ -805,6 +824,7 @@
       ["add-services-expense"      {"" handle-add-services-expense}]
       ["services"                  {"" handle-services}]
       ["accts"                     {"" handle-accts}]
+      [["view-receipt/"            id] handle-view-receipt]
       ["log"                       {"" handle-log}]
       ["intl"                      {"" handle-intl}]
       ["error-log"                 {"" handle-error-list

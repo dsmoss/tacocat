@@ -531,6 +531,33 @@
                             where  id = ?"
                            id])))
 
+(defn retrieve-receipt
+  "Retrieves a receipt data from the db"
+  [id]
+  (first
+    (j/query db-spec ["select receipt
+                            , receipt_filename
+                            , receipt_filetype
+                            , id_close
+                       from   expenses
+                       where  id = ?"
+                      id])))
+
+(defn update-expense-receipt
+  "Update value of expense receipt"
+  [user id image]
+  (let [receipt (if (empty? (:filename image))
+                  {:filename nil
+                   :tempfile (:tempfile image) ; 0B file
+                   :content-type nil}
+                  image)]
+    (upd user db-spec :expenses
+         {:receipt          (to-byte-array
+                              (:tempfile   receipt))
+          :receipt_filename (:filename     receipt)
+          :receipt_filetype (:content-type receipt)}
+         ["id = ?" id])))
+
 (defn retrieve-closed-accounting
   "Finds the accounting for the current period"
   [id-close]
@@ -539,6 +566,7 @@
                           , amount
                           , receipt_filename
                           , id_expense
+                          , id_intake
                      from   v_accounting
                      where  id_close = ?
                      order
@@ -572,6 +600,7 @@
                           , amount
                           , receipt_filename
                           , id_expense
+                          , id_intake
                      from   v_accounting
                      where  id_close is null
                      order

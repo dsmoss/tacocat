@@ -1085,6 +1085,46 @@
            (with-form-table nil nil
              [(btn-charge lang)])])))))
 
+(defn render-set-expense-receipt
+  "Form to upload a receipt for an expense"
+  [user id]
+  (let [lang (:language user)]
+    (with-page (get-string "str-upload-receipt" {} lang)
+      user
+      [:home :accts]
+      (with-form (str "/view-receipt/" id)
+        (form/hidden-field {:value id} "set-receipt")
+        (with-form-table nil nil
+          [(finput "image")]
+          [(btn-change lang)])))))
+
+(defn render-view-receipt
+  "Show a receipt"
+  [user id]
+  (let [lang                   (:language user)
+        id                     (int-or-null id)
+        {rc :receipt
+         rf :receipt_filename
+         rt :receipt_filetype
+         cl :id_close}         (sql/retrieve-receipt id)
+        editable?              (nil? cl)]
+    (with-page (get-string "ln-view-receipt" {} lang)
+      user
+      [:home :accts]
+      (with-form-table nil nil
+        [((if editable?
+            (partial make-link (str "/set-expense-receipt/" id))
+            identity)
+          (if (nil? rf)
+            (get-string "ln-no-receipt-image" {} lang)
+            (html
+              [:img
+               {:src (str "data:" rt
+                          ";base64,"
+                          (-> rc
+                              b64/encode-bytes
+                              String.))}])))]))))
+
 (defn render-accts
   "Displays the accounts page"
   [user]
@@ -1106,11 +1146,20 @@
           [(fn [d _] (format-date d))
            (fn [c _] (html [:h5 c]))
            (fn [m _] (format-money m))
-           (fn [f a] (if (nil? f)
-                       nil
-                       (make-link
-                         (str "/view-receipt/" (:id_expense a))
-                         (get-string "ln-view-receipt" {} lang))))]
+           (fn [f a]
+             (cond
+               (and (nil? f) (nil? (:id_expense a)))
+                 (make-link
+                   (str "/closed-bill/" (:id_intake a))
+                   (get-string "ln-view" {} lang))
+               (nil? f)
+                 (make-link
+                   (str "/set-expense-receipt/" (:id_expense a))
+                   (get-string "ln-no-receipt-image" {} lang))
+               :else
+                 (make-link
+                   (str "/view-receipt/" (:id_expense a))
+                   (get-string "ln-view-receipt" {} lang))))]
           (sql/retrieve-current-accounting))))))
 
 (defn render-list-users
@@ -1368,11 +1417,24 @@
          (format-money partner-take
                        (get-string "fmt-per-partner" {} lang))
          (with-table lang
-           [:date      :concept      :amount]
-           ["str-date" "str-concept" "str-amount"]
+           [:date      :concept      :amount      :receipt_filename]
+           ["str-date" "str-concept" "str-amount" ""]
            [(fn [d _] (format-date d))
             (fn [c _] (html [:h5 c]))
-            (fn [m _] (format-money m))]
+            (fn [m _] (format-money m))
+            (fn [f a]
+             (cond
+               (and (nil? f) (nil? (:id_expense a)))
+                 (make-link
+                   (str "/closed-bill/" (:id_intake a))
+                   (get-string "ln-view" {} lang))
+               (nil? f)
+                 (html
+                   [:h5 (get-string "ln-no-receipt-image" {} lang)])
+               :else
+                 (make-link
+                   (str "/view-receipt/" (:id_expense a))
+                   (get-string "ln-view-receipt" {} lang))))]
            (sql/retrieve-closed-accounting id))]))))
 
 (defn render-log
