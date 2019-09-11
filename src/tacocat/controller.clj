@@ -158,9 +158,15 @@
 
 (defn add-new-user
   "Adds a user to the database"
-  [user username uname password]
-  (println "Adding user" username "(" uname ")")
-  (sql/insert-new-user user username uname password))
+  [user username uname password user-img]
+  (println "Adding user" username "(" uname ")" user-img)
+  (sql/insert-new-user user username uname password user-img))
+
+(defn change-user-picture
+  "Changes a user picture"
+  [user id image]
+  (println "Changing picture for" id)
+  (sql/update-user-picture user (int-or-null id) image))
 
 (defn change-user-password
   "Changes a users password"

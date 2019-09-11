@@ -3,6 +3,7 @@
   (:require [tacocat.server.util        :refer :all]
             [com.stuartsierra.component :as    component]
             [ring.middleware.params     :refer [wrap-params]]
+            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [aleph.http                 :as    http]
             [ring.util.response         :as    res]
             [bidi.ring                  :refer [make-handler]]
@@ -291,6 +292,7 @@
         {user-name "user-name"
          c-user    "change-user-name"
          uname     "name"
+         image     "image"
          password  "password"
          language  "language"} params]
     ; First log in, so that info is accurate
@@ -308,6 +310,9 @@
       (if (or (empty? id) (= (int-or-null id)
                              (:id logged-in-user)))
         (do
+          (if (contains? params "set-user-picture")
+            (controller/change-user-picture
+              (get-user request) (:id logged-in-user) image))
           (if (contains? params "set-user-language")
             (controller/change-user-language
               (get-user request) (:id logged-in-user) language))
@@ -326,6 +331,10 @@
                       (:id logged-in-user))))
         (with-check-permissions request "view-other-users"
           (view/render-user-info id)
+          {:trigger    "set-user-picture"
+           :permission "change-other-users-picture"
+           :action     (controller/change-user-picture
+                         (get-user request) id image)}
           {:trigger    "set-user-language"
            :permission "change-other-users-language"
            :action     (controller/change-user-language
@@ -348,6 +357,7 @@
   [request]
   ;(println request)
   (let [{username   "username"
+         user-img   "img"
          uname      "name"
          password   "password"
          delete     "delete-user"
@@ -366,7 +376,8 @@
       {:trigger    "add-user"
        :permission "add-user"
        :action     (controller/add-new-user 
-                     (get-user request) username uname password)})))
+                     (get-user request)
+                     username uname password user-img)})))
 
 (defn handle-list-roles
   "Shows a page with all roles"
@@ -723,6 +734,16 @@
   [request]
   (with-check-permissions request "view-sales" view/render-sales))
 
+(defn handle-set-user-image
+  "Shows the user image acquisition form"
+  [request]
+  (let [r-id (-> request :params :id int-or-null)
+        u-id (-> request :remote-addr controller/get-logged-in-user :id)]
+    (if (= r-id u-id) ; Current user id == request id
+      (response request (view/render-set-user-image u-id))
+      (with-check-permissions request "change-other-users-picture"
+        (view/render-set-user-image r-id)))))
+
 (def handler
   "Get the handler function for our routes."
   (make-handler
@@ -754,6 +775,7 @@
       [["change-password/"         id] handle-change-password]
       [["change-user-roles/"       id] handle-change-user-roles]
       [["change-user-language/"    id] handle-change-user-language]
+      [["set-user-image/"          id] handle-set-user-image]
       [["view-role/"               id] handle-view-role]
       ["add-new-role"              {"" handle-add-new-role}]
       [["delete-role/"             id] handle-delete-role]
@@ -797,6 +819,7 @@
   [store]
   (-> handler
       wrap-params
+      wrap-multipart-params
       wrap-exception-handling))
 
 (defrecord HttpServer [server]
@@ -804,7 +827,9 @@
   component/Lifecycle
 
   (start [this]
-    (assoc this :server (http/start-server (app (:store this)) {:port 8080})))
+    (assoc this :server (http/start-server
+                          (app (:store this))
+                          {:port 8080})))
 
   (stop [this]
     (dissoc this :server)))

@@ -14,6 +14,26 @@
    :user       "tacocat"
    :password   "Tacocat2019"})
 
+(defn to-byte-array
+  "Takes in a file path and turns it into a
+  byte array containing the data in the file"
+  [file]
+  ;create table t (i int primary key, d bytea);
+  ;(j/insert! db-spec :t
+  ;  {:i 1
+  ;   :d (to-byte-array "/path/to/test.txt")})
+  ;and
+  ;(j/query db-spec
+  ;  ["select d from t where i = ?" 1])
+  (let [f (if (= java.io.File (type file))
+            file
+            (java.io.File. file))
+        a (byte-array (.length f))
+        i (java.io.FileInputStream. f)]
+    (.read i a)
+    (.close i)
+    a))
+
 (defn log-action
   "Logs an action"
   [db id_user action details]
@@ -661,6 +681,32 @@
                             where  au.id = ?"
                            id])))))
 
+(defn update-user-picture
+  "Updates a user image"
+  [user id image]
+  (let [user-img (if (empty? (:filename image))
+                   {:filename nil
+                    :tempfile (:tempfile image) ; 0B file
+                    :content-type nil}
+                   image)]
+    (upd user db-spec :app_user
+         {:picture          (to-byte-array
+                              (:tempfile   user-img))
+          :picture_filename (:filename     user-img)
+          :picture_filetype (:content-type user-img)}
+         ["id = ?" id])))
+
+(defn retrieve-user-picture
+  "Finds a user image"
+  [id]
+  (first
+    (j/query db-spec ["select picture
+                            , picture_filename
+                            , picture_filetype
+                       from   app_user
+                       where  id = ?"
+                      id])))
+
 (defn retrieve-user-by-id
   "Finds a user"
   ([id db]
@@ -707,9 +753,14 @@
 
 (defn insert-new-user
   "Add a user" 
-  [user username uname password]
+  [user username uname password user-img]
   (j/with-db-transaction [t-con db-spec]
-    (let [{id    :id
+    (let [user-img      (if (empty? (:filename user-img))
+                          {:filename nil
+                           :tempfile (:tempfile user-img) ; 0B file
+                           :content-type nil}
+                          user-img)
+          {id    :id
            salt  :salt} (first
                           (ins user t-con
                                      :app_user
@@ -721,10 +772,13 @@
                                    ["select produce_password_hash(?, ?) as hash"
                                     password
                                     salt]))]
-      (upd user t-con
-                 :app_user
-                 {:password_hash phash}
-                 ["id = ?" id]))))
+      (upd user t-con :app_user
+           {:password_hash    phash
+            :picture          (to-byte-array
+                                (:tempfile   user-img))
+            :picture_filename (:filename     user-img)
+            :picture_filetype (:content-type user-img)}
+           ["id = ?" id]))))
 
 (defn retrieve-logged-in-to
   "Gets machines the user is logged in to"

@@ -103,6 +103,8 @@ values ('str-cause')
      , ('ln-sales')
      , ('prm-view-sales')
      , ('str-options')
+     , ('ln-get-user-image')
+     , ('prm-change-other-users-picture')
 ;
 
 insert into intl (key, lang, val)
@@ -158,6 +160,12 @@ values ('str-cause'           , 'en', 'Cause')
      , ('prm-view-sales'      , 'en', 'View Sales')
      , ('str-options'         , 'es', 'Opciones')
      , ('str-options'         , 'en', 'Options')
+     , ('ln-get-user-image'   , 'en', 'Set User Picture')
+     , ('ln-get-user-image'   , 'es', 'Adquirir Imagen')
+     , ('prm-change-other-users-picture'
+	                      , 'en', 'Change Other Users Picture')
+     , ('prm-change-other-users-picture'
+	                      , 'es', 'Cambiar Imagen de Otros Usuarios')
 ;
 
 insert into permission (name)
@@ -168,6 +176,7 @@ values ('view-error-list')
      , ('add-debt-payment')
      , ('view-debt-detail')
      , ('view-sales')
+     , ('change-other-users-picture')
 ;
 
 insert into role_permission (id_role, id_permission)
@@ -183,6 +192,7 @@ where  r.name = 'Admin'
 		 , 'add-debt-payment'
 		 , 'view-debt-detail'
 		 , 'view-sales'
+		 , 'change-other-users-picture'
 );
 
 drop table if exists creditor cascade;
@@ -247,3 +257,14 @@ group
     , o.name
     , it.id
     , o.id;
+
+alter table  expenses
+  add column receipt          bytea        null,
+  add column receipt_filename varchar(255) null,
+  add column receipt_filetype varchar(15)  null;
+
+alter table app_user
+  add column picture          bytea        null,
+  add column picture_filename varchar(255) null,
+  add column picture_filetype varchar(32)  null;
+

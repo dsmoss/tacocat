@@ -3,6 +3,7 @@
   (:require [tacocat.view.util :refer :all]
             [hiccup.form       :as    form]
             [hiccup.core       :refer [html]]
+            [base64-clj.core   :as    b64]
             [tacocat.util      :refer :all]
             [tacocat.sql       :as    sql]
             [tacocat.intl      :refer [get-string]]))
@@ -136,6 +137,19 @@
                 t-lang)]
              [(btn-change lang)]))]))))
 
+(defn render-set-user-image
+  "Form where we set user image"
+  [user id]
+  (let [lang (:language user)]
+    (with-page (get-string "ln-get-user-image" {} lang)
+      user
+      [:admin :list-users]
+      (with-form (str "/user-info/" id)
+        (form/hidden-field {:value id} "set-user-picture")
+        (with-form-table nil nil
+          [(finput "image")]
+          [(btn-change lang)])))))
+
 (defn render-user-info
   "Shows user info page or login error"
   ([user id]
@@ -152,24 +166,40 @@
        (let [id              (int-or-null id)
              id              (if (nil? id) (:id user) id)
              {permissions :permissions
-              :as         u} (sql/retrieve-user-by-id id)
+              :as         u} (sql/retrieve-user-by-id     id)
              user-roles      (sql/retrieve-roles-for-user id)
-             machines        (sql/retrieve-logged-in-to id)]
+             machines        (sql/retrieve-logged-in-to   id)
+             picture         (sql/retrieve-user-picture   id)]
          (with-page (get-string "str-user-info/name" u lang)
            user
            [:system]
            (html
-             (with-form-table nil
-               [[:h5 (get-string "str-username/user_name" u lang)]]
-               [(make-link (str "/change-user-name/"  id)
-                           (get-string "ln-full-name/name" u lang))]
-               [(make-link (str "/change-password/"   id)
-                           (get-string "ln-change-password" {} lang))]
-               [(make-link (str "/change-user-roles/" id)
-                           (get-string "ln-change-roles" {} lang))]
-               [(make-link (str "/change-user-language/" id)
-                           (get-string
-                             "ln-change-language/language" u lang))])
+             (with-form-table nil nil
+               [(make-link
+                  (str "/set-user-image/" id)
+                  (if (nil? (:picture_filetype picture))
+                    (get-string "ln-get-user-image" {} lang)
+                    (html [:img
+                           {:height "190px"
+                            :src
+                            (str "data:" (:picture_filetype picture)
+                                 ";base64,"
+                                 (-> picture
+                                     :picture
+                                     b64/encode-bytes
+                                     String.))}])))
+
+                (with-form-table nil
+                  [[:h2 (get-string "str-username/user_name" u lang)]]
+                  [(make-link (str "/change-user-name/"  id)
+                              (get-string "ln-full-name/name" u lang))]
+                  [(make-link (str "/change-password/"   id)
+                              (get-string "ln-change-password" {} lang))]
+                  [(make-link (str "/change-user-roles/" id)
+                              (get-string "ln-change-roles" {} lang))]
+                  [(make-link (str "/change-user-language/" id)
+                              (get-string
+                                "ln-change-language/language" u lang))])])
              (with-table lang
                [:roles      :permissions      :machines]
                ["str-roles" "str-permissions" "str-machines"]
@@ -1289,7 +1319,8 @@
         [:h5
          (with-form "/list-users"
            (form/hidden-field {:value true} "add-user")
-           (with-form-table [nil nil nil nil [2]] nil
+           (with-form-table [nil [2] nil nil nil [2]] nil
+             [(finput "img")]
              [(lbl-user-name "username" lang)
               (tf "username")]
              [(lbl-full-name "name" lang)

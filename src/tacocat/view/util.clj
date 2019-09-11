@@ -304,7 +304,10 @@
   "Wraps a form"
   [post & forms]
   `(html
-     (form/form-to [:post ~post] ~@forms)))
+     (form/form-to
+       {:enctype "multipart/form-data"}
+       [:post ~post]
+       ~@forms)))
 
 (defn format-money
   "Gets a formatted money form"
@@ -416,6 +419,15 @@
      (fn [m _] (format-money m))
      (fn [m _] (format-money m))]
     services-resultset))
+
+(defn finput
+  "Makes a file input control"
+  ([id typ]
+   (html
+     [:input {:type "file" :accept typ
+              :name id     :id     id}]))
+  ([id]
+   (finput id "image/*")))
 
 (defn btn
   "Make a localised button"
