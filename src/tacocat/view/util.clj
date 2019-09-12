@@ -133,24 +133,25 @@
 
 (defn with-form-table
   "Makes a table suitable for holding form items
-   (with-form-table [[1 2] [1 2] [2 1] nil] [some some]
-     [some some]
-     [some some]
-     [some some some])
+   (with-form-table [[1 2] [1 2] [2 1] nil] [:some :some]
+     [:some :some]
+     [:some :some]
+     [:some :some :some])
    => [:table [:tr [:th some] [:th {:colspan 2} some]]
               [:tr [:td some] [:td {:colspan 2} some]]
               [:tr [:td {:colspan 2} some] [:td some]]
               [:tr [:td some] [:td some] [:td some]]]
    Or:
    (with-form-table nil nil
-     [some some])
+     [:some :some])
    => [:table [:tr [:td some] [:td some]]]"
   [[hs & ts] header & data]
   (html
     [:table {:class "form-table"}
-     [:tr {:class "form-table"}
-      (for [[h s] (map list header (get-spans hs header))]
-        [:th {:class "form-table" :colspan s} h])]
+     (if (not (empty? header))
+       [:tr {:class "form-table"}
+        (for [[h s] (map list header (get-spans hs header))]
+          [:th {:class "form-table" :colspan s} h])])
      (for [r (map (fn [d s] (map list d s))
                   data
                   (get-spans-list ts data))]
