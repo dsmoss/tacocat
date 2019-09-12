@@ -649,7 +649,8 @@
             (get-string "ln-no-receipt-image" {} lang)
             (html
               [:img
-               {:src (str "data:" rt
+               {:width "100%"
+                :src (str "data:" rt
                           ";base64,"
                           (-> rc
                               b64/encode-bytes
@@ -1160,7 +1161,8 @@
             (get-string "ln-no-receipt-image" {} lang)
             (html
               [:img
-               {:src (str "data:" rt
+               {:width "100%"
+                :src (str "data:" rt
                           ";base64,"
                           (-> rc
                               b64/encode-bytes

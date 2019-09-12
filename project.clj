@@ -5,6 +5,7 @@
                  :url  "http://www.eclipse.org/legal/epl-v10.html"}
   :main         tacocat.main
   :profiles     {:uberjar {:aot :all}}
+  :jvm-opts     ["-server"] 
   :dependencies [[org.clojure/clojure        "1.10.1"]
                  [org.clojure/java.jdbc      "0.7.9"]
                  [org.postgresql/postgresql  "42.2.6"]

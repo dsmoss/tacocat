@@ -183,10 +183,14 @@ values ('str-cause'           , 'en', 'Cause')
      , ('prm-set-receipt'     , 'en', 'Set Receipt')
      , ('str-upload-receipt'  , 'es', 'Subir Recibo')
      , ('str-upload-receipt'  , 'en', 'Receipt Upload')
-     , ('prm-set-services-receipt', 'en', 'Subir Recibo de Servicios')
-     , ('prm-set-services-receipt', 'es', 'Set Utilities Receipt')
-     , ('prm-view-services-receipt', 'es', 'Ver Recibo de Servicios')
-     , ('prm-view-services-receipt', 'en', 'View Utilities Receipt')
+     , ('prm-set-services-receipt'
+                              , 'en', 'Subir Recibo de Servicios')
+     , ('prm-set-services-receipt'
+	                      , 'es', 'Set Utilities Receipt')
+     , ('prm-view-services-receipt'
+	                      , 'es', 'Ver Recibo de Servicios')
+     , ('prm-view-services-receipt'
+	                      , 'en', 'View Utilities Receipt')
 ;
 
 insert into permission (name)
