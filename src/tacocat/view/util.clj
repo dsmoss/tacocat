@@ -120,6 +120,17 @@
   (for [s sections]
     (make-link-table (s link-data) lang)))
 
+(defn get-spans
+  "gets a list of spans for a data row"
+  [s d]
+  (if (empty? s) (repeat (count d) 1) s))
+
+(defn get-spans-list
+  "Gets list of spans for data"
+  [s d]
+  (for [[x h] (map list d (if (empty? s) (repeat (count d) nil) s))]
+    (get-spans h x)))
+
 (defn with-form-table
   "Makes a table suitable for holding form items
    (with-form-table [[1 2] [1 2] [2 1] nil] [some some]
@@ -136,22 +147,16 @@
    => [:table [:tr [:td some] [:td some]]]"
   [[hs & ts] header & data]
   (html
-    (let [row (fn [tag cs items]
-                (html
-                  [:tr {:class "form-table"}
-                   (map (fn [c d]
-                          (html
-                            [tag {:class "form-table"
-                                  :colspan (if (nil? c) 1 c)} d]))
-                        (if (nil? cs) (repeat (count items) 1) cs)
-                        items)]))]
-      [:table {:class "form-table"}
-       (if (not (empty? header))
-         (row :th hs header))
-       (map row
-            (repeat (count data) :td)
-            (if (empty? ts) (repeat (count data) nil) ts)
-            data)])))
+    [:table {:class "form-table"}
+     [:tr {:class "form-table"}
+      (for [[h s] (map list header (get-spans hs header))]
+        [:th {:class "form-table" :colspan s} h])]
+     (for [r (map (fn [d s] (map list d s))
+                  data
+                  (get-spans-list ts data))]
+       [:tr {:class "form-table"}
+        (for [[d s] r]
+          [:td {:class "form-table" :colspan s} d])])]))
 
 (defn main-head
   "normal page head tag"
@@ -347,11 +352,11 @@
     [:table
      [:tr
       (for [x column-display]
-        [:th (h (get-string x {} lang))])]
+        [:th {:valign "top"} (h (get-string x {} lang))])]
      (for [i list-of-maps]
        [:tr
         (for [[c f] (map list columns functions)]
-          [:td (f (get i c) i)])])]))
+          [:td {:valign "top"} (f (get i c) i)])])]))
 
 (defn format-date
   "Gets the format for a date"
