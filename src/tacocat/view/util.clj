@@ -2,7 +2,7 @@
   (:gen-class)
   (:require [hiccup.page  :as    page]
             [hiccup.form  :as    form]
-            [hiccup.core  :refer [html]]
+            [hiccup.core  :refer [html h]]
             [tacocat.util :refer :all]
             [tacocat.sql  :as    sql]
             [tacocat.intl :refer [get-string]]))
@@ -336,15 +336,6 @@
   [options]
   (if (empty? options) "" (str " (" options ")")))
 
-(defn headers
-  "Make the [:th ...] section of a table"
-  [hh]
-  (html
-    (-> (fn [h] (html [:th h]))
-        (map hh)
-        (conj :tr)
-        vec)))
-
 (defn with-table
   "Makes a [:table [:tr [:td ... ]]] structure out of a list of
   maps by applying the respective function to each.
@@ -353,16 +344,14 @@
   The column content and the context"
   [lang columns column-display functions list-of-maps]
   (html
-    (-> (fn [d]
-          (-> (fn [c f] (html [:td {:valign "top"} (f (get d c) d)]))
-              (map columns functions)
-              (conj :tr)
-              vec))
-        (map list-of-maps)
-        (conj (headers (map #(get-string % {} lang) column-display))
-              {:cellspacing 0 :cellpadding 1}
-              :table)
-        vec)))
+    [:table
+     [:tr
+      (for [x column-display]
+        [:th (h (get-string x {} lang))])]
+     (for [i list-of-maps]
+       [:tr
+        (for [[c f] (map list columns functions)]
+          [:td (f (get i c) i)])])]))
 
 (defn format-date
   "Gets the format for a date"
