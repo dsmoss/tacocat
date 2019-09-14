@@ -451,6 +451,7 @@
    (btn text lang :h5)))
 
 ; Buttons
+(def btn-merge             (partial btn "btn-merge"            ))
 (def btn-enter             (partial btn "btn-enter"            ))
 (def btn-delete            (partial btn "btn-delete"           ))
 (def btn-add               (partial btn "btn-add"              ))

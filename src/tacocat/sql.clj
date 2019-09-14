@@ -514,6 +514,14 @@
                          by   menu_group desc"
                       id])))
 
+(defn update-bill-item-bill-id-and-delete-bill
+  "Changes the items over and deletes newly empty bill"
+  [user id-from id-to]
+  (j/with-db-transaction [t-con db-spec]
+    (upd user t-con :bill_item
+         {:id_bill id-to} ["id_bill = ?" id-from])
+    (del user t-con :bill ["id = ?" id-from])))
+
 (defn retrieve-bills
   "Finds all the open bills in the database"
   []

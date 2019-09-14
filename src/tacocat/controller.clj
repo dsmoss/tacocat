@@ -394,6 +394,13 @@
   (add-expense user (str (:name cr) "/" concept) amount image)
   (sql/insert-debt user creditor amount concept)))
 
+(defn merge-bills
+  "Merges the first bill into the second"
+  [user id-from id-to]
+  (println "Merging" id-from "into" id-to)
+  (sql/update-bill-item-bill-id-and-delete-bill
+    user (int-or-null id-from) (int-or-null id-to)))
+
 (defn create-populated-bill
   "Add a pre-populated bill from the menu screen"
   [user data]

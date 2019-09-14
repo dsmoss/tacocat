@@ -23,10 +23,17 @@
   "Display the bills page"
   [request]
   ;(println request)
-  (let [{location "bill-location"} (:params request)
+  (let [{location   "bill-location"
+         merge-into "merge-location"
+         merge-bill "merge-bill"} (:params request)
+
         user                       (get-user request)]
     (with-check-permissions
       request "list-bills" view/render-bills
+      {:trigger    "merge-bill"
+       :permission "merge-bill"
+       :action     (controller/merge-bills
+                     user merge-bill merge-into)}
       {:trigger    "add-new-bill-from-menu"
        :permission "create-new-bill"
        :action     (controller/create-populated-bill
@@ -792,6 +799,12 @@
   [request]
   (response request view/handle-menu))
 
+(defn handle-merge
+  "Merge two bills together"
+  [request]
+  (with-check-permissions request "merge-bill"
+    (view/render-merge (-> request :params :id))))
+
 (def handler
   "Get the handler function for our routes."
   (make-handler
@@ -830,6 +843,7 @@
       [["delete-user/"             id] handle-delete-user]
       ["bills"                         handle-bills]
       [["edit-location/"           id] handle-edit-bill-location]
+      [["merge-bill/"              id] handle-merge]
       ["new-bill"                      handle-new-bill]
       [["bill/"                    id] handle-single-bill]
       [["set-person/"              id] handle-set-person]

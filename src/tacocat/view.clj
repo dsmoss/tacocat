@@ -675,6 +675,28 @@
       [:home :bills]
       (get-existing-bills user))))
 
+(defn render-merge
+  "Shows a form in which to merge bills"
+  [user id]
+  (let [lang  (:language user)
+        id    (int-or-null id)
+        bill  (sql/retrieve-bill id)
+        bills (filter (fn [{i :id}] (not (= i id)))
+                      (sql/retrieve-bills))]
+    (with-page (get-string "str-merge/location" bill lang)
+      user
+      [:home :bills]
+      (with-form "/bills"
+        (form/hidden-field {:value id} "merge-bill")
+        (html
+          [:h5
+           (with-form-table [nil nil [2]] nil
+             [(lbl-location "merge-location" lang)
+              (form/drop-down {:id "merge-location"} "merge-location"
+                              (for [b bills]
+                                [(:location b) (:id b)]))]
+             [(btn-merge lang)])])))))
+
 (defn render-previous-closes
   "Shows the previous closes"
   [user]
