@@ -1,7 +1,8 @@
 (ns tacocat.controller
   (:gen-class)
   (:require [tacocat.sql  :as    sql]
-            [tacocat.util :refer :all]))
+            [tacocat.util :refer :all]
+            [tacocat.intl :refer [get-string]]))
 
 (defn log-exception
   "Log an exception"
@@ -392,3 +393,32 @@
         cr       (sql/retrieve-creditor-by-id creditor)]
   (add-expense user (str (:name cr) "/" concept) amount image)
   (sql/insert-debt user creditor amount concept)))
+
+(defn create-populated-bill
+  "Add a pre-populated bill from the menu screen"
+  [user data]
+  (let [location (get data "location")
+        location (if (empty? location)
+                   (get-string "str-none" {}) ; System language
+                   location)
+        data     (into {} (filter #(not (= "0" (val %))) data))
+        ks       (keys data)
+        item-id  #(-> %1 (clojure.string/replace %2 "") int-or-null)
+        count-fn #(-> data (get %) int-or-null)
+        items    (map
+                   (fn [k]
+                     (let [inum (item-id k "i-")
+                           opre (str "o-" inum "-")
+                           opat (re-pattern (str opre "\\d+"))
+                           opts (filter #(re-matches opat %) ks)]
+                       (list
+                         inum
+                         (count-fn k)
+                         (map
+                           #(list
+                              (item-id % opre)
+                              (count-fn %))
+                           opts))))
+                   (filter #(re-matches #"i-\d+" %) ks))]
+    (println "Making bill for" location "with" items)
+    (sql/insert-populated-bill user location items)))

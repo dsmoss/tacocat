@@ -15,7 +15,8 @@
    (make-link address text :h5)))
 
 (def link-data
-  ;["/" ["admin" ["list-users" ["add-new-user"]]
+  ;["/" ["menu"]
+  ;     ["admin" ["list-users" ["add-new-user"]]
   ;              ["list-roles" ["add-new-role"]]
   ;              ["list-items" ["add-new-item"]
   ;                            ["add-new-menu-group"]]]
@@ -35,6 +36,8 @@
   ;               ["intl"]]]
   {:general    [{:destination "/"
                  :string      "ln-home"}
+                {:destination "/menu"
+                 :string      "ln-menu"}
                 {:destination "/admin"
                  :string      "ln-admin"}
                 {:destination "/system"
@@ -390,18 +393,24 @@
 (defn format-bill-list
   "Formats a list of bills"
   [user bill-link-root bill-data editable?]
-  (with-table (:language user)
-    [:date      :location      :charge      :id]
-    ["str-date" "str-location" "str-charge" ""]
-    [(fn [d _] (format-date d))
-     (fn [l c] (if editable?
-                 (make-link (str "/edit-location/" (:id c)) l)
-                 (html [:h5 l])))
-     (fn [c _] (format-money c))
-     (fn [i _] (make-link
-                 (str bill-link-root i)
-                 (get-string "ln-view" {} (:language user))))]
-    bill-data))
+  (let [lang (:language user)]
+    (with-table lang
+      [:date      :location      :charge      :id]
+      ["str-date" "str-location" "str-charge" ""]
+      [(fn [d _] (format-date d))
+       (fn [l c] (if editable?
+                   (make-link (str "/edit-location/" (:id c)) l)
+                   (html [:h5 l])))
+       (fn [c _] (format-money c))
+       (fn [i _] (with-form-table nil nil
+                   [(make-link
+                      (str bill-link-root i)
+                      (get-string "ln-view" {} lang))
+                    (if editable?
+                      (make-link
+                        (str "/merge-bill/" i)
+                        (get-string "ln-merge" {} lang)))]))]
+      bill-data)))
 
 (defn make-services-table
   "Makes a services table"

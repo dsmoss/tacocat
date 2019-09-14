@@ -132,8 +132,10 @@
 
 (defn insert-item-option
   "Insert an item option"
-  [user it op]
-  (ins user db-spec :item_option {:id_item it :id_option op}))
+  ([user it op db]
+   (ins user db :item_option {:id_item it :id_option op}))
+  ([user it op]
+   (insert-item-option user it op db-spec)))
 
 (defn delete-item-option
   "Deletes an item option"
@@ -238,13 +240,36 @@
 
 (defn insert-new-bill
   "Inserts a new bill to the system"
-  [user location]
-  (ins user db-spec :bill {:location location}))
+  ([user location db]
+   (ins user db :bill {:location location}))
+  ([user location]
+   (insert-new-bill user location db-spec)))
 
 (defn insert-new-bill-item
   "Inserts an item to a bill"
-  [user id-bill id-item]
-  (ins user db-spec :bill_item {:id_bill id-bill :id_item id-item}))
+  ([user id-bill id-item db]
+   (ins user db :bill_item {:id_bill id-bill :id_item id-item}))
+  ([user id-bill id-item]
+   (insert-new-bill-item user id-bill id-item db-spec)))
+
+(defn insert-populated-bill
+  "Insert a new bill and populate it with given data"
+  [user location data]
+  (j/with-db-transaction [t-con db-spec]
+    (let [bill    (first (insert-new-bill user location t-con))
+          id-bill (:id bill)]
+      (doall
+        (for [[i c o] data]
+          (doall
+            (for [n (range 0 c)
+                  :let [bi    (first (insert-new-bill-item
+                                       user id-bill i t-con))
+                        id-bi (:id bi)]]
+              (doall
+                (for [[oi c] o]
+                  (if (< c n)
+                    (ins user t-con :bill_item_option
+                         {:id_bill_item id-bi :id_option oi})))))))))))
 
 (defn update-bill-location
   "Updates the location for a bill"
@@ -436,6 +461,28 @@
                        by   menu_group desc
                           , name"
                     group]))
+
+(defn retrieve-full-avaliable-menu
+  "Gets every menu item and its options"
+  []
+  (j/query db-spec ["select i.id           as id_item
+                          , i.name         as item_name
+                          , i.charge       as item_charge
+                          , i.menu_group   as menu_group
+                          , o.extra_charge as option_charge
+                          , o.id           as id_option
+                          , o.name         as option_name
+                          , o.option_group as option_group
+                     from   item           as i
+                     left   outer
+                     join   item_option    as io
+                       on   io.id_item   = i.id
+                     left   outer
+                     join   option         as o
+                       on   io.id_option = o.id
+                     where  i.in_stock
+                       and  (  o.in_stock
+                            or o.in_stock  is null)"]))
 
 (defn update-item-menu-group
   "Change an items menu_group"

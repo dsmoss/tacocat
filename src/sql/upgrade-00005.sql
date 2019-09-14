@@ -17,3 +17,22 @@ where  d.key  =  'prm-set-services-receipt'
   and  s.key  =  d.key
   and  s.lang != d.lang;
 
+update intl
+  set  val  = 'Active'
+where  key  = 'str-enabled'
+  and  lang = 'en';
+
+insert into intl (key, lang, val)
+values ('str-enabled', 'es', 'Activo');
+
+update intl
+  set  val = replace(val, ' &nbsp;', '');
+
+insert into intl_key (name)
+values ('ln-menu')
+;
+
+insert into intl (key, lang, val)
+values ('ln-menu', 'es', 'Menú')
+     , ('ln-menu', 'en', 'Menu')
+;

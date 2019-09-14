@@ -23,13 +23,17 @@
   "Display the bills page"
   [request]
   ;(println request)
-  (let [{location "bill-location"} (:params request)]
+  (let [{location "bill-location"} (:params request)
+        user                       (get-user request)]
     (with-check-permissions
       request "list-bills" view/render-bills
+      {:trigger    "add-new-bill-from-menu"
+       :permission "create-new-bill"
+       :action     (controller/create-populated-bill
+                     user (-> request :params))}
       {:trigger    "new-bill"
        :permission "create-new-bill"
-       :action     (controller/add-bill
-                     (get-user request) location)})))
+       :action     (controller/add-bill user location)})))
 
 (defn handle-single-bill
   "Shows data for a particular bill"
@@ -784,6 +788,10 @@
   (with-check-permissions request "set-services-receipt"
     (view/render-set-services-receipt (-> request :params :id))))
 
+(defn handle-menu
+  [request]
+  (response request view/handle-menu))
+
 (def handler
   "Get the handler function for our routes."
   (make-handler
@@ -792,15 +800,15 @@
       ["css"                           handle-css]
       ["fonts"                         handle-fonts]
       [""                              handle-index]
-      ["system"                    {"" handle-system}]
-      ["admin"                     {"" handle-admin}]
-      ["admin-options"             {"" handle-admin-options}]
-      ["list-users"                {"" handle-list-users}]
-      ["add-new-user"              {"" handle-add-new-user}]
-      ["list-roles"                {"" handle-list-roles}]
-      ["list-items"                {"" handle-list-items}]
-      ["add-new-item"              {"" handle-add-new-item}]
-      ["add-new-menu-group"        {"" handle-add-new-menu-group}]
+      ["system"                        handle-system]
+      ["admin"                         handle-admin]
+      ["admin-options"                 handle-admin-options]
+      ["list-users"                    handle-list-users]
+      ["add-new-user"                  handle-add-new-user]
+      ["list-roles"                    handle-list-roles]
+      ["list-items"                    handle-list-items]
+      ["add-new-item"                  handle-add-new-item]
+      ["add-new-menu-group"            handle-add-new-menu-group]
       [["view-item/"               id] handle-view-item]
       [["create-new-option-group/" id] handle-new-option-group]
       [["create-new-option/"       id] handle-new-option]
@@ -808,7 +816,7 @@
       [["change-item-menu-group/"  id] handle-change-item-menu-group]
       [["change-item-charge/"      id] handle-change-item-charge]
       [["delete-item/"             id] handle-delete-item]
-      ["login"                     {"" handle-login}]
+      ["login"                         handle-login]
       ["user-info"                 {"" handle-user-info
        ["/"                        id] handle-user-info}]
       [["change-user-name/"        id] handle-change-user-name]
@@ -817,12 +825,12 @@
       [["change-user-language/"    id] handle-change-user-language]
       [["set-user-image/"          id] handle-set-user-image]
       [["view-role/"               id] handle-view-role]
-      ["add-new-role"              {"" handle-add-new-role}]
+      ["add-new-role"                  handle-add-new-role]
       [["delete-role/"             id] handle-delete-role]
       [["delete-user/"             id] handle-delete-user]
-      ["bills"                     {"" handle-bills}]
+      ["bills"                         handle-bills]
       [["edit-location/"           id] handle-edit-bill-location]
-      ["new-bill"                  {"" handle-new-bill}]
+      ["new-bill"                      handle-new-bill]
       [["bill/"                    id] handle-single-bill]
       [["set-person/"              id] handle-set-person]
       [["set-bill-item/"           id] handle-set-bill-item]
@@ -831,32 +839,33 @@
       [["set-charge-override/"     id] handle-charge-override]
       [["add-item/"                id] handle-add-item]
       [["charge-bill/"             id] handle-charge-bill]
-      ["add-expense"               {"" handle-new-expense}]
+      ["add-expense"                   handle-new-expense]
       [["set-expense-receipt/"     id] handle-set-expense-receipt]
-      ["old-bills"                 {"" handle-old-bills}]
+      ["old-bills"                     handle-old-bills]
       [["closed-bill/"             id] handle-closed-bill]
       [["print-bill/"              id] handle-print-bill]
       [["close/"                   id] handle-single-close]
-      ["close-acct"                {"" handle-close-acct}]
-      ["previous-closes"           {"" handle-previous-closes}]
-      ["closed-services"           {"" handle-closed-services}]
+      ["close-acct"                    handle-close-acct]
+      ["previous-closes"               handle-previous-closes]
+      ["closed-services"               handle-closed-services]
       [["services-for-close/"      id] handle-services-for-close]
-      ["add-services-expense"      {"" handle-add-services-expense}]
-      ["services"                  {"" handle-services}]
+      ["add-services-expense"          handle-add-services-expense]
+      ["services"                      handle-services]
       [["set-services-receipt/"    id] handle-set-services-receipt]
       [["view-services-receipt/"   id] handle-view-services-receipt]
-      ["accts"                     {"" handle-accts}]
+      ["accts"                         handle-accts]
       [["view-receipt/"            id] handle-view-receipt]
-      ["log"                       {"" handle-log}]
-      ["intl"                      {"" handle-intl}]
+      ["log"                           handle-log]
+      ["intl"                          handle-intl]
       ["error-log"                 {"" handle-error-list
        ["/"                        id] handle-error-log}]
-      ["debts"                     {"" handle-debts}]
-      ["add-creditor"              {"" handle-add-creditor}]
-      ["add-debt-payment"          {"" handle-add-debt-payment}]
-      ["add-debt"                  {"" handle-add-debt}]
+      ["debts"                         handle-debts]
+      ["add-creditor"                  handle-add-creditor]
+      ["add-debt-payment"              handle-add-debt-payment]
+      ["add-debt"                      handle-add-debt]
       [["debt-detail/"             id] handle-debt-detail]
-      ["sales"                     {"" handle-sales}]
+      ["sales"                         handle-sales]
+      ["menu"                          handle-menu]
       [true                            handle-404]]])) 
 
 (defn app

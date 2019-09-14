@@ -374,36 +374,46 @@
       lt
       (html
         [:h5
-         (with-form (str "/view-item/" id)
-           (form/hidden-field {:value id} "set-item-name")
-           (with-form-table nil nil
-             [(lbl-item "name" lang)
-              (tf "name" iname)
-              (btn-change lang)]))
-         
-         (with-form (str "/view-item/" id)
-           (form/hidden-field {:value id} "set-item-menu-group")
-           (with-form-table nil nil
-             [(lbl-group "menu-group" lang)
-              (form/drop-down {:id "menu-group"} "menu-group"
-                              (map (fn [g] [g g])
-                                   (sort (map :name menu-groups)))
-                              mgroup)
-              (btn-change lang)]))
-         
-         (with-form (str "/view-item/" id)
-           (form/hidden-field {:value id} "set-item-charge")
-           (with-form-table nil nil
-             [(lbl-charge "amount" lang)
-              (nf "amount" amount)
-              (btn-change lang)]))
-         
-         (with-form (str "/view-item/" id)
-           (form/hidden-field {:value id} "set-item-in-stock")
-           (with-form-table nil nil
-             [(lbl-in-stock "in-stock" lang)
-              (format-bool in-stock? "in-stock")
-              (btn-change lang)]))
+         [:table {:style "border: 0; padding: 0;"}
+          [:tr {:style "border: 0; padding: 0;"}
+           (with-form (str "/view-item/" id)
+             [:td {:style "border: 0; padding: 0;"} 
+              (form/hidden-field {:value id} "set-item-name")
+              (lbl-item "name" lang)]
+             [:td {:style "border: 0; padding: 0;"}
+              (tf "name" iname)]
+             [:td {:style "border: 0; padding: 0;"}
+              (btn-change lang)])]
+         [:tr {:style "border: 0; padding: 0;"}
+          (with-form (str "/view-item/" id)
+            [:td {:style "border: 0; padding: 0;"}
+             (form/hidden-field {:value id} "set-item-menu-group")
+             (lbl-group "menu-group" lang)]
+            [:td {:style "border: 0; padding: 0;"}
+             (form/drop-down {:id "menu-group"} "menu-group"
+                             (map (fn [g] [g g])
+                                  (sort (map :name menu-groups)))
+                             mgroup)]
+            [:td {:style "border: 0; padding: 0;"}
+             (btn-change lang)])]
+         [:tr {:style "border: 0; padding: 0;"}
+          (with-form (str "/view-item/" id)
+            [:td {:style "border: 0; padding: 0;"}
+             (form/hidden-field {:value id} "set-item-charge")
+             (lbl-charge "amount" lang)]
+            [:td {:style "border: 0; padding: 0;"}
+             (nf "amount" amount)]
+            [:td {:style "border: 0; padding: 0;"}
+             (btn-change lang)])]
+         [:tr {:style "border: 0; padding: 0;"}
+          (with-form (str "/view-item/" id)
+            [:td {:style "border: 0; padding: 0;"}
+             (form/hidden-field {:value id} "set-item-in-stock")
+             (lbl-in-stock "in-stock" lang)]
+            [:td {:style "border: 0; padding: 0;"}
+             (format-bool in-stock? "in-stock")]
+            [:td {:style "border: 0; padding: 0;"}
+             (btn-change lang)])]]
          
          [:h4 {:class "w3-container w3-card"}
           (get-string "str-item-options" {} lang)]
@@ -1074,21 +1084,24 @@
     (with-page (get-string "ln-add-to-bill" {} lang)
       user
       [:home :bills]
-      (doall
-        (map (fn [m]
+      (html
+        [:h5
+         [:table {:style "border: 0; padding: 0;"}
+          (for [m (sort (group-by :menu_group
+                                  (sql/retrieve-items-in-stock)))]
+              [:tr {:style "border: 0; padding: 0;"}
                (with-form (str "/bill/" id)
-                 (form/hidden-field {:value id} "id-bill")
-                 (html
-                   [:h5
-                    (with-form-table [[2] nil] [(key m)]
-                      [(form/drop-down
-                         "new-item"
-                         (sort
-                           (map (fn [{id :id nm :name}] [nm id])
-                                (val m))))
-                       (btn-add lang)])])))
-             (group-by :menu_group
-                       (sql/retrieve-items-in-stock)))))))
+                 [:td {:style "border: 0; padding: 0;"}
+                  (lbl (str (key m) ":") "new-item" lang)]
+                 [:td {:style "border: 0; padding: 0;"}
+                  (form/hidden-field {:value id} "id-bill")
+                  (form/drop-down
+                    "new-item"
+                    (sort
+                      (for [{id :id nm :name} (val m)]
+                        [nm id])))]
+                 [:td {:style "border: 0; padding: 0;"}
+                  (btn-add lang)])])]]))))
 
 (defn render-new-bill
   "Shows a page where we can create a new bill"
@@ -1171,39 +1184,37 @@
 (defn render-accts
   "Displays the accounts page"
   [user]
-  (let [lang (:language user)]
+  (let [lang                (:language user)
+        {total    :total
+         expenses :expenses
+         intakes  :intakes} (sql/retrieve-current-accounting-totals)]
     (with-page (get-string "ln-accts" {} lang)
       user
       [:home :accts]
-      (let [{total    :total
-             expenses :expenses
-             intakes  :intakes} (sql/retrieve-current-accounting-totals)]
-        (html
-          [:span
-           (format-money total (get-string "fmt-total" {} lang) :h2)
-           (format-money expenses (get-string "fmt-expenses" {} lang))
-           (format-money intakes (get-string "fmt-intakes" {} lang))])
-        (with-table lang
-          [:date      :concept      :amount      :receipt_filename]
-          ["str-date" "str-concept" "str-amount" ""]
-          [(fn [d _] (format-date d))
-           (fn [c _] (html [:h5 c]))
-           (fn [m _] (format-money m))
-           (fn [f a]
-             (cond
-               (and (nil? f) (nil? (:id_expense a)))
-                 (make-link
-                   (str "/closed-bill/" (:id_intake a))
-                   (get-string "ln-view" {} lang))
-               (nil? f)
-                 (make-link
-                   (str "/set-expense-receipt/" (:id_expense a))
-                   (get-string "ln-no-receipt-image" {} lang))
-               :else
-                 (make-link
-                   (str "/view-receipt/" (:id_expense a))
-                   (get-string "ln-view-receipt" {} lang))))]
-          (sql/retrieve-current-accounting))))))
+      (format-money total (get-string "fmt-total" {} lang) :h2)
+      (format-money expenses (get-string "fmt-expenses" {} lang))
+      (format-money intakes (get-string "fmt-intakes" {} lang))
+      (with-table lang
+        [:date      :concept      :amount      :receipt_filename]
+        ["str-date" "str-concept" "str-amount" ""]
+        [(fn [d _] (format-date d))
+         (fn [c _] (html [:h5 c]))
+         (fn [m _] (format-money m))
+         (fn [f a]
+           (cond
+             (and (nil? f) (nil? (:id_expense a)))
+               (make-link
+                 (str "/closed-bill/" (:id_intake a))
+                 (get-string "ln-view" {} lang))
+             (nil? f)
+               (make-link
+                 (str "/set-expense-receipt/" (:id_expense a))
+                 (get-string "ln-no-receipt-image" {} lang))
+             :else
+               (make-link
+                 (str "/view-receipt/" (:id_expense a))
+                 (get-string "ln-view-receipt" {} lang))))]
+        (sql/retrieve-current-accounting)))))
 
 (defn render-list-users
   "Page listing all registered users"
@@ -1698,3 +1709,82 @@
                                 (html [:h5 n])])
                              o))]))]
         (sql/retrieve-sales-breakdown)))))
+
+(defn handle-menu
+  "Shows the menu of available items"
+  [user]
+  (let [lang   (:language user)
+        menu   (group-by :menu_group
+                         (sql/retrieve-full-avaliable-menu))
+        groups (sort (keys menu))]
+    (with-page (get-string "ln-menu" {} lang)
+      user
+      [:home]
+      (with-form "/bills"
+        (form/hidden-field {:value true} "add-new-bill-from-menu")
+        (html
+          [:table 
+           [:tr
+            [:td
+             (lbl-location "location" lang)]
+            [:td {:colspan 3}
+             (tf "location")]]
+           (for [g groups]
+             (list
+               [:tr
+                [:th {:colspan 4} g]]
+               (for [item (sort (group-by :item_name (get menu g)))
+                     :let [i-id (:id_item (first (val item)))
+                           q-id (str "i-" i-id)]]
+                 [:tr
+                  [:td {:valign "top"}
+                   (key item)]
+                  [:td {:valign "top" :style "border-right: 0;"}
+                   (lbl "Quantity:" q-id lang)]
+                  [:td {:valign "top" :style "border-left: 0;"}
+                   (form/drop-down {:id q-id}
+                     q-id (for [x (range 0 100)] [x x]) 0)]
+                  [:td {:valign "top"}
+                   (for [og (sort
+                              (group-by :option_group (val item)))]
+                     (if (not (empty? (key og)))
+                       [:table {:style "padding: 0;"}
+                        [:tr {:style "padding: 0;"}
+                         [:th {:style "padding: 0;" :colspan 3}
+                          (key og)]]
+                        (for [op (sort-by :option_name (val og))
+                              :let [o-id (:id_option op)
+                                    g-id (str "o-" i-id "-" o-id)]]
+                          [:tr {:style "padding: 0;"}
+                           [:td {:style "padding: 3;"}
+                            (:option_name op)]
+                           [:td {:style "border-right: 0;
+                                         padding: 3;"}
+                            (lbl "Quantity:" g-id lang)]
+                           [:td {:style "border-left: 0;
+                                         padding: 3;"}
+                            (form/drop-down {:id g-id}
+                              g-id (for [x (range 0 100)] [x x]) 0)]]
+                          )] ; /table
+                       ))]] ; /tr
+                 ))) ; /for
+           [:tr
+            [:td {:colspan 4}
+             (btn-create lang)]]])))))
+
+
+;               (let [sect  (get menu g)
+;                     items (group-by :option_group (get menu g))
+;                     ogrs  (sort (keys items))]
+;                 (println s menu sect items ogrs)
+;                 (for [og ogrs]
+;                   [:tr
+;                    [:th og]
+;                    [:td (:item_name )]]))))])))))
+;
+;              (lbl "Quantity:" "quantity" lang)
+;              (form/drop-down {:id "quantity"} "quantity"
+;                              (for [x (range 0 100)]
+;                                [x x])
+;                              0)])
+
