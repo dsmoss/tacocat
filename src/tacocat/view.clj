@@ -1111,6 +1111,7 @@
          [:table {:style "border: 0; padding: 0;"}
           (for [m (sort (group-by :menu_group
                                   (sql/retrieve-items-in-stock)))]
+            (html
               [:tr {:style "border: 0; padding: 0;"}
                (with-form (str "/bill/" id)
                  [:td {:style "border: 0; padding: 0;"}
@@ -1123,7 +1124,7 @@
                       (for [{id :id nm :name} (val m)]
                         [nm id])))]
                  [:td {:style "border: 0; padding: 0;"}
-                  (btn-add lang)])])]]))))
+                  (btn-add lang)])]))]]))))
 
 (defn render-new-bill
   "Shows a page where we can create a new bill"
@@ -1732,7 +1733,7 @@
                              o))]))]
         (sql/retrieve-sales-breakdown)))))
 
-(defn handle-menu
+(defn render-menu
   "Shows the menu of available items"
   [user]
   (let [lang   (:language user)
@@ -1747,52 +1748,56 @@
         (html
           [:table 
            [:tr
-            [:td
+            [:td {:style "border-right: 0;"}
              (lbl-location "location" lang)]
-            [:td {:colspan 3}
+            [:td {:style "border-left: 0;" :colspan 3}
              (tf "location")]]
            (for [g groups]
-             (list
+             (html
                [:tr
                 [:th {:colspan 4} g]]
                (for [item (sort (group-by :item_name (get menu g)))
                      :let [i-id (:id_item (first (val item)))
                            q-id (str "i-" i-id)]]
-                 [:tr
-                  [:td {:valign "top"}
-                   (key item)]
-                  [:td {:valign "top" :style "border-right: 0;"}
-                   (lbl "Quantity:" q-id lang)]
-                  [:td {:valign "top" :style "border-left: 0;"}
-                   (form/drop-down {:id q-id}
-                     q-id (for [x (range 0 100)] [x x]) 0)]
-                  [:td {:valign "top"}
-                   (for [og (sort
-                              (group-by :option_group (val item)))]
-                     (if (not (empty? (key og)))
-                       [:table {:style "padding: 0;"}
-                        [:tr {:style "padding: 0;"}
-                         [:th {:style "padding: 0;" :colspan 3}
-                          (key og)]]
-                        (for [op (sort-by :option_name (val og))
-                              :let [o-id (:id_option op)
-                                    g-id (str "o-" i-id "-" o-id)]]
-                          [:tr {:style "padding: 0;"}
-                           [:td {:style "padding: 3;"}
-                            (:option_name op)]
-                           [:td {:style "border-right: 0;
-                                         padding: 3;"}
-                            (lbl "Quantity:" g-id lang)]
-                           [:td {:style "border-left: 0;
-                                         padding: 3;"}
-                            (form/drop-down {:id g-id}
-                              g-id (for [x (range 0 100)] [x x]) 0)]]
-                          )] ; /table
-                       ))]] ; /tr
+                 (html
+                   [:tr
+                    [:td {:valign "top"}
+                     (key item)]
+                    [:td {:valign "top" :style "border-right: 0;"}
+                     (lbl "Quantity:" q-id lang)]
+                    [:td {:valign "top" :style "border-left: 0;"}
+                     (form/drop-down {:id q-id}
+                        q-id (for [x (range 0 100)] [x x]) 0)]
+                    [:td {:valign "top"}
+                     (for [og (sort
+                                (group-by :option_group (val item)))]
+                       (if (not (empty? (key og)))
+                         (html
+                           [:table {:style "padding: 0;"}
+                            [:tr {:style "padding: 0;"}
+                             [:th {:style "padding: 0;" :colspan 3}
+                              (key og)]]
+                            (for [op (sort-by :option_name (val og))
+                                  :let [o-id (:id_option op)
+                                        g-id (str "o-"i-id"-"o-id)]]
+                              (html
+                                [:tr {:style "padding: 0;"}
+                                 [:td {:style "padding: 3;"}
+                                  (:option_name op)]
+                                 [:td {:style "border-right: 0;
+                                              padding: 3;"}
+                                  (lbl "Quantity:" g-id lang)]
+                                 [:td {:style "border-left: 0;
+                                              padding: 3;"}
+                                  (form/drop-down {:id g-id}
+                                    g-id (for [x (range 0 100)]
+                                           [x x]) 0)]]
+                          ))] ; /table
+                       )))]] ; /tr
                  ))) ; /for
            [:tr
             [:td {:colspan 4}
-             (btn-create lang)]]])))))
+             (btn-create lang)]])])))))
 
 
 ;               (let [sect  (get menu g)

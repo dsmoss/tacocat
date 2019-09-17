@@ -797,7 +797,7 @@
 
 (defn handle-menu
   [request]
-  (response request view/handle-menu))
+  (response request view/render-menu))
 
 (defn handle-merge
   "Merge two bills together"

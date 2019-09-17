@@ -154,13 +154,14 @@
      (if (not (empty? header))
        [:tr {:class "form-table"}
         (for [[h s] (map list header (get-spans hs header))]
-          [:th {:class "form-table" :colspan s} h])])
+          (html [:th {:class "form-table" :colspan s} h]))])
      (for [r (map (fn [d s] (map list d s))
                   data
                   (get-spans-list ts data))]
-       [:tr {:class "form-table"}
-        (for [[d s] r]
-          [:td {:class "form-table" :colspan s} d])])]))
+       (html
+         [:tr {:class "form-table"}
+          (for [[d s] r]
+            (html [:td {:class "form-table" :colspan s} d]))]))]))
 
 (defn main-head
   "normal page head tag"
@@ -356,11 +357,12 @@
     [:table
      [:tr
       (for [x column-display]
-        [:th {:valign "top"} (h (get-string x {} lang))])]
+        (html [:th {:valign "top"} (h (get-string x {} lang))]))]
      (for [i list-of-maps]
-       [:tr
-        (for [[c f] (map list columns functions)]
-          [:td {:valign "top"} (f (get i c) i)])])]))
+       (html
+         [:tr
+          (for [[c f] (map list columns functions)]
+            (html [:td {:valign "top"} (f (get i c) i)]))]))]))
 
 (defn format-date
   "Gets the format for a date"
