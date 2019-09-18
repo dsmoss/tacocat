@@ -4,3 +4,6 @@
 - Add a page for deleting menu groups
 - Add a page for deleting option groups
 - Multi-option/mutex flag for item/options
+- Accept PDF for receipts
+- Cache
+- Fix Menu -> Options not getting set

@@ -154,14 +154,18 @@
      (if (not (empty? header))
        [:tr {:class "form-table"}
         (for [[h s] (map list header (get-spans hs header))]
-          (html [:th {:class "form-table" :colspan s} h]))])
+          (html [:th {:valign "top"
+                      :class "form-table"
+                      :colspan s} h]))])
      (for [r (map (fn [d s] (map list d s))
                   data
                   (get-spans-list ts data))]
        (html
          [:tr {:class "form-table"}
           (for [[d s] r]
-            (html [:td {:class "form-table" :colspan s} d]))]))]))
+            (html [:td {:valign "top"
+                        :class "form-table"
+                        :colspan s} d]))]))]))
 
 (defn main-head
   "normal page head tag"
@@ -471,6 +475,7 @@
   [text id lang]
   (form/label {:for id} id (get-string text {} lang)))
 
+(def lbl-quantity     (partial lbl "lbl-quantity"    ))
 (def lbl-creditor     (partial lbl "lbl-creditor"    ))
 (def lbl-person       (partial lbl "lbl-person"      ))
 (def lbl-charge       (partial lbl "lbl-charge"      ))

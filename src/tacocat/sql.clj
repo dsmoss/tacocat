@@ -258,18 +258,23 @@
   (j/with-db-transaction [t-con db-spec]
     (let [bill    (first (insert-new-bill user location t-con))
           id-bill (:id bill)]
+      ;(println "0=>" id-bill bill location data)
       (doall
         (for [[i c o] data]
+          (do ;(println "  1=>" i c o)
           (doall
             (for [n (range 0 c)
                   :let [bi    (first (insert-new-bill-item
                                        user id-bill i t-con))
                         id-bi (:id bi)]]
+              (do ;(println "    2=>" n id-bi)
               (doall
                 (for [[oi c] o]
-                  (if (< c n)
+                  (do ;(println "      3=>" oi c (< n c))
+                  (if (< n c)
                     (ins user t-con :bill_item_option
-                         {:id_bill_item id-bi :id_option oi})))))))))))
+                         {:id_bill_item id-bi
+                          :id_option    oi}))))))))))))))
 
 (defn update-bill-location
   "Updates the location for a bill"

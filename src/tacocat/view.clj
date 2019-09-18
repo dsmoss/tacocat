@@ -1,6 +1,7 @@
 (ns tacocat.view
   (:gen-class)
-  (:require [tacocat.view.util :refer :all]
+  (:require [clojure.string    :as    s]
+            [tacocat.view.util :refer :all]
             [hiccup.form       :as    form]
             [hiccup.core       :refer [html]]
             [base64-clj.core   :as    b64]
@@ -384,8 +385,8 @@
               (tf "name" iname)]
              [:td {:style "border: 0; padding: 0;"}
               (btn-change lang)])]
-         [:tr {:style "border: 0; padding: 0;"}
-          (with-form (str "/view-item/" id)
+          [:tr {:style "border: 0; padding: 0;"}
+           (with-form (str "/view-item/" id)
             [:td {:style "border: 0; padding: 0;"}
              (form/hidden-field {:value id} "set-item-menu-group")
              (lbl-group "menu-group" lang)]
@@ -396,8 +397,8 @@
                              mgroup)]
             [:td {:style "border: 0; padding: 0;"}
              (btn-change lang)])]
-         [:tr {:style "border: 0; padding: 0;"}
-          (with-form (str "/view-item/" id)
+          [:tr {:style "border: 0; padding: 0;"}
+           (with-form (str "/view-item/" id)
             [:td {:style "border: 0; padding: 0;"}
              (form/hidden-field {:value id} "set-item-charge")
              (lbl-charge "amount" lang)]
@@ -405,8 +406,8 @@
              (nf "amount" amount)]
             [:td {:style "border: 0; padding: 0;"}
              (btn-change lang)])]
-         [:tr {:style "border: 0; padding: 0;"}
-          (with-form (str "/view-item/" id)
+          [:tr {:style "border: 0; padding: 0;"}
+           (with-form (str "/view-item/" id)
             [:td {:style "border: 0; padding: 0;"}
              (form/hidden-field {:value id} "set-item-in-stock")
              (lbl-in-stock "in-stock" lang)]
@@ -422,7 +423,8 @@
                    all-options)
            (fn [i _]
              (with-form (str "/view-item/" id)
-               (form/hidden-field {:value i} "remove-option-from-item")
+               (form/hidden-field
+                 {:value i} "remove-option-from-item")
                (btn-remove lang))))
          
          [:h4 {:class "w3-container w3-card"}
@@ -433,7 +435,8 @@
                    all-options)
            (fn [i _]
              (with-form (str "/view-item/" id)
-               (form/hidden-field {:value i} "add-option-to-item")
+               (form/hidden-field
+                 {:value i} "add-option-to-item")
                (btn-add lang))))]
         lt))))
 
@@ -1739,10 +1742,19 @@
   (let [lang   (:language user)
         menu   (group-by :menu_group
                          (sql/retrieve-full-avaliable-menu))
-        groups (sort (keys menu))]
+        groups (sort (keys menu))
+        ln-gr  (into {}
+                 (for [g groups]
+                   [g (s/replace g #"\s+" "-")]))
+        lt     (make-link-table
+                 (for [g groups]
+                   {:destination (str "#" (get ln-gr g))
+                   :string       g})
+                 lang)]
     (with-page (get-string "ln-menu" {} lang)
       user
       [:home]
+      [:span {:id "top"} lt]
       (with-form "/bills"
         (form/hidden-field {:value true} "add-new-bill-from-menu")
         (html
@@ -1750,54 +1762,62 @@
            [:tr
             [:td {:style "border-right: 0;"}
              (lbl-location "location" lang)]
-            [:td {:style "border-left: 0;" :colspan 3}
-             (tf "location")]]
+            [:td {:style "border-left: 0;"}
+             (tf "location")]]]
            (for [g groups]
              (html
-               [:tr
-                [:th {:colspan 4} g]]
-               (for [item (sort (group-by :item_name (get menu g)))
+               [:header {:class "w3-container w3-card w3-theme-l5"}
+                 [:h2 {:id (get ln-gr g)} g]]
+               (with-form-table nil nil
+                 [(make-link
+                    "#top" (get-string "ln-top" {} lang))
+                  (make-link
+                    "#bottom" (get-string "ln-bottom" {} lang))])
+                (for [item (sort (group-by :item_name (get menu g)))
                      :let [i-id (:id_item (first (val item)))
                            q-id (str "i-" i-id)]]
-                 (html
-                   [:tr
-                    [:td {:valign "top"}
-                     (key item)]
-                    [:td {:valign "top" :style "border-right: 0;"}
-                     (lbl "Quantity:" q-id lang)]
-                    [:td {:valign "top" :style "border-left: 0;"}
-                     (form/drop-down {:id q-id}
-                        q-id (for [x (range 0 100)] [x x]) 0)]
-                    [:td {:valign "top"}
-                     (for [og (sort
-                                (group-by :option_group (val item)))]
-                       (if (not (empty? (key og)))
-                         (html
-                           [:table {:style "padding: 0;"}
-                            [:tr {:style "padding: 0;"}
-                             [:th {:style "padding: 0;" :colspan 3}
-                              (key og)]]
-                            (for [op (sort-by :option_name (val og))
-                                  :let [o-id (:id_option op)
-                                        g-id (str "o-"i-id"-"o-id)]]
-                              (html
-                                [:tr {:style "padding: 0;"}
-                                 [:td {:style "padding: 3;"}
-                                  (:option_name op)]
-                                 [:td {:style "border-right: 0;
-                                              padding: 3;"}
-                                  (lbl "Quantity:" g-id lang)]
-                                 [:td {:style "border-left: 0;
-                                              padding: 3;"}
-                                  (form/drop-down {:id g-id}
-                                    g-id (for [x (range 0 100)]
-                                           [x x]) 0)]]
-                          ))] ; /table
-                       )))]] ; /tr
-                 ))) ; /for
-           [:tr
-            [:td {:colspan 4}
-             (btn-create lang)]])])))))
+                  (html
+                    [:header {:class "w3-container
+                                     w3-card w3-theme-l6"}
+                      [:h3 (key item)]]
+                    [:table
+                     [:tr
+                      [:td {:valign "top" :style "border-right: 0;"}
+                       (lbl-quantity q-id lang)]
+                      [:td {:valign "top" :style "border-left: 0;"}
+                       (form/drop-down {:id q-id}
+                         q-id (for [x (range 0 100)] [x x]) 0)]]]
+                    (with-form-table nil nil
+                      (for [og (sort
+                                 (group-by :option_group (val item)))]
+                        (if (not (empty? (key og)))
+                          (html
+                            [:table {:style "padding: 0;"}
+                             [:tr {:style "padding: 0;"}
+                              [:th {:style "padding: 3;" :colspan 2}
+                               (key og)]]
+                             (for [op (sort-by :option_name (val og))
+                                   :let [o-id (:id_option op)
+                                         g-id (str "o-"i-id"-"o-id)]]
+                               (html
+                                 [:tr {:style "padding: 0;"}
+                                  [:td {:style "padding: 3;
+                                               text-align: right;
+                                               border-right: 0;"}
+                                   (:option_name op)]
+                                  [:td {:style "border-left: 0;
+                                               padding: 3;"}
+                                   (form/drop-down {:id g-id}
+                                                   g-id (for [x (range 0 100)]
+                                                          [x x]) 0)]]
+                               ))] ; /table
+                          ))))) ; /html
+                  ))) ; /for
+           [:table
+            [:tr
+             [:td
+              (btn-create lang)]]]))
+      [:span {:id "bottom"} lt])))
 
 
 ;               (let [sect  (get menu g)
