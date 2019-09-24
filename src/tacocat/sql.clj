@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [clojure.java.jdbc :as j]
             [tacocat.str-var   :refer [translate-vars]]
+            [tacocat.log       :refer [log]]
             [tacocat.util      :refer :all]))
 
 (def connection-string "postgresql://tacocat:Tacocat2019@localhost:5432/tacocat")

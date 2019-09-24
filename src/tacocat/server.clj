@@ -9,6 +9,7 @@
             [bidi.ring                  :refer [make-handler]]
             [ring.util.request          :as    req]
             [tacocat.view               :as    view]
+            [tacocat.log                :refer [log]]
             [tacocat.util               :refer :all]
             [tacocat.controller         :as    controller]
             [tacocat.intl               :refer [get-string]]))
