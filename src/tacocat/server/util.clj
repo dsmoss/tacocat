@@ -77,7 +77,7 @@
       (catch Exception e
         (let [eid (controller/log-exception (get-user request) e)
               msg (.getMessage e)]
-          ;(println request)
+          ;(log request)
           (-> (response request (view/render-exception msg eid))
               (res/status 500)))))))
 

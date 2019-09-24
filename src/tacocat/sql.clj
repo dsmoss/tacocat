@@ -70,7 +70,7 @@
 (defmacro ins
   "Makes an insert"
   [user db & stuff]
-  ;(println (:name user) db stuff)
+  ;(log (:name user) db stuff)
   `(j/with-db-transaction [t-con# ~db]
      (let [ret# (j/insert! t-con# ~@stuff)]
        (log-action t-con# (:id ~user) "insert" (str ~@stuff))
@@ -258,19 +258,19 @@
   (j/with-db-transaction [t-con db-spec]
     (let [bill    (first (insert-new-bill user location t-con))
           id-bill (:id bill)]
-      ;(println "0=>" id-bill bill location data)
+      ;(log "0=>" id-bill bill location data)
       (doall
         (for [[i c o] data]
-          (do ;(println "  1=>" i c o)
+          (do ;(log "  1=>" i c o)
           (doall
             (for [n (range 0 c)
                   :let [bi    (first (insert-new-bill-item
                                        user id-bill i t-con))
                         id-bi (:id bi)]]
-              (do ;(println "    2=>" n id-bi)
+              (do ;(log "    2=>" n id-bi)
               (doall
                 (for [[oi c] o]
-                  (do ;(println "      3=>" oi c (< n c))
+                  (do ;(log "      3=>" oi c (< n c))
                   (if (< n c)
                     (ins user t-con :bill_item_option
                          {:id_bill_item id-bi
@@ -804,7 +804,7 @@
             ; Log in new user
             (ins {:id user-id} t-con :app_user_ip_addr
                  {:ip_addr ip-addr :id_app_user user-id})))
-        (println "User" user-id "tred to log in, but is not enabled")))))
+        (log "User" user-id "tred to log in, but is not enabled")))))
 
 (defn retrieve-user-permissions
   "Finds permissions allocated to user"
@@ -1167,7 +1167,7 @@
 (defn retrieve-internationalised-string
   "Find the value of an internationalised string"
   ([k lang default db]
-   ;(println "k" k "lang" lang "default" default)
+   ;(log "k" k "lang" lang "default" default)
    (let [l (if (nil? lang)
              (retrieve-app-data-val "default-language" db)
              lang)
@@ -1287,11 +1287,11 @@
 (defn insert-debt
   "Inserts a debt to the db"
   [user id-creditor amount concept]
-  ;(println (:name user) id-creditor amount concept)
+  ;(log (:name user) id-creditor amount concept)
   (let [concept (if (empty? concept)
                   (retrieve-internationalised-string "str-debt")
                   concept)]
-    ;(println user id-creditor amount concept)
+    ;(log user id-creditor amount concept)
     (ins user db-spec :debt
          {:id_creditor id-creditor
           :amount      amount

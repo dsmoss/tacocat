@@ -2,6 +2,7 @@
   (:gen-class)
   (:require [tacocat.sql  :as    sql]
             [tacocat.util :refer :all]
+            [tacocat.log  :refer [log]]
             [tacocat.intl :refer [get-string]]))
 
 (defn log-exception
@@ -23,7 +24,7 @@
 (defn make-close
   "Closes the current period"
   [user str-register str-close]
-  (println "Closing current period")
+  (log "Closing current period")
   (sql/insert-new-close user str-register str-close))
 
 (defn copy-bill-item
@@ -34,7 +35,7 @@
 (defn edit-bill-location
   "Edits the location for a bill"
   [user id location]
-  (println "Changing bill" id "to" location)
+  (log "Changing bill" id "to" location)
   (sql/update-bill-location
     user
     (int-or-null id)
@@ -43,19 +44,19 @@
 (defn set-receipt
   "Sets the receipt image for an expense"
   [user id image]
-  (println "Setting receipt for" id)
+  (log "Setting receipt for" id)
   (sql/update-expense-receipt user (int-or-null id) image))
 
 (defn set-services-receipt
   "Sets the receipt for a service"
   [user id image]
-  (println "Setting receipt for services" id)
+  (log "Setting receipt for services" id)
   (sql/update-services-receipt user (int-or-null id) image))
 
 (defn add-expense
   "Adds an expense to the database"
   [user concept amount image]
-  (println "Adding expense of" amount "for" concept)
+  (log "Adding expense of" amount "for" concept)
   (sql/insert-new-expense
     user
     concept
@@ -65,13 +66,13 @@
 (defn add-bill
   "Adds a new bill to the system"
   [user location]
-  (println "Adding a bill for" location)
+  (log "Adding a bill for" location)
   (sql/insert-new-bill user (str location)))
 
 (defn delete-bill-item
   "Deletes a bill item"
   [user id]
-  (println "Deleting bill item" id)
+  (log "Deleting bill item" id)
   (sql/delete-bill-item-by-id
     user
     (int-or-null id)))
@@ -79,7 +80,7 @@
 (defn charge-bill
   "Sets a bill to paid and related actions"
   [user id-bill charge]
-  (println "Paying" charge "for bill" id-bill)
+  (log "Paying" charge "for bill" id-bill)
   (sql/insert-new-intake
     user
     (int-or-null id-bill)
@@ -88,7 +89,7 @@
 (defn set-options
   "Sets the options for a bill item"
   [user id-bill-item options]
-  (println "Setting options" options "for" id-bill-item)
+  (log "Setting options" options "for" id-bill-item)
   (sql/update-options-for-bill-item
     user
     (int-or-null id-bill-item)
@@ -98,13 +99,13 @@
 (defn change-app-options
   "Changes the admin options"
   [user options]
-  (println "Setting options" options)
+  (log "Setting options" options)
   (sql/update-app-options user options))
 
 (defn add-service-charge
   "Add a services charge"
   [user concept amount image]
-  (println "Adding" amount "services charge for" concept)
+  (log "Adding" amount "services charge for" concept)
   (sql/insert-services-charge
     user
     concept
@@ -114,7 +115,7 @@
 (defn set-person
   "Sets the person attribute of a bill item"
   [user id-bill-item person]
-  (println "Setting person for" id-bill-item "to" person)
+  (log "Setting person for" id-bill-item "to" person)
   (sql/update-person-for-bill-item
     user
     (int-or-null id-bill-item)
@@ -123,7 +124,7 @@
 (defn add-item
   "Adds an item to a bill"
   [user id-bill id-item]
-  (println "Adding item" id-item "to bill" id-bill)
+  (log "Adding item" id-item "to bill" id-bill)
   (sql/insert-new-bill-item
     user
     (int-or-null id-bill)
@@ -132,7 +133,7 @@
 (defn set-charge-override
   "Sets the price for a bill item"
   [user id charge-override]
-  (println "Changing price for" id "to" charge-override)
+  (log "Changing price for" id "to" charge-override)
   (sql/update-charge-override-for-bill-item
     user
     (int-or-null id)
@@ -142,7 +143,7 @@
   "Sets the item attribute of a bill item.
   Note: this erases options and charge override"
   [user id-bill-item id-item]
-  (println "Setting item for" id-bill-item "to" id-item)
+  (log "Setting item for" id-bill-item "to" id-item)
   (sql/update-item-for-bill-item
     user
     (int-or-null id-bill-item)
@@ -151,19 +152,19 @@
 (defn perform-login
   "Log the user into the app"
   [user-name password ip-addr]
-  (println "Login:" user-name "for" ip-addr)
+  (log "Login:" user-name "for" ip-addr)
   (sql/insert-app-login user-name password ip-addr))
 
 (defn get-logged-in-user
   "Gets the currently logged-in user"
   [ip-addr]
-  ;(println "Getting logged-in user")
+  ;(log "Getting logged-in user")
   (sql/retrieve-logged-in-user ip-addr))
 
 (defn change-stock-status
   "Set an item's is_stock flag"
   [user id-item set-true?]
-  (println "Setting item" id-item "in-stock" set-true?)
+  (log "Setting item" id-item "in-stock" set-true?)
   (sql/update-item-set-in-stock
     user
     (int-or-null id-item)
@@ -174,31 +175,31 @@
 (defn add-new-user
   "Adds a user to the database"
   [user username uname password user-img]
-  (println "Adding user" username "(" uname ")" user-img)
+  (log "Adding user" username "(" uname ")" user-img)
   (sql/insert-new-user user username uname password user-img))
 
 (defn change-user-picture
   "Changes a user picture"
   [user id image]
-  (println "Changing picture for" id)
+  (log "Changing picture for" id)
   (sql/update-user-picture user (int-or-null id) image))
 
 (defn change-user-password
   "Changes a users password"
   [user id password]
-  (println "Changing password for" id)
+  (log "Changing password for" id)
   (sql/set-password-for-user user (int-or-null id) password))
 
 (defn change-user-name
   "Changes the users full name"
   [user id uname]
-  (println "Setting name of" id "to" uname)
+  (log "Setting name of" id "to" uname)
   (sql/update-user-name user (int-or-null id) uname))
 
 (defn assign-user-roles
   "Assign a set of roles to a uer"
   [user id roles]
-  (println "Setting user" id "Roles" roles)
+  (log "Setting user" id "Roles" roles)
   (sql/set-user-roles 
     user
     (int-or-null id)
@@ -210,7 +211,7 @@
 (defn set-role-permission
   "Sets a permission for a role"
   [user id-role id-perm set-true?]
-  (println "Setting permission" id-perm
+  (log "Setting permission" id-perm
            "to role" id-role "as" set-true?)
   (let [set-true? (bool-or-null set-true?)
         id-role   (int-or-null id-role)
@@ -224,19 +225,19 @@
 (defn delete-user
   "Deletes a user"
   [user id]
-  (println "Deleting user" id)
+  (log "Deleting user" id)
   (sql/delete-user user (int-or-null id)))
 
 (defn add-new-role
   "Adds a role"
   [user role]
-  (println "Adding role" role)
+  (log "Adding role" role)
   (sql/insert-role user role))
 
 (defn add-new-item
   "Adds an item"
   [user item-name menu-group amount]
-  (println "Adding item" menu-group 
+  (log "Adding item" menu-group 
            "/" item-name "for" amount)
   (sql/insert-new-item
     user
@@ -251,7 +252,7 @@
 (defn set-item-menu-group
   "Sets the menu group for an item"
   [user id menu-group]
-  (println "Setting group" menu-group "for item" id)
+  (log "Setting group" menu-group "for item" id)
   (sql/update-item-menu-group
     user
     (int-or-null id)
@@ -260,13 +261,13 @@
 (defn change-item-name
   "Set the name of an item"
   [user id iname]
-  (println "Setting name of item" id "to" iname)
+  (log "Setting name of item" id "to" iname)
   (sql/update-item-name user (int-or-null id) iname))
 
 (defn set-item-charge
   "Sets the price of an item"
   [user id charge]
-  (println "Setting charge of" charge "for item" id)
+  (log "Setting charge of" charge "for item" id)
   (sql/update-item-charge
     user
     (int-or-null id)
@@ -275,7 +276,7 @@
 (defn set-option-in-stock
   "Sets the in_stock flag for an option"
   [user id in-stock?]
-  (println "Setting option" id "in_stock to" in-stock?)
+  (log "Setting option" id "in_stock to" in-stock?)
   (sql/update-option-in-stock
     user
     (int-or-null id)
@@ -284,7 +285,7 @@
 (defn set-option-charge
   "Sets the extra charge for an option"
   [user id charge]
-  (println "Setting extra charge for option" id "to" charge)
+  (log "Setting extra charge for option" id "to" charge)
   (sql/update-option-charge
     user
     (int-or-null id)
@@ -293,13 +294,13 @@
 (defn delete-item
   "Deletes an item"
   [user id]
-  (println "Deleting item" id)
+  (log "Deleting item" id)
   (sql/delete-item user (int-or-null id)))
 
 (defn set-option-group
   "Sets the option group for an option"
   [user id option-group]
-  (println "Setting option group for" id "to" option-group)
+  (log "Setting option group for" id "to" option-group)
   (sql/update-option-group
     user
     (int-or-null id)
@@ -308,13 +309,13 @@
 (defn set-option-name
   "Sets the name for an option"
   [user id oname]
-  (println "Setting option name to" oname "for option" id)
+  (log "Setting option name to" oname "for option" id)
   (sql/update-option-name user (int-or-null id) oname))
 
 (defn add-option-to-item
   "Adds an option to an item"
   [user id add-op]
-  (println "Adding option" add-op "to item" id)
+  (log "Adding option" add-op "to item" id)
   (sql/insert-item-option
     user
     (int-or-null id)
@@ -323,7 +324,7 @@
 (defn remove-option-from-item
   "Removes an option from an item"
   [user id rm-op]
-  (println "Removing option" rm-op "from item" id)
+  (log "Removing option" rm-op "from item" id)
   (sql/delete-item-option
     user
     (int-or-null id)
@@ -332,32 +333,32 @@
 (defn add-option-group
   "Create a new option group"
   [user og-name]
-  (println "Adding option group" og-name)
+  (log "Adding option group" og-name)
   (sql/insert-option-group user og-name))
 
 (defn change-user-enabled
   "Sets the enabled flag on a user"
   [user id enabled]
-  (println "Setting enabled to" enabled "for user" id)
+  (log "Setting enabled to" enabled "for user" id)
   (sql/update-user-enabled
     user (int-or-null id) (bool-or-null enabled)))
 
 (defn change-user-language
   "Sets the language of a user"
   [user id language]
-  (println "Setting language of" id "to" language)
+  (log "Setting language of" id "to" language)
   (sql/update-user-language user (int-or-null id) language))
 
 (defn set-translation
   "Sets internationalisation for a key"
   [user key-name lang value]
-  (println "Setting" key-name "(" lang ") to" value)
+  (log "Setting" key-name "(" lang ") to" value)
   (sql/insert-intl user key-name lang value))
 
 (defn add-option
   "Add an option"
   [user id o-name o-group]
-  (println "Adding option" o-name "in" o-group)
+  (log "Adding option" o-name "in" o-group)
   (add-option-to-item
     user
     id
@@ -368,26 +369,26 @@
 (defn delete-role
   "Deletes a role"
   [user id]
-  (println "Deleting role" id)
+  (log "Deleting role" id)
   (sql/delete-role user (int-or-null id)))
 
 (defn add-creditor
   "Adds a creditor"
   [user creditor]
-  (println "Add Creditor" creditor)
+  (log "Add Creditor" creditor)
   (sql/insert-creditor user creditor))
 
 (defn add-debt
   "Add a debt to the system"
   [user creditor amount]
-  (println "Debt for" creditor "of" amount)
+  (log "Debt for" creditor "of" amount)
   (sql/insert-debt
     user (int-or-null creditor) (* -1 (float-or-null amount)) nil))
 
 (defn add-debt-payment
   "Add a debt payment to the system"
   [user creditor amount concept image]
-  (println "Payment of" amount "for" creditor "because" concept)
+  (log "Payment of" amount "for" creditor "because" concept)
   (let [creditor (int-or-null creditor)
         amount   (float-or-null amount)
         cr       (sql/retrieve-creditor-by-id creditor)]
@@ -397,7 +398,7 @@
 (defn merge-bills
   "Merges the first bill into the second"
   [user id-from id-to]
-  (println "Merging" id-from "into" id-to)
+  (log "Merging" id-from "into" id-to)
   (sql/update-bill-item-bill-id-and-delete-bill
     user (int-or-null id-from) (int-or-null id-to)))
 
@@ -427,5 +428,5 @@
                               (count-fn %))
                            opts))))
                    (filter #(re-matches #"i-\d+" %) ks))]
-    (println "Making bill for" location "with" items)
+    (log "Making bill for" location "with" items)
     (sql/insert-populated-bill user location items)))

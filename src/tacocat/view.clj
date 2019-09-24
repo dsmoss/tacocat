@@ -7,6 +7,7 @@
             [base64-clj.core   :as    b64]
             [tacocat.util      :refer :all]
             [tacocat.sql       :as    sql]
+            [tacocat.log       :refer [log]]
             [tacocat.intl      :refer [get-string]]))
 
 (defn render-index
@@ -1823,7 +1824,7 @@
 ;               (let [sect  (get menu g)
 ;                     items (group-by :option_group (get menu g))
 ;                     ogrs  (sort (keys items))]
-;                 (println s menu sect items ogrs)
+;                 (log s menu sect items ogrs)
 ;                 (for [og ogrs]
 ;                   [:tr
 ;                    [:th og]

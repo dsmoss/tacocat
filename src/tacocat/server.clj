@@ -16,13 +16,13 @@
 (defn handle-index
   "Index Page"
   [request]
-  ;(println request)
+  ;(log request)
   (response request view/render-index))
 
 (defn handle-bills
   "Display the bills page"
   [request]
-  ;(println request)
+  ;(log request)
   (let [{location   "bill-location"
          merge-into "merge-location"
          merge-bill "merge-bill"} (:params request)
@@ -45,7 +45,7 @@
 (defn handle-single-bill
   "Shows data for a particular bill"
   [request]
-  ;(println request)
+  ;(log request)
   (let [params                           (:params request)
         {person          "set-person"
          id-item         "set-item"
@@ -98,7 +98,7 @@
 (defn handle-set-person
   "Changes the person a bill item is asigned to"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "assign-bill-item-to-person"
     (view/render-set-person (request-id request))))
@@ -106,7 +106,7 @@
 (defn handle-charge-override
   "Changes the charge for a bill item"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "change-bill-item-price"
     (view/render-set-charge-override (request-id request))))
@@ -114,7 +114,7 @@
 (defn handle-set-bill-item
   "Changes an item in the bill"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "change-bill-item"
     (view/render-set-bill-item (request-id request))))
@@ -122,7 +122,7 @@
 (defn handle-set-bill-item-options
   "Changes the options for a bill item"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "set-options-to-bill-item"
     (view/render-set-bill-item-options (request-id request))))
@@ -130,7 +130,7 @@
 (defn handle-delete-bill-item
   "Shows the page to delete an item from the bill"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "delete-bill-item"
     (view/render-delete-bill-item (request-id request))))
@@ -138,7 +138,7 @@
 (defn handle-add-item
   "Adds an item to the bill"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "create-bill-item"
     (view/render-add-item (request-id request))))
@@ -146,7 +146,7 @@
 (defn handle-charge-bill
   "Closes a bill"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "charge-bill"
     (view/render-charge-bill (request-id request))))
@@ -154,28 +154,28 @@
 (defn handle-new-expense
   "Show the expense addition page"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "add-expense" view/render-new-expense))
 
 (defn handle-new-bill
   "Add a new bill to the system"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "create-new-bill" view/render-new-bill))
 
 (defn handle-old-bills
   "Show closed bills"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "list-closed-bills" view/render-old-bills))
 
 (defn handle-closed-bill
   "Show closed bills"
   [request]
-  ;(println request)
+  ;(log request)
   (let [{charge   "bill-charge"
          id-bill  "bill-id"}    (:params request)]
     (with-check-permissions
@@ -189,7 +189,7 @@
 (defn handle-accts
   "Show the accounts page"
   [request]
-  ;(println request)
+  ;(log request)
   (let [{concept "concept"
          image   "image"
          amount  "amount"} (:params request)]
@@ -203,7 +203,7 @@
 (defn handle-edit-bill-location
   "Show the edit bill location"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "change-bill-location"
     (view/render-edit-bill-location (request-id request))))
@@ -211,14 +211,14 @@
 (defn handle-close-acct
   "Show the close account page"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "close-accounts" view/render-close-acct))
 
 (defn handle-previous-closes
   "Shows the previous closes page"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "list-closed-accounts" view/render-previous-closes
     {:trigger    "make-close"
@@ -232,7 +232,7 @@
 (defn handle-single-close
   "Shows a single close item"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "view-closed-account"
     (view/render-close (request-id request))))
@@ -240,7 +240,7 @@
 (defn handle-services
   "Shows the services screen"
   [request]
-  ;(println request)
+  ;(log request)
   (let [{concept "concept"
          image   "image"
          amount  "amount"} (:params request)]
@@ -254,14 +254,14 @@
 (defn handle-closed-services
   "Shows the services screen"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "list-closed-services" view/render-closed-services))
 
 (defn handle-services-for-close
   "Shows services linked to a past close"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "view-closed-services"
     (view/render-services-for-close (request-id request))))
@@ -269,14 +269,14 @@
 (defn handle-add-services-expense
   "Shows the form to add a services expense"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "add-services-expense" view/render-add-services-expense))
 
 (defn handle-admin-options
   "Shows the admin options page"
   [request]
-  ;(println request)
+  ;(log request)
   (with-check-permissions
     request "view-app-values" view/render-app-options
     {:trigger    "make-admin-changes"
@@ -287,19 +287,19 @@
 (defn handle-admin
   "Shows the admin page"
   [request]
-  ;(println request)
+  ;(log request)
   (response request view/render-admin))
 
 (defn handle-login
   "Shows the login page"
   [request]
-  ;(println request)
+  ;(log request)
   (response request view/render-login))
 
 (defn handle-user-info
   "Shows the logged-in user info or an error page"
   [request]
-  ;(println request)
+  ;(log request)
   ; :params {set-user-roles , 1 true, 3 true, 5 true, :id 1}
   (let [params                 (:params request)
         {user-name "user-name"
@@ -368,7 +368,7 @@
 (defn handle-list-users
   "Shows a page with all the registered users and related actions"
   [request]
-  ;(println request)
+  ;(log request)
   (let [{username   "username"
          user-img   "img"
          uname      "name"
@@ -395,7 +395,7 @@
 (defn handle-list-roles
   "Shows a page with all roles"
   [request]
-  ;(println request)
+  ;(log request)
   (let [params                  (-> request :params)
         {role    "role"
          rm-role "delete-role"} params]
@@ -413,7 +413,7 @@
 (defn handle-list-items
   "Shows the items page"
   [request]
-  ;(println request)
+  ;(log request)
   (let [{change-in-stock "change-in-stock"
          set-true?       change-in-stock
          item-name       "item-name"
@@ -498,7 +498,7 @@
 (defn handle-view-role
   "Shows a roles info"
   [request]
-  ;(println requet)
+  ;(log requet)
   (let [params                         (-> request :params)
         id                             (-> params :id)
         {perm-id   "change-permission"
@@ -537,7 +537,7 @@
 (defn handle-view-item
   "Shows the item screen"
   [request]
-  ;(println request)
+  ;(log request)
   (let [params                                 (-> request :params)
         id                                     (-> params :id)
         {charge      "amount"
@@ -661,7 +661,7 @@
 (defn handle-intl
   "Shows the internationalisation screen"
   [request]
-  ;(println request)
+  ;(log request)
   (let [{lang-to   "lang-to"
          lang-from "lang-from"
          key-name  "translate"
@@ -677,7 +677,7 @@
 (defn handle-system
   "Shows the System page"
   [request]
-  ;(println request)
+  ;(log request)
   (response request view/render-system))
 
 (defn handle-error-log
@@ -700,7 +700,7 @@
 (defn handle-debts
   "Shows the debts page"
   [request]
-  ;(println request)
+  ;(log request)
   (let [user                 (get-user request)
         {creditor "creditor"
          amount   "amount"

@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as    component]
             [tacocat.server             :as    server]
             [tacocat.store              :as    store]
+            [tacocat.log                :refer [log]]
             [clojure.tools.logging      :refer [error]]))
 
 (def ^:redef system
@@ -33,4 +34,4 @@
   "Start system"
   []
   (alter-var-root #'system component/start-system)
-  (println "System started"))
+  (log "System started"))
