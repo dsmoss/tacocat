@@ -1,11 +1,12 @@
 (ns tacocat.view.util
   (:gen-class)
-  (:require [hiccup.page  :as    page]
-            [hiccup.form  :as    form]
-            [hiccup.core  :refer [html h]]
-            [tacocat.util :refer :all]
-            [tacocat.sql  :as    sql]
-            [tacocat.intl :refer [get-string]]))
+  (:require [hiccup.page  :as     page]
+            [hiccup.form  :as     form]
+            [hiccup.core  :refer  [html h]]
+            [tacocat.util :refer  :all]
+            [tacocat.sql  :as     sql]
+            [tacocat.intl :refer  [get-string]]
+            [tacocat.cache :refer [with-cache]]))
 
 (defn make-link
   "Makes the link form"
@@ -356,17 +357,29 @@
 
   Each function must be able to take two arguments:
   The column content and the context"
-  [lang columns column-display functions list-of-maps]
-  (html
-    [:table
-     [:tr
-      (for [x column-display]
-        (html [:th {:valign "top"} (h (get-string x {} lang))]))]
-     (for [i list-of-maps]
-       (html
+  [lang context columns column-display functions list-of-maps]
+  (with-cache context
+    (fn [lang columns column-display list-of-maps]
+      (html
+        [:table
          [:tr
-          (for [[c f] (map list columns functions)]
-            (html [:td {:valign "top"} (f (get i c) i)]))]))]))
+          (doall
+            (for [x column-display]
+              (html
+                [:th {:valign "top"} (h (get-string x {} lang))])))]
+         (doall
+           (for [i list-of-maps]
+             (with-cache (str context ":tr")
+               (fn [i]
+                 (html
+                   [:tr
+                    (doall
+                      (for [[c f] (map list columns functions)]
+                        (html
+                          [:td {:valign "top"}
+                           (f (get i c) i)])))]))
+               i)))]))
+    lang columns column-display list-of-maps))
 
 (defn format-date
   "Gets the format for a date"
@@ -400,7 +413,7 @@
   "Formats a list of bills"
   [user bill-link-root bill-data editable?]
   (let [lang (:language user)]
-    (with-table lang
+    (with-table lang "format-bill-list"
       [:date      :location      :charge      :id]
       ["str-date" "str-location" "str-charge" ""]
       [(fn [d _] (format-date d))
@@ -421,7 +434,7 @@
 (defn make-services-table
   "Makes a services table"
   [lang services-resultset]
-  (with-table lang
+  (with-table lang "make-services-table"
     [:date      :concept      :amount      :running_total    :receipt_filename]
     ["str-date" "str-concept" "str-charge" "str-new-balance" ""]
     [(fn [d _] (format-date d))
@@ -521,7 +534,7 @@
 (defn with-options-table
   "Make a table for showing item options"
   [lang id options action]
-  (with-table lang
+  (with-table lang "with-options-table"
     [:name        :extra_charge :in_stock       :id]
     ["str-option" "str-charge"  "str-in-stock"  ""]
     [(fn [n {i :id g :option_group}]

@@ -22,13 +22,22 @@
       :remote-addr
       controller/find-logged-in-user))
 
+(defn log
+  "Log stuff to stdout with a timestamp"
+  [& stuff]
+  (apply (partial println (-> (java.util.Date.) str)) stuff))
+
 (defmacro response
   "Returns the response form"
   [request fun]
-  `(-> ~request
-       get-user
-       ~fun
-       res/response))
+  `(do
+     (log \> (-> ~request :uri))
+     (let [r# (-> ~request
+                  get-user
+                  ~fun
+                  res/response)]
+       (log \< (-> ~request :uri))
+       r#)))
 
 (defn get-permissions
   "Gets the permissions to the logged-in user"

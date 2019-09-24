@@ -46,7 +46,7 @@
         [:h2 {:style "color: red;"}
          (get-string "str-insufficient-permissions" {} lang)]
         (if (not (empty? permissions-required))
-          (with-table lang
+          (with-table lang "NOT-ALLOWED"
             [:permissions]
             [(get-string "str-permissions" {} lang)]
             [(fn [p _] (map (fn [p]
@@ -201,7 +201,7 @@
                   [(make-link (str "/change-user-language/" id)
                               (get-string
                                 "ln-change-language/language" u lang))])])
-             (with-table lang
+             (with-table lang "render-user-info"
                [:roles      :permissions      :machines]
                ["str-roles" "str-permissions" "str-machines"]
                [(fn [r _] (map (fn [r]
@@ -239,7 +239,7 @@
         [:h5
          (with-form (str "/user-info/" id)
            (form/hidden-field {:value true} "set-user-roles")
-           (with-table lang
+           (with-table lang "render-change-user-roles"
              [:name      :id]
              ["str-role" ""]
              [(fn [n r] (lbl n (:id r) lang))
@@ -259,7 +259,7 @@
     (with-page rname
       user
       [:admin :list-roles]
-      (with-table lang
+      (with-table lang "render-view-role"
         [:name            :id]
         ["str-permission" ""]
         [(fn [n r] 
@@ -513,7 +513,7 @@
         (if (and (not (nil? lang-from))
                  (not (nil? lang-to))
                  (not (= lang-from lang-to)))
-          (with-table lang
+          (with-table lang "render-intl"
             [:key        :src_val :key          :dst_val]
             ["str-label" name-f   "str-default" name-t]
             [(fn [k _] (html [:small k]))
@@ -572,7 +572,7 @@
     (with-page (get-string "str-items" {} lang)
       user
       [:admin :list-items]
-      (with-table lang
+      (with-table lang "render-list-items"
         [:name      :menu_group      :charge      :in_stock      :id]
         ["str-item" "str-menu-group" "str-charge" "str-in-stock" ""]
         [(fn [p i] (make-link
@@ -608,7 +608,7 @@
     (with-page (get-string "ln-closed-services" {} lang)
       user
       [:home :services]
-      (with-table lang
+      (with-table lang "render-closed-services"
         [:date      :id]
         ["str-date" "str-close"]
         [(fn [d _] (format-date d))
@@ -707,7 +707,7 @@
     (with-page (get-string "str-closes" {} lang)
       user
       [:home :accts]
-      (with-table lang
+      (with-table lang "render-previous-closes"
         [:date      :expense_amount :intake_amount :earnings     :id]
         ["str-date" "str-expenses"  "str-intake"   "str-earning" ""]
         [(fn [d _] (format-date d))
@@ -772,7 +772,7 @@
                   :small))
         op-cnt #(sql/retrieve-bill-item-option-count %)]
     (html
-      (with-table lang
+      (with-table lang "get-bill-items"
         [:date      :person      :item      :charge      :id :id]
         ["str-time" "str-person" "str-item" "str-charge" ""  ""]
         [(fn [t _] (format-time t))
@@ -835,7 +835,7 @@
 (defn get-old-bill-items
   "Returns a form with the bill items of a closed bill"
   ([user id tag sep]
-   (with-table (:language user)
+   (with-table (:language user) "get-old-bill-items"
      [:date  :person  :item      :charge]
      [""     "str-p#" "str-item" "str-charge"]
      [(fn [t _] (format-time t tag))
@@ -891,7 +891,7 @@
         [:p date]
         (format-money charge (get-string "fmt-total" {} lang) :h2)
         (get-old-bill-items user id)
-        (with-table lang
+        (with-table lang "render-closed-bill"
           [:person      :charge]
           ["str-person" "str-charge"]
           [(fn [p _] (html
@@ -922,7 +922,7 @@
         (let [per-person (sql/retrieve-bill-charges-per-person id)]
           (if (= 1 (count per-person))
             nil
-            (with-table lang
+            (with-table lang "render-print-bill"
               [:person      :charge]
               ["str-person" "str-charge"]
               [(fn [p _] (html
@@ -1069,7 +1069,7 @@
                                (group-by :option_group
                                          valid-options)))
                  option-groups (keys oo)]
-             (with-table lang
+             (with-table lang "render-set-bill-item-options"
                option-groups
                option-groups
                (repeat (count oo) (fn [k _] k))
@@ -1220,7 +1220,7 @@
       (format-money total (get-string "fmt-total" {} lang) :h2)
       (format-money expenses (get-string "fmt-expenses" {} lang))
       (format-money intakes (get-string "fmt-intakes" {} lang))
-      (with-table lang
+      (with-table lang "render-accts"
         [:date      :concept      :amount      :receipt_filename]
         ["str-date" "str-concept" "str-amount" ""]
         [(fn [d _] (format-date d))
@@ -1255,7 +1255,7 @@
                               (interpose ", "
                                 (sort
                                   (map :name roles)))))]
-        (with-table lang
+        (with-table lang "render-list-users"
           [:user_name :name           :id
            :id         :enabled       :id]
           ["str-user" "str-full-name" "str-password"
@@ -1289,7 +1289,7 @@
     (with-page (get-string "str-registerd-roles" {} lang)
       user
       [:admin :list-roles]
-      (with-table lang
+      (with-table lang "render-list-roles"
         [:name      :id               :id]
         ["str-role" "str-permissions" ""]
         [(fn [n r] (make-link (str "/view-role/" (:id r)) n))
@@ -1496,7 +1496,7 @@
                        (get-string "fmt-partners" {} lang))
          (format-money partner-take
                        (get-string "fmt-per-partner" {} lang))
-         (with-table lang
+         (with-table lang "render-close"
            [:date      :concept      :amount      :receipt_filename]
            ["str-date" "str-concept" "str-amount" ""]
            [(fn [d _] (format-date d))
@@ -1526,7 +1526,7 @@
       [:system]
       (html
         [:p (get-string "str-entries-limit" {} lang)]
-        (with-table lang
+        (with-table lang "render-log"
           [:date      :id_app_user  :action      :details]
           ["str-date" "str-user"    "str-action" "str-detail"]
           [(fn [d _] (html
@@ -1548,7 +1548,7 @@
       [:system]
       (html
         [:p (get-string "str-entries-limit" {} lang)]
-        (with-table lang
+        (with-table lang "render-error-list"
           [:date      :error_type      :id_cause      :id]
           ["str-date" "str-error-type" "str-cause" ""]
           [(fn [d _] (html [:small (format-full-date d :p)]))
@@ -1608,7 +1608,7 @@
     (with-page (get-string "ln-debts" {} lang)
       user
       [:home :debts]
-      (with-table lang
+      (with-table lang "render-debts"
         [:creditor      :amount      :id_creditor]
         ["str-creditor" "str-amount" ""]
         [(fn [c _] (html [:h5 c]))
@@ -1686,7 +1686,7 @@
       (format-money (-> debt :total)
                     (get-string "fmt-total" {} lang)
                     :h2)
-      (with-table lang
+      (with-table lang "render-debt-detaill"
         [:date      :concept      :amount]
         ["str-date" "str-concept" "str-amount"]
         [(fn [d _] (format-full-date d))
@@ -1712,7 +1712,7 @@
     (with-page (get-string "ln-sales" {} lang)
       user
       [:home :accts]
-      (with-table lang
+      (with-table lang "render-sales"
         [:item      :item        :options]
         ["str-item" "str-amount" "str-options"]
         [(fn [i _] (make-link (str "/view-item/" (-> i :id_item))
