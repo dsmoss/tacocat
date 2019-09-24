@@ -369,7 +369,7 @@
                 [:th {:valign "top"} (h (get-string x {} lang))])))]
          (doall
            (for [i list-of-maps]
-             (with-cache (str context ":tr")
+             (with-cache [context "tr"]
                (fn [i]
                  (html
                    [:tr

@@ -5,6 +5,7 @@
             [bidi.ring              :refer [resources-maybe
                                             resources]]
             [tacocat.view           :as    view]
+            [tacocat.log            :refer [log]]
             [tacocat.controller     :as    controller]))
 
 (def handle-icons (resources-maybe {:prefix "ico/"}))
@@ -21,11 +22,6 @@
   (-> request
       :remote-addr
       controller/find-logged-in-user))
-
-(defn log
-  "Log stuff to stdout with a timestamp"
-  [& stuff]
-  (apply (partial println (-> (java.util.Date.) str)) stuff))
 
 (defmacro response
   "Returns the response form"
