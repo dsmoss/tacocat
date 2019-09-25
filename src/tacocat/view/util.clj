@@ -101,17 +101,20 @@
 (defn make-link-table
   "Makes a link table"
   ([data lang m]
-   (let [c  (count data)
-         pc (float (/ 100 (if (= 0 c) 1 c)))]
-     (html
-       [:table {:style "width: 100%; border: 0; padding: 0;"}
-        [:tr {:style "padding: 0; border: 0;"}
-         (map (fn [{d :destination s :string}]
-                (html
-                  [:th {:width (str pc "%")
-                        :style "border: 0; padding: 0;"}
-                   (make-link d (get-string s m lang))]))
-              data)]])))
+   (with-cache "make-link-table"
+     (fn [data lang m]
+       (let [c  (count data)
+             pc (float (/ 100 (if (= 0 c) 1 c)))]
+         (html
+           [:table {:style "width: 100%; border: 0; padding: 0;"}
+            [:tr {:style "padding: 0; border: 0;"}
+             (map (fn [{d :destination s :string}]
+                    (html
+                      [:th {:width (str pc "%")
+                            :style "border: 0; padding: 0;"}
+                       (make-link d (get-string s m lang))]))
+                  data)]])))
+     data lang m))
   ([data lang]
    (make-link-table data lang {}))
   ([data]
@@ -149,69 +152,75 @@
    (with-form-table nil nil
      [:some :some])
    => [:table [:tr [:td some] [:td some]]]"
-  [[hs & ts] header & data]
-  (html
-    [:table {:class "form-table"}
-     (if (not (empty? header))
-       [:tr {:class "form-table"}
-        (for [[h s] (map list header (get-spans hs header))]
-          (html [:th {:valign "top"
-                      :class "form-table"
-                      :colspan s} h]))])
-     (for [r (map (fn [d s] (map list d s))
-                  data
-                  (get-spans-list ts data))]
-       (html
-         [:tr {:class "form-table"}
-          (for [[d s] r]
-            (html [:td {:valign "top"
-                        :class "form-table"
-                        :colspan s} d]))]))]))
+  [layout header & data]
+  (with-cache "with-form-table"
+    (fn [[hs & ts] header data]
+      (html
+        [:table {:class "form-table"}
+         (if (not (empty? header))
+           [:tr {:class "form-table"}
+            (for [[h s] (map list header (get-spans hs header))]
+              (html [:th {:valign "top"
+                          :class "form-table"
+                          :colspan s} h]))])
+         (for [r (map (fn [d s] (map list d s))
+                      data
+                      (get-spans-list ts data))]
+           (html
+             [:tr {:class "form-table"}
+              (for [[d s] r]
+                (html [:td {:valign "top"
+                            :class "form-table"
+                            :colspan s} d]))]))]))
+    layout header data))
 
 (defn main-head
   "normal page head tag"
   [font header theme]
-  (html
-    [:head
-     [:link {:rel     "apple-touch-icon"
-             :sizes   "180x180"
-             :href    "/apple-touch-icon.png"}]
-     [:link {:rel     "icon"
-             :type    "image/png"
-             :sizes   "32x32"
-             :href    "/favicon-32x32.png"}]
-     [:link {:rel     "icon"
-             :type    "image/png"
-             :sizes   "16x16"
-             :href    "/favicon-16x16.png"}]
-     [:link {:rel     "manifest"
-             :href    "/site.webmanifest"}]
-     [:link {:rel     "mask-icon"
-             :href    "/safari-pinned-tab.svg"
-             :color   "#5bbad5"}]
-     [:meta {:name    "msapplication-TileColor"
-             :content "#da532c"}]
-     [:meta {:name    "theme-color"
-             :content "#ffffff"}]
-     [:meta {:name    "viewport"
-             :content "width=device-width, initial-scale=1.0"}]
-     [:meta {:charset "UTF-8"}]
-     (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
-                       (str "https://www.w3schools.com/lib/" theme)
-                       (if (= (sql/retrieve-app-data-val "environment")
-                              "dev")
-                         (str "/css/style.css?" (rand))
-                         "/css/style.css")
-                       "/fonts/style.css")
-     [:style (str "h1, h2, h3, h4,
-                  h5, h6, div, p,
-                  th, td, tr {font-family: "
-                  (if (or (nil? font)
-                          (empty? font))
-                    ""
-                    (str \" font "\", "))
-                  "Verdana, sans-serif;}")]
-     [:title header]]))
+  (with-cache "main-head"
+    (fn [font header theme]
+      (html
+        [:head
+         [:link {:rel     "apple-touch-icon"
+                 :sizes   "180x180"
+                 :href    "/apple-touch-icon.png"}]
+         [:link {:rel     "icon"
+                 :type    "image/png"
+                 :sizes   "32x32"
+                 :href    "/favicon-32x32.png"}]
+         [:link {:rel     "icon"
+                 :type    "image/png"
+                 :sizes   "16x16"
+                 :href    "/favicon-16x16.png"}]
+         [:link {:rel     "manifest"
+                 :href    "/site.webmanifest"}]
+         [:link {:rel     "mask-icon"
+                 :href    "/safari-pinned-tab.svg"
+                 :color   "#5bbad5"}]
+         [:meta {:name    "msapplication-TileColor"
+                 :content "#da532c"}]
+         [:meta {:name    "theme-color"
+                 :content "#ffffff"}]
+         [:meta {:name    "viewport"
+                 :content "width=device-width, initial-scale=1.0"}]
+         [:meta {:charset "UTF-8"}]
+         (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
+                           (str "https://www.w3schools.com/lib/" theme)
+                           (if (= (sql/retrieve-app-data-val "environment")
+                                  "dev")
+                             (str "/css/style.css?" (rand))
+                             "/css/style.css")
+                           "/fonts/style.css")
+         [:style (str "h1, h2, h3, h4,
+                      h5, h6, div, p,
+                      th, td, tr {font-family: "
+                      (if (or (nil? font)
+                              (empty? font))
+                        ""
+                        (str \" font "\", "))
+                      "Verdana, sans-serif;}")]
+         [:title header]]))
+    font header theme))
 
 (defn with-page
   "Adds content to a page"
@@ -249,43 +258,46 @@
 (defn print-head
   "Head tag for printing"
   [font header]
-  (html
-    [:head
-     [:link {:rel     "apple-touch-icon"
-             :sizes   "180x180"
-             :href    "/apple-touch-icon.png"}]
-     [:link {:rel     "icon"
-             :type    "image/png"
-             :sizes   "32x32"
-             :href    "/favicon-32x32.png"}]
-     [:link {:rel     "icon"
-             :type    "image/png"
-             :sizes   "16x16"
-             :href    "/favicon-16x16.png"}]
-     [:link {:rel     "manifest"
-             :href    "/site.webmanifest"}]
-     [:link {:rel     "mask-icon"
-             :href    "/safari-pinned-tab.svg"
-             :color   "#5bbad5"}]
-     [:meta {:name    "msapplication-TileColor"
-             :content "#da532c"}]
-     [:meta {:name    "theme-color"
-             :content "#ffffff"}]
-     [:meta {:name    "viewport"
-             :content "width=device-width, initial-scale=1.0"}]
-     [:meta {:charset "UTF-8"}]
-     (page/include-css "/css/style.css"
-                       "/fonts/style.css"
-                       "/css/printing-style.css")
-     [:style (str "h1, h2, h3, h4,
-                  h5, h6, div, p,
-                  th, td, tr {font-family: "
-                  (if (or (nil? font)
-                          (empty? font))
-                    ""
-                    (str \" font "\", "))
-                  "Verdana, sans-serif;}")]
-     [:title header]]))
+  (with-cache "print-head"
+    (fn [font header]
+      (html
+        [:head
+         [:link {:rel     "apple-touch-icon"
+                 :sizes   "180x180"
+                 :href    "/apple-touch-icon.png"}]
+         [:link {:rel     "icon"
+                 :type    "image/png"
+                 :sizes   "32x32"
+                 :href    "/favicon-32x32.png"}]
+         [:link {:rel     "icon"
+                 :type    "image/png"
+                 :sizes   "16x16"
+                 :href    "/favicon-16x16.png"}]
+         [:link {:rel     "manifest"
+                 :href    "/site.webmanifest"}]
+         [:link {:rel     "mask-icon"
+                 :href    "/safari-pinned-tab.svg"
+                 :color   "#5bbad5"}]
+         [:meta {:name    "msapplication-TileColor"
+                 :content "#da532c"}]
+         [:meta {:name    "theme-color"
+                 :content "#ffffff"}]
+         [:meta {:name    "viewport"
+                 :content "width=device-width, initial-scale=1.0"}]
+         [:meta {:charset "UTF-8"}]
+         (page/include-css "/css/style.css"
+                           "/fonts/style.css"
+                           "/css/printing-style.css")
+         [:style (str "h1, h2, h3, h4,
+                      h5, h6, div, p,
+                      th, td, tr {font-family: "
+                      (if (or (nil? font)
+                              (empty? font))
+                        ""
+                        (str \" font "\", "))
+                      "Verdana, sans-serif;}")]
+         [:title header]]))
+    font header))
 
 (defn with-printing-page
   "Makes a page suitable for printing"
@@ -570,4 +582,58 @@
   "Returns a structure containing existing bills"
   [user]
   (format-bill-list user "/closed-bill/" (sql/retrieve-closed-bills) false))
+
+(defn get-menu-option-group-table
+  "Gets the option group table section of the menu"
+  [item i-id]
+  (with-form-table nil nil
+    (for [og (sort (group-by :option_group (val item)))]
+      (if (not (empty? (key og)))
+        (html
+          [:table {:style "padding: 0;"}
+           [:tr {:style "padding: 0;"}
+            [:th {:style "padding: 3;" :colspan 2}
+             (key og)]]
+           (for [op (sort-by :option_name (val og))
+                 :let [o-id (:id_option op)
+                       g-id (str "o-" i-id "-" o-id)]]
+             (html
+               [:tr {:style "padding: 0;"}
+                [:td {:style "text-align: right; border-right: 0;"}
+                 (:option_name op)]
+                [:td {:style "border-left: 0;"}
+                 (form/drop-down {:id g-id}
+                   g-id (for [x (range 0 100)] [x x]) 0)]]))])))))
+
+(defn get-menu-groups-section
+  "Get the menu group section of the menu"
+  [g ln-gr lang menu]
+  (with-cache "get-menu-groups-section"
+    (fn [g ln-gr lang menu]
+      (html
+        [:header {:class "w3-container w3-card w3-theme-l5"}
+         [:h2 {:id (get ln-gr g)} g]]
+        (with-form-table nil nil
+          [(make-link
+             "#top" (get-string "ln-top" {} lang))
+           (make-link
+             "#bottom" (get-string "ln-bottom" {} lang))])
+        (for [item (sort (group-by :item_name (get menu g)))
+              :let [i-id (:id_item (first (val item)))
+                    q-id (str "i-" i-id)]]
+          (with-cache ["get-menu-groups-section" "header"]
+            (fn [item i-id q-id lang]
+              (html
+                [:header {:class "w3-container w3-card w3-theme-l6"}
+                 [:h3 (key item)]]
+                [:table
+                 [:tr
+                  [:td {:valign "top" :style "border-right: 0;"}
+                   (lbl-quantity q-id lang)]
+                  [:td {:valign "top" :style "border-left: 0;"}
+                   (form/drop-down {:id q-id}
+                     q-id (for [x (range 0 100)] [x x]) 0)]]]
+                (get-menu-option-group-table item i-id)))
+            item i-id q-id lang))))
+    g ln-gr lang menu))
 

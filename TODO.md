@@ -6,4 +6,3 @@
 - Multi-option/mutex flag for item/options
 - Accept PDF for receipts
 - Fix Menu -> Options not getting set
-- Cache menu

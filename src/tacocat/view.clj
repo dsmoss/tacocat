@@ -1766,73 +1766,10 @@
             [:td {:style "border-left: 0;"}
              (tf "location")]]]
            (for [g groups]
-             (html
-               [:header {:class "w3-container w3-card w3-theme-l5"}
-                 [:h2 {:id (get ln-gr g)} g]]
-               (with-form-table nil nil
-                 [(make-link
-                    "#top" (get-string "ln-top" {} lang))
-                  (make-link
-                    "#bottom" (get-string "ln-bottom" {} lang))])
-                (for [item (sort (group-by :item_name (get menu g)))
-                     :let [i-id (:id_item (first (val item)))
-                           q-id (str "i-" i-id)]]
-                  (html
-                    [:header {:class "w3-container
-                                     w3-card w3-theme-l6"}
-                      [:h3 (key item)]]
-                    [:table
-                     [:tr
-                      [:td {:valign "top" :style "border-right: 0;"}
-                       (lbl-quantity q-id lang)]
-                      [:td {:valign "top" :style "border-left: 0;"}
-                       (form/drop-down {:id q-id}
-                         q-id (for [x (range 0 100)] [x x]) 0)]]]
-                    (with-form-table nil nil
-                      (for [og (sort
-                                 (group-by :option_group (val item)))]
-                        (if (not (empty? (key og)))
-                          (html
-                            [:table {:style "padding: 0;"}
-                             [:tr {:style "padding: 0;"}
-                              [:th {:style "padding: 3;" :colspan 2}
-                               (key og)]]
-                             (for [op (sort-by :option_name (val og))
-                                   :let [o-id (:id_option op)
-                                         g-id (str "o-"i-id"-"o-id)]]
-                               (html
-                                 [:tr {:style "padding: 0;"}
-                                  [:td {:style "padding: 3;
-                                               text-align: right;
-                                               border-right: 0;"}
-                                   (:option_name op)]
-                                  [:td {:style "border-left: 0;
-                                               padding: 3;"}
-                                   (form/drop-down {:id g-id}
-                                                   g-id (for [x (range 0 100)]
-                                                          [x x]) 0)]]
-                               ))] ; /table
-                          ))))) ; /html
-                  ))) ; /for
+             (get-menu-groups-section g ln-gr lang menu))
            [:table
             [:tr
              [:td
               (btn-create lang)]]]))
       [:span {:id "bottom"} lt])))
-
-
-;               (let [sect  (get menu g)
-;                     items (group-by :option_group (get menu g))
-;                     ogrs  (sort (keys items))]
-;                 (log s menu sect items ogrs)
-;                 (for [og ogrs]
-;                   [:tr
-;                    [:th og]
-;                    [:td (:item_name )]]))))])))))
-;
-;              (lbl "Quantity:" "quantity" lang)
-;              (form/drop-down {:id "quantity"} "quantity"
-;                              (for [x (range 0 100)]
-;                                [x x])
-;                              0)])
 
