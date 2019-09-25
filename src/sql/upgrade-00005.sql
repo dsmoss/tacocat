@@ -34,6 +34,9 @@ values ('ln-menu')
      , ('prm-merge-bill')
      , ('str-merge/location')
      , ('btn-merge')
+     , ('ln-top')
+     , ('ln-bottom')
+     , ('lbl-quantity')
 ;
 
 insert into intl (key, lang, val)
@@ -47,6 +50,12 @@ values ('ln-menu'           , 'es', 'Menú')
      , ('str-merge/location', 'en', 'Merge "%location" Bill')
      , ('btn-merge'         , 'es', 'Unir')
      , ('btn-merge'         , 'en', 'Merge')
+     , ('ln-top'            , 'es', 'Arriba')
+     , ('ln-bottom'         , 'es', 'Abajo')
+     , ('lbl-quantity'      , 'es', 'Cantidad:')
+     , ('ln-top'            , 'en', 'Top')
+     , ('ln-bottom'         , 'en', 'Bottom')
+     , ('lbl-quantity'      , 'en', 'Quantity:')
 ;
 
 insert into permission (name)
