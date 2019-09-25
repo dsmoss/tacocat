@@ -10,10 +10,10 @@
   (let [cached (get @store [context funargs])]
     (if cached
       (do
-        (log "From cache" context)
+        (log "Hit:" context)
         cached)
       (do
-        (log "Into cache" context funargs)
+        (log "Miss:" context)
         (let [res (apply fun funargs)]
           (do
             (swap! store assoc [context funargs] res)

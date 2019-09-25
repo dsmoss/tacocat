@@ -3,7 +3,8 @@
   (:require [tacocat.server.util        :refer :all]
             [com.stuartsierra.component :as    component]
             [ring.middleware.params     :refer [wrap-params]]
-            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+            [ring.middleware.multipart-params
+                                        :refer [wrap-multipart-params]]
             [aleph.http                 :as    http]
             [ring.util.response         :as    res]
             [bidi.ring                  :refer [make-handler]]
