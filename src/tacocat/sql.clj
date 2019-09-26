@@ -759,7 +759,12 @@
 (defn retrieve-app-data
   "Finds all values from the app_data table"
   ([c]
-   (j/query c ["select key, val, data_type from app_data"]))
+   (j/query c ["select key
+                     , val
+                     , data_type
+                from   app_data
+                order
+                  by   key"]))
   ([]
    (retrieve-app-data db-spec)))
 

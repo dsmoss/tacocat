@@ -140,7 +140,7 @@
 
 (defn with-form-table
   "Makes a table suitable for holding form items
-   (with-form-table [[1 2] [1 2] [2 1] nil] [:some :some]
+   (with-form-table lang [[1 2] [1 2] [2 1] nil] [:some :some]
      [:some :some]
      [:some :some]
      [:some :some :some])
@@ -149,11 +149,11 @@
               [:tr [:td {:colspan 2} some] [:td some]]
               [:tr [:td some] [:td some] [:td some]]]
    Or:
-   (with-form-table nil nil
+   (with-form-table lang nil nil
      [:some :some])
    => [:table [:tr [:td some] [:td some]]]"
-  [layout header & data]
-  (with-cache "with-form-table"
+  [lang layout header & data]
+  (with-cache ["with-form-table" lang]
     (fn [[hs & ts] header data]
       (html
         [:table {:class "form-table"}
@@ -246,9 +246,9 @@
         [:center
          [:h5
           (if (empty? user)
-            (with-form-table nil nil
+            (with-form-table lang nil nil
               [(make-link "/login" (get-string "ln-login" {} lang))])
-            (with-form-table nil nil
+            (with-form-table lang nil nil
               [(make-link
                  "/user-info" (get-string "ln-user-info" {} lang))
                (make-link
@@ -381,7 +381,7 @@
                 [:th {:valign "top"} (h (get-string x {} lang))])))]
          (doall
            (for [i list-of-maps]
-             (with-cache [context "tr"]
+             (with-cache [context lang "tr"]
                (fn [i]
                  (html
                    [:tr
@@ -433,7 +433,7 @@
                    (make-link (str "/edit-location/" (:id c)) l)
                    (html [:h5 l])))
        (fn [c _] (format-money c))
-       (fn [i _] (with-form-table nil nil
+       (fn [i _] (with-form-table lang nil nil
                    [(make-link
                       (str bill-link-root i)
                       (get-string "ln-view" {} lang))
@@ -555,7 +555,7 @@
      (fn [b o]
        (with-form (str "/view-item/" id)
          (form/hidden-field {:value (:id o)} "set-option-in-stock")
-         (with-form-table nil nil
+         (with-form-table lang nil nil
            [(format-bool b "set-option")
             (btn-change lang)])))
      action]
@@ -585,8 +585,8 @@
 
 (defn get-menu-option-group-table
   "Gets the option group table section of the menu"
-  [item i-id]
-  (with-form-table nil nil
+  [lang item i-id]
+  (with-form-table lang nil nil
     (for [og (sort (group-by :option_group (val item)))]
       (if (not (empty? (key og)))
         (html
@@ -613,7 +613,7 @@
       (html
         [:header {:class "w3-container w3-card w3-theme-l5"}
          [:h2 {:id (get ln-gr g)} g]]
-        (with-form-table nil nil
+        (with-form-table lang nil nil
           [(make-link
              "#top" (get-string "ln-top" {} lang))
            (make-link
@@ -633,7 +633,7 @@
                   [:td {:valign "top" :style "border-left: 0;"}
                    (form/drop-down {:id q-id}
                      q-id (for [x (range 0 100)] [x x]) 0)]]]
-                (get-menu-option-group-table item i-id)))
+                (get-menu-option-group-table lang item i-id)))
             item i-id q-id lang))))
     g ln-gr lang menu))
 
