@@ -16,9 +16,10 @@ select             {width:            200pt;
 .green             {color: green;}
 a:hover,
 input:hover,
-select:hover       {background-color: #555;
-                    color: white;}
-a, input,
+select:hover,
+summary:hover      {background-color: #555 !important;
+                    color: white !important;}
+a, input, summary
 label, select      {padding: 4pt;
                     width: 100%;
 	            height: 100%;
@@ -26,7 +27,8 @@ label, select      {padding: 4pt;
 	            text-decoration: none;
                     background-color: inherit;}
 label              {text-align: right;}
-a, input, select   {border-right:  1pt solid rgba(3, 3, 3, 0.2);
+a, summary,
+input, select      {border-right:  1pt solid rgba(3, 3, 3, 0.2);
 	            border-bottom: 1pt solid rgba(3, 3, 3, 0.2);
 	            border-left: 1pt solid rgba(220, 220, 220, 0.3);
 	            border-top:  1pt solid rgba(220, 220, 220, 0.3);}
@@ -62,3 +64,7 @@ pre                {text-align: left;}
 .expand,
 .expand table      {width: 100%;
                     text-align: center;}
+summary::-webkit-details-marker,
+summary::marker    {display: none;}
+details > summary:first-of-type
+                   {list-style-type: none;}

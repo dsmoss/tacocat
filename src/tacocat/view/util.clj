@@ -620,29 +620,34 @@
   (with-cache "get-menu-groups-section"
     (fn [g ln-gr lang menu]
       (html
-        [:header {:class "w3-container w3-card w3-theme-l5"}
-         [:h2 {:id (get ln-gr g)} g]]
-        (with-form-table lang nil nil
-          [(make-link
-             "#top" (get-string "ln-top" {} lang))
-           (make-link
-             "#bottom" (get-string "ln-bottom" {} lang))])
-        (for [item (sort (group-by :item_name (get menu g)))
-              :let [i-id (:id_item (first (val item)))
-                    q-id (str "i-" i-id)]]
-          (with-cache ["get-menu-groups-section" "header"]
-            (fn [item i-id q-id lang]
-              (html
-                [:header {:class "w3-container w3-card w3-theme-l6"}
-                 [:h3 (key item)]]
-                [:table
-                 [:tr
-                  [:td {:valign "top" :style "border-right: 0;"}
-                   (lbl-quantity q-id lang)]
-                  [:td {:valign "top" :style "border-left: 0;"}
-                   (form/drop-down {:id q-id}
-                     q-id (for [x (range 0 100)] [x x]) 0)]]]
-                (get-menu-option-group-table lang item i-id)))
-            item i-id q-id lang))))
+        [:details
+         [:summary {:class "w3-container w3-card w3-theme-l5"
+                    :style "text-align: left;"}
+          [:h2 {:id (get ln-gr g)} g]]
+         (with-form-table lang nil nil
+           [(make-link
+              "#top" (get-string "ln-top" {} lang))
+            (make-link
+              "#bottom" (get-string "ln-bottom" {} lang))])
+         (for [item (sort (group-by :item_name (get menu g)))
+               :let [i-id (:id_item (first (val item)))
+                     q-id (str "i-" i-id)]]
+           (with-cache ["get-menu-groups-section" "header"]
+             (fn [item i-id q-id lang]
+               (let [sect-id (clojure.string/replace
+                               (str g \- (key item)) #"\s+" "-")]
+                 (html
+                   [:details
+                    [:summary
+                     {:class "w3-container w3-card w3-theme-l6"
+                      :style "text-align: left;"}
+                     [:h3 (key item)]]
+                    [:h4 {:class "w3-container w3-card w3-theme-l6"}
+                     (with-form-table lang nil nil
+                       [(lbl-quantity q-id lang)
+                        (form/drop-down {:id q-id}
+                          q-id (for [x (range 0 100)] [x x]) 0)])]
+                    (get-menu-option-group-table lang item i-id)])))
+             item i-id q-id lang))]))
     g ln-gr lang menu))
 
