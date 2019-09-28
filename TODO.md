@@ -6,4 +6,3 @@
 - Multi-option/mutex flag for item/options
 - Accept PDF for receipts
 - Menu links to sub-sections, section, top, bottom, etc.
-- Controls to flush and enable/disable cache
