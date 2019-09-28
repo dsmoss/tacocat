@@ -204,21 +204,20 @@
          [:meta {:name    "viewport"
                  :content "width=device-width, initial-scale=1.0"}]
          [:meta {:charset "UTF-8"}]
-         (page/include-css "https://www.w3schools.com/w3css/4/w3pro.css"
-                           (str "https://www.w3schools.com/lib/" theme)
-                           (if (= (sql/retrieve-app-data-val "environment")
-                                  "dev")
-                             (str "/css/style.css?" (rand))
-                             "/css/style.css")
-                           "/fonts/style.css")
-         [:style (str "h1, h2, h3, h4,
-                      h5, h6, div, p,
-                      th, td, tr {font-family: "
-                      (if (or (nil? font)
-                              (empty? font))
-                        ""
-                        (str \" font "\", "))
-                      "Verdana, sans-serif;}")]
+         (page/include-css
+           "https://www.w3schools.com/w3css/4/w3pro.css"
+           (str "https://www.w3schools.com/lib/" theme)
+           (if (= (sql/retrieve-app-data-val "environment")
+                  "dev")
+             (str "/css/style.css?" (rand))
+             "/css/style.css")
+           "/fonts/style.css")
+         [:style
+          (str "h1, h2, h3, h4, h5, h6, div, p, th, td, tr"
+               "{font-family:" (if (empty? font)
+                                 ""
+                                 (str \" font "\", "))
+               "Verdana, sans-serif;}")]
          [:title header]]))
     font header theme))
 
@@ -234,26 +233,35 @@
     (page/html5
       (main-head font header theme)
       [:body
-       (get-links lang [:general])
-       (get-links lang sections)
-       [:header {:class "w3-container w3-card w3-theme-l4"}
-        [:center
-         [:h1 header]
-         (if (empty? user) "" [:h5 (:name user)])]]
+       (with-cache "with-page"
+         (fn [lang sections header user lang]
+           (html
+             (get-links lang [:general])
+             (get-links lang sections)
+             [:header {:class "w3-container w3-card w3-theme-l4"}
+              [:center
+               [:h1 header]
+               (if (empty? user) "" [:h5 (:name user)])]]))
+         lang sections header user lang)
        [:center content]
-       (get-links lang (reverse sections))
-       [:header {:class "w3-container w3-card w3-theme-l4"}
-        [:center
-         [:h5
-          (if (empty? user)
-            (with-form-table lang nil nil
-              [(make-link "/login" (get-string "ln-login" {} lang))])
-            (with-form-table lang nil nil
-              [(make-link
-                 "/user-info" (get-string "ln-user-info" {} lang))
-               (make-link
-                 "/login"
-                 (get-string "ln-change-user" {} lang))]))]]]])))
+       (with-cache "with-page"
+         (fn [sections user lang]
+           (html
+             (get-links lang sections)
+             [:header {:class "w3-container w3-card w3-theme-l4"}
+              [:center
+               [:h5
+                (if (empty? user)
+                  (with-form-table lang nil nil
+                    [(make-link "/login"
+                                (get-string "ln-login" {} lang))])
+                  (with-form-table lang nil nil
+                    [(make-link "/user-info"
+                                (get-string "ln-user-info" {} lang))
+                     (make-link
+                       "/login"
+                       (get-string "ln-change-user" {} lang))]))]]]))
+         (reverse sections) user lang)])))
 
 (defn print-head
   "Head tag for printing"
@@ -565,13 +573,14 @@
   "Get correct control for an option"
   [{k :key dt :data_type v :val}]
   (case dt
-    "int"    (nf k v 1)
-    "float"  (nf k v)
-    "list"   (form/drop-down {:id k}
-               k
-               (map :val (sql/retrieve-app_data_list_values k))
-               v)
-    "string" (tf k v)))
+    "boolean" (format-bool v k)
+    "int"     (nf k v 1)
+    "float"   (nf k v)
+    "list"    (form/drop-down {:id k}
+                k
+                (map :val (sql/retrieve-app_data_list_values k))
+                v)
+    "string"  (tf k v)))
 
 (defn get-existing-bills
   "Returns a structure containing existing bills"

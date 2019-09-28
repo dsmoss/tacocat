@@ -28,3 +28,15 @@ group
        i.charge,
        i.id;
 
+insert into app_data (key, val, data_type)
+values ('use-cache', 'true', 'boolean')
+;
+
+insert into intl_key (name)
+values ('dta-use-cache')
+;
+
+insert into intl (key, lang, val)
+values ('dta-use-cache', 'es', 'Almacenar en Caché')
+     , ('dta-use-cache', 'en', 'Use Cache')
+;

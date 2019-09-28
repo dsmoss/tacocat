@@ -5,7 +5,8 @@
             [tacocat.log       :refer [log]]
             [tacocat.util      :refer :all]))
 
-(def connection-string "postgresql://tacocat:Tacocat2019@localhost:5432/tacocat")
+(def connection-string
+  "postgresql://tacocat:Tacocat2019@localhost:5432/tacocat")
 
 (def db-spec
   {:dbtype     "postgresql"
