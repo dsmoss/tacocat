@@ -417,29 +417,31 @@
              (format-bool in-stock? "in-stock")]
             [:td {:style "border: 0; padding: 0;"}
              (btn-change lang)])]]
+
+         [:details
+          [:summary {:class "w3-container w3-card"}
+           [:h4 (get-string "str-item-options" {} lang)]]
+          (with-options-table lang id
+            (filter (fn [{i :id}] (contains? item-options i))
+                    all-options)
+            (fn [i _]
+              (with-form (str "/view-item/" id)
+                (form/hidden-field
+                  {:value i} "remove-option-from-item")
+                (btn-remove lang))))]
          
-         [:h4 {:class "w3-container w3-card"}
-          (get-string "str-item-options" {} lang)]
-         (with-options-table lang id
-           (filter (fn [{i :id}] (contains? item-options i))
-                   all-options)
-           (fn [i _]
-             (with-form (str "/view-item/" id)
-               (form/hidden-field
-                 {:value i} "remove-option-from-item")
-               (btn-remove lang))))
-         
-         [:h4 {:class "w3-container w3-card"}
-          (get-string "str-other-options" {} lang)]
-         (with-options-table lang id
-           (filter (fn [{i :id}]
-                     (not (contains? item-options i)))
-                   all-options)
-           (fn [i _]
-             (with-form (str "/view-item/" id)
-               (form/hidden-field
-                 {:value i} "add-option-to-item")
-               (btn-add lang))))]
+         [:details
+          [:summary {:class "w3-container w3-card"}
+           [:h4 (get-string "str-other-options" {} lang)]]
+          (with-options-table lang id
+            (filter (fn [{i :id}]
+                      (not (contains? item-options i)))
+                    all-options)
+            (fn [i _]
+              (with-form (str "/view-item/" id)
+                (form/hidden-field
+                  {:value i} "add-option-to-item")
+                (btn-add lang))))]]
         lt))))
 
 (defn render-change-user-password

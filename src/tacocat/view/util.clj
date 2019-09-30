@@ -634,20 +634,18 @@
                      q-id (str "i-" i-id)]]
            (with-cache ["get-menu-groups-section" "header"]
              (fn [item i-id q-id lang]
-               (let [sect-id (clojure.string/replace
-                               (str g \- (key item)) #"\s+" "-")]
-                 (html
-                   [:details
-                    [:summary
-                     {:class "w3-container w3-card w3-theme-l6"
-                      :style "text-align: left;"}
-                     [:h3 (key item)]]
-                    [:h4 {:class "w3-container w3-card w3-theme-l6"}
-                     (with-form-table lang nil nil
-                       [(lbl-quantity q-id lang)
-                        (form/drop-down {:id q-id}
-                          q-id (for [x (range 0 100)] [x x]) 0)])]
-                    (get-menu-option-group-table lang item i-id)])))
+               (html
+                 [:details
+                  [:summary
+                   {:class "w3-container w3-card w3-theme-l6"
+                    :style "text-align: left;"}
+                   [:h3 (key item)]]
+                  [:h4 {:class "w3-container w3-card w3-theme-l6"}
+                   (with-form-table lang nil nil
+                     [(lbl-quantity q-id lang)
+                      (form/drop-down {:id q-id}
+                        q-id (for [x (range 0 100)] [x x]) 0)])]
+                  (get-menu-option-group-table lang item i-id)]))
              item i-id q-id lang))]))
     g ln-gr lang menu))
 
