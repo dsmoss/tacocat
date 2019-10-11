@@ -1362,36 +1362,61 @@
     (with-page (str option-group "/" oname)
       user
       [:admin :list-items]
-      (html
-        [:h5
-         (with-form post-page
-           (form/hidden-field {:value true} "set-option-name")
-           (with-form-table lang nil nil
-             [(lbl-option "option-name" lang)
-              (tf "option-name" oname)
-              (btn-change lang)]))
-         (with-form post-page
-           (form/hidden-field {:value true} "set-option-group")
-           (with-form-table lang nil nil
-             [(lbl-group "option-group" lang)
-              (form/drop-down {:id "option-group"} "option-group"
-                              (sort
-                                (map :name
-                                     all-option-groups))
-                              option-group)
-              (btn-change lang)]))
-         (with-form post-page
-           (form/hidden-field {:value true} "set-option-charge")
-           (with-form-table lang nil nil
-             [(lbl-extra-charge "option-charge" lang)
-              (nf "option-charge" extra-charge)
-              (btn-change lang)]))
-         (with-form post-page
-           (form/hidden-field {:value true} "set-option-in-stock")
-           (with-form-table lang nil nil
-             [(lbl-in-stock "option-in-stock" lang)
-              (format-bool in-stock? "option-in-stock")
-              (btn-change lang)]))]))))
+      (with-cache ["render-view-option" id lang oname]
+        (fn [option-group all-option-groups extra-charge in-stock?]
+          (html
+            [:h5
+             [:table {:style "padding: 0; border: 0;"}
+              (with-form post-page
+                [:tr {:style "padding: 0; border: 0;"}
+                 [:td {:style "padding: 0; border: 0;
+                              text-align: right;"}
+                  (form/hidden-field {:value true}
+                                     "set-option-name")
+                  (lbl-option "option-name" lang)]
+                 [:td {:style "padding: 0; border: 0;"}
+                  (tf "option-name" oname)]
+                 [:td {:style "padding: 0; border: 0;"}
+                  (btn-change lang)]])
+              (with-form post-page
+                [:tr {:style "padding: 0; border: 0;"}
+                 [:td {:style "padding: 0; border: 0;
+                              text-align: right;"}
+                  (form/hidden-field {:value true}
+                                     "set-option-group")
+                  (lbl-group "option-group" lang)]
+                 [:td {:style "padding: 0; border: 0;"}
+                  (form/drop-down {:id "option-group"}
+                                  "option-group"
+                                  (sort
+                                    (map :name
+                                         all-option-groups))
+                                  option-group)]
+                 [:td {:style "padding: 0; border: 0;"}
+                  (btn-change lang)]])
+              (with-form post-page
+                [:tr {:style "padding: 0; border: 0;"}
+                 [:td {:style "padding: 0; border: 0;
+                              text-align: right;"}
+                  (form/hidden-field {:value true}
+                                     "set-option-charge")
+                  (lbl-extra-charge "option-charge" lang)]
+                 [:td {:style "padding: 0; border: 0;"}
+                  (nf "option-charge" extra-charge)]
+                 [:td {:style "padding: 0; border: 0;"}
+                  (btn-change lang)]])
+              (with-form post-page
+                [:tr {:style "padding: 0; border: 0;"}
+                 [:td {:style "padding: 0; border: 0;
+                              text-align: right;"}
+                  (form/hidden-field {:value true}
+                                     "set-option-in-stock")
+                  (lbl-in-stock "option-in-stock" lang)]
+                 [:td {:style "padding: 0; border: 0;"}
+                  (format-bool in-stock? "option-in-stock")]
+                 [:td {:style "padding: 0; border: 0;"}
+                  (btn-change lang)]])]]))
+        option-group all-option-groups extra-charge in-stock?))))
 
 (defn render-change-item-menu-group
   "Page to change an items menu group"
